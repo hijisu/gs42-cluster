@@ -1,0 +1,135 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1160,
+   "title": "00 홈",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Meeting.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1260,
+   "title": "01 면담 신청",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Room.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1280,
+   "title": "02 회의실 예약",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Library.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1560,
+   "title": "03 오아시스 도서",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Reviews.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "04 교육과정 후기",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "StaffMain.dc.html": {
+   "x": 0,
+   "y": 1980,
+   "w": 1440,
+   "h": 1080,
+   "title": "운영 00 운영 홈",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "StaffMeeting.dc.html": {
+   "x": 1520,
+   "y": 1980,
+   "w": 1440,
+   "h": 1300,
+   "title": "운영 01 면담 관리",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "StaffRoom.dc.html": {
+   "x": 3040,
+   "y": 1980,
+   "w": 1440,
+   "h": 1420,
+   "title": "운영 02 회의실 관리",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "StaffLibrary.dc.html": {
+   "x": 4560,
+   "y": 1980,
+   "w": 1440,
+   "h": 1260,
+   "title": "운영 03 도서 관리",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "StaffCourses.dc.html": {
+   "x": 6080,
+   "y": 1980,
+   "w": 1440,
+   "h": 1380,
+   "title": "운영 04 교육과정 · 후기 관리",
+   "expand": "fill",
+   "is_interactive": true
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-10-01T07:36:06Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "view": "canvas"
+ },
+ "notes": {
+  "t1": {
+   "kind": "title1",
+   "maxW": 7520,
+   "text": "교육생 화면",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t2": {
+   "x": 0,
+   "y": 1680,
+   "text": "교육운영팀 화면",
+   "kind": "title1",
+   "maxW": 7520
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Meeting.dc.html",
+  "Room.dc.html",
+  "Library.dc.html",
+  "Reviews.dc.html",
+  "StaffMain.dc.html",
+  "StaffMeeting.dc.html",
+  "StaffRoom.dc.html",
+  "StaffLibrary.dc.html",
+  "StaffCourses.dc.html"
+ ],
+ "pages": [],
+ "title": "42gs-cluster"
+}

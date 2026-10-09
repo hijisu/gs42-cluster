@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>교육과정 · 후기 관리</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#F2F2EE;color:#121212;font-family:'IBM Plex Sans KR',system-ui,sans-serif;font-size:15px;line-height:1.5}
+a{color:#00797B}a:hover{color:#005A5C}
+h1,h2,h3,p{margin:0}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;background:#F2F2EE}
+.side{background:#121212;color:#F2F2EE;padding:28px 18px;display:flex;flex-direction:column;gap:36px}
+.brand{display:flex;align-items:baseline;gap:2px;color:#F2F2EE;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;padding:0 10px}
+.brand:hover{color:#fff}
+.brand b{color:#00BABC}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{display:flex;gap:12px;align-items:center;min-height:44px;padding:0 12px;border-radius:10px;color:#C9C9C4;text-decoration:none;font-size:15px;box-sizing:border-box;white-space:nowrap}
+.nav a:hover{background:#262626;color:#fff}
+.nav a.on{background:#00BABC;color:#121212;font-weight:600}
+.nav .n{font-family:'JetBrains Mono',monospace;font-size:12px;opacity:.75}
+.me{margin-top:auto;display:flex;gap:12px;align-items:center;padding:14px 10px 0;border-top:1px solid #2E2E2E}
+.av{width:36px;height:36px;border-radius:50%;background:#00BABC;color:#121212;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;flex-shrink:0}
+.main{padding:40px 48px 72px;display:flex;flex-direction:column;gap:28px;max-width:1200px;width:100%;box-sizing:border-box}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.h1{font-size:30px;font-weight:700;letter-spacing:-0.01em}
+.sub{color:#5C5C58;margin-top:6px}
+.card{background:#fff;border:1px solid #DADAD4;border-radius:16px;padding:24px;box-sizing:border-box}
+.mono{font-family:'JetBrains Mono',monospace}
+.label{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#5C5C58}
+.muted{color:#5C5C58}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid #121212;background:#121212;color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;box-sizing:border-box}
+.btn:hover{background:#333;color:#fff}
+.btn.ghost{background:#fff;color:#121212}
+.btn.ghost:hover{background:#EDEDE8;color:#121212}
+.btn.teal{background:#00BABC;border-color:#00BABC;color:#121212}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:#D5F2F2;color:#00585A}
+.wait{background:#FBE7D7;color:#9A3412}
+.neu{background:#EDEDE8;color:#3F3F3B}
+.done{background:#121212;color:#fff}
+.input{min-height:44px;border:1px solid #C8C8C2;border-radius:10px;padding:0 14px;font:inherit;background:#fff;box-sizing:border-box;width:100%;color:#121212}
+textarea.input{padding:12px 14px;min-height:96px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.chip{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid #C8C8C2;background:#fff;font:inherit;font-size:14px;cursor:pointer;color:#121212}
+.chip.on{background:#121212;border-color:#121212;color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.list{display:flex;flex-direction:column}
+.list > div{padding:14px 0;border-bottom:1px solid #EDEDE8}
+.list > div:last-child{border-bottom:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#5C5C58;padding:10px 12px;border-bottom:1px solid #DADAD4}
+td{padding:14px 12px;border-bottom:1px solid #EDEDE8}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.bar{height:8px;border-radius:999px;background:#EDEDE8;overflow:hidden}
+.bar > div{height:100%;background:#00BABC;border-radius:999px}
+@media (max-width:900px){
+.app{grid-template-columns:minmax(0,1fr)}
+.side{padding:16px;gap:14px}
+.nav{flex-direction:row;overflow-x:auto}
+.me{display:none}
+.main{padding:24px 16px 48px}
+.g2,.g3,.g4,.split{grid-template-columns:minmax(0,1fr)}
+}
+
+.side.staff{background:#0F2A2A}
+.side.staff .nav a:hover{background:#1C3D3D}
+.side.staff .me{border-top-color:#25494A}
+.role{display:inline-flex;align-self:flex-start;margin:-22px 10px 0;padding:3px 10px;border-radius:999px;background:#FDBA8C;color:#121212;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em}
+.switch{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;border:1px dashed #5C5C58;color:#C9C9C4;text-decoration:none;font-size:13px}
+.switch:hover{color:#fff;border-color:#C9C9C4}
+.notice{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px 20px;border-radius:14px;background:#121212;color:#F2F2EE;flex-wrap:wrap}
+.notice b{color:#00BABC}
+.info{padding:14px 16px;border-radius:12px;background:#F2F2EE;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal span{font-size:12px;color:#5C5C58;padding:4px 0}
+.cal button{min-height:40px;border-radius:8px;border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:#121212}
+.cal button:hover{background:#EDEDE8}
+.cal button.off{color:#B5B5AF;cursor:default}
+.cal button.today{box-shadow:inset 0 0 0 1px #121212}
+.cal button.sel{background:#121212;color:#fff}
+.tabs{display:flex;gap:4px;background:#fff;border:1px solid #DADAD4;border-radius:12px;padding:4px;align-self:flex-start;flex-wrap:wrap}
+.tabs button{min-height:40px;padding:0 16px;border-radius:8px;border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:#3F3F3B}
+.tabs button.on{background:#121212;color:#fff;font-weight:600}
+.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.btn.warn{background:#fff;border-color:#C2410C;color:#9A3412}
+.ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.scrim{position:fixed;inset:0;background:rgba(18,18,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:#fff;border-radius:18px;width:480px;max-width:100%;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+.hatch{background:repeating-linear-gradient(135deg,#FBE7D7 0 6px,#F6D3B8 6px 12px);color:#9A3412}
+</style>
+</helmet>
+<div class="app">
+<aside class="side staff">
+<a class="brand" href="StaffMain.dc.html"><b>42</b>gs<span style="color: #8A8A85">-cluster</span></a>
+<span class="role">STAFF · 교육운영팀</span>
+<nav class="nav" aria-label="주요 메뉴">
+<a href="StaffMain.dc.html"><span class="n">00</span><span>운영 홈</span></a>
+<a href="StaffMeeting.dc.html"><span class="n">01</span><span>면담 관리</span></a>
+<a href="StaffRoom.dc.html"><span class="n">02</span><span>회의실 관리</span></a>
+<a href="StaffLibrary.dc.html"><span class="n">03</span><span>도서 관리</span></a>
+<a href="StaffCourses.dc.html" class="on"><span class="n">04</span><span>교육과정 · 후기 관리</span></a>
+<a href="https://gs42stat.hijae.dev/home" target="_blank" rel="noopener"><span class="n">05</span><span>gs42stats</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left: auto; opacity: .7"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden">(새 창)</span></a>
+</nav>
+<div class="me"><div class="av" style="background: #FDBA8C">GS</div><div style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 600; font-size: 14px">[운영팀 이름]</span><span style="font-size: 12px; color: #A3A39E">교육운영팀</span></div></div>
+<a class="switch" href="Main.dc.html">교육생 화면 보기</a>
+</aside>
+<main class="main">
+
+<div class="head">
+<div>
+<p class="label">04 · COURSE ADMIN</p>
+<h1 class="h1" style="margin-top: 8px">교육과정 · 후기 관리</h1>
+<p class="sub">교육과정을 등록하고 참여 학생을 추가하면 후기 게시판이 열리고, 학생들에게 후기 작성 알림을 보낼 수 있어요.</p>
+</div>
+
+</div>
+
+<div class="card" style="display: flex; flex-direction: column; gap: 8px">
+<div class="row"><h2 style="font-size: 17px">교육과정</h2></div>
+<table>
+<thead><tr><th>과정명</th><th>기간</th><th>참여</th><th>후기 작성률</th><th>상태</th><th></th></tr></thead>
+<tbody><tr><td style="font-weight: 600">경북 특화형 데이터센터 기초과정</td><td class="mono">11.18–11.26</td><td class="mono">[00]명</td><td style="min-width: 140px"><div style="display: flex; gap: 8px; align-items: center"><div class="bar" style="flex-grow: 1"><div style="width: 35%"></div></div><span class="mono muted" style="font-size: 12px">35%</span></div></td><td><span class="pill neu">모집 · 수요조사</span></td><td style="text-align: right; white-space: nowrap"><a href="#">학생</a> · <a href="#">게시판</a></td></tr><tr><td style="font-weight: 600">서울대학교 파이썬 AI 교육</td><td class="mono">[기간]</td><td class="mono">[00]명</td><td style="min-width: 140px"><div style="display: flex; gap: 8px; align-items: center"><div class="bar" style="flex-grow: 1"><div style="width: 72%"></div></div><span class="mono muted" style="font-size: 12px">72%</span></div></td><td><span class="pill wait">후기 수집 중</span></td><td style="text-align: right; white-space: nowrap"><a href="#">학생</a> · <a href="#">게시판</a></td></tr><tr><td style="font-weight: 600">글로벌 기업가 정신 및 AI 몰입 프로그램</td><td class="mono">[기간]</td><td class="mono">[00]명</td><td style="min-width: 140px"><div style="display: flex; gap: 8px; align-items: center"><div class="bar" style="flex-grow: 1"><div style="width: 100%"></div></div><span class="mono muted" style="font-size: 12px">100%</span></div></td><td><span class="pill ok">종료</span></td><td style="text-align: right; white-space: nowrap"><a href="#">학생</a> · <a href="#">게시판</a></td></tr></tbody>
+</table>
+</div>
+
+<div class="split" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)">
+<div class="card" style="display: flex; flex-direction: column; gap: 14px">
+<div class="row"><h2 style="font-size: 17px">새 교육과정 등록</h2><span class="label">STEP 1 · 2</span></div>
+<div class="field"><label for="cn">과정명</label><input id="cn" class="input" placeholder="예: 2026 경북 특화형 데이터센터 기초과정 심화기수"></div>
+<div class="g3" style="gap: 12px">
+<div class="field"><label for="cs">시작일</label><input id="cs" class="input" type="date" value="2026-11-18"></div>
+<div class="field"><label for="ce">종료일</label><input id="ce" class="input" type="date" value="2026-11-26"></div>
+<div class="field"><label for="cp">장소</label><input id="cp" class="input" value="유니버스룸"></div>
+</div>
+<div class="field"><label for="cd">과정 소개</label><textarea id="cd" class="input" style="min-height: 72px" placeholder="게시판 상단에 보일 소개 문구"></textarea></div>
+<div class="field"><label>참여 학생</label>
+<div style="display: flex; gap: 8px"><label for="cst" style="position: absolute; width: 1px; height: 1px; overflow: hidden">intra ID 추가</label><input id="cst" class="input" placeholder="intra ID 입력 후 Enter" style="flex-grow: 1"><button type="button" class="btn ghost">CSV</button></div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px"><span class="pill neu">[intra_a] ×</span><span class="pill neu">[intra_b] ×</span><span class="pill neu">[intra_c] ×</span><span class="muted" style="font-size: 12px; align-self: center">외 [00]명</span></div>
+</div>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 14px"><input type="checkbox" checked> 등록과 함께 후기 게시판 생성</label>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 14px"><input type="checkbox" checked> 종료일 다음 날 후기 요청 푸시 자동 발송</label>
+<button type="button" class="btn">과정 등록</button>
+</div>
+
+<div class="card" style="display: flex; flex-direction: column; gap: 14px">
+<div class="row"><h2 style="font-size: 17px">후기 요청 보내기</h2><span class="label">STEP 2 · 2</span></div>
+<div class="field"><label for="pc">교육과정</label><select id="pc" class="input"><option>서울대학교 파이썬 AI 교육</option></select></div>
+<div class="g2" style="gap: 12px">
+<div class="info"><span class="label">작성 완료</span><span class="mono" style="font-size: 22px; font-weight: 700">[00]명</span></div>
+<div class="info"><span class="label">미작성</span><span class="mono" style="font-size: 22px; font-weight: 700">[00]명</span></div>
+</div>
+<div class="field"><label for="pm">알림 문구</label><textarea id="pm" class="input" style="min-height: 72px">서울대학교 파이썬 AI 교육에 참여해 주셔서 감사합니다. 다음 교육생을 위해 후기를 남겨 주세요.</textarea></div>
+<div class="field"><label for="pd">작성 마감</label><input id="pd" class="input" type="date"></div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><button type="button" class="btn ghost">전체에게 보내기</button><button type="button" class="btn teal">미작성자에게 보내기</button></div>
+<p class="muted" style="font-size: 12px">앱 푸시와 Slack DM으로 함께 전송됩니다.</p>
+</div>
+</div>
+
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1380}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

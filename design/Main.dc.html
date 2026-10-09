@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>42gs-cluster 홈</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#F2F2EE;color:#121212;font-family:'IBM Plex Sans KR',system-ui,sans-serif;font-size:15px;line-height:1.5}
+a{color:#00797B}a:hover{color:#005A5C}
+h1,h2,h3,p{margin:0}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;background:#F2F2EE}
+.side{background:#121212;color:#F2F2EE;padding:28px 18px;display:flex;flex-direction:column;gap:36px}
+.brand{display:flex;align-items:baseline;gap:2px;color:#F2F2EE;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;padding:0 10px}
+.brand:hover{color:#fff}
+.brand b{color:#00BABC}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{display:flex;gap:12px;align-items:center;min-height:44px;padding:0 12px;border-radius:10px;color:#C9C9C4;text-decoration:none;font-size:15px;box-sizing:border-box;white-space:nowrap}
+.nav a:hover{background:#262626;color:#fff}
+.nav a.on{background:#00BABC;color:#121212;font-weight:600}
+.nav .n{font-family:'JetBrains Mono',monospace;font-size:12px;opacity:.75}
+.me{margin-top:auto;display:flex;gap:12px;align-items:center;padding:14px 10px 0;border-top:1px solid #2E2E2E}
+.av{width:36px;height:36px;border-radius:50%;background:#00BABC;color:#121212;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;flex-shrink:0}
+.main{padding:40px 48px 72px;display:flex;flex-direction:column;gap:28px;max-width:1200px;width:100%;box-sizing:border-box}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.h1{font-size:30px;font-weight:700;letter-spacing:-0.01em}
+.sub{color:#5C5C58;margin-top:6px}
+.card{background:#fff;border:1px solid #DADAD4;border-radius:16px;padding:24px;box-sizing:border-box}
+.mono{font-family:'JetBrains Mono',monospace}
+.label{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#5C5C58}
+.muted{color:#5C5C58}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid #121212;background:#121212;color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;box-sizing:border-box}
+.btn:hover{background:#333;color:#fff}
+.btn.ghost{background:#fff;color:#121212}
+.btn.ghost:hover{background:#EDEDE8;color:#121212}
+.btn.teal{background:#00BABC;border-color:#00BABC;color:#121212}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:#D5F2F2;color:#00585A}
+.wait{background:#FBE7D7;color:#9A3412}
+.neu{background:#EDEDE8;color:#3F3F3B}
+.done{background:#121212;color:#fff}
+.input{min-height:44px;border:1px solid #C8C8C2;border-radius:10px;padding:0 14px;font:inherit;background:#fff;box-sizing:border-box;width:100%;color:#121212}
+textarea.input{padding:12px 14px;min-height:96px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.chip{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid #C8C8C2;background:#fff;font:inherit;font-size:14px;cursor:pointer;color:#121212}
+.chip.on{background:#121212;border-color:#121212;color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.list{display:flex;flex-direction:column}
+.list > div{padding:14px 0;border-bottom:1px solid #EDEDE8}
+.list > div:last-child{border-bottom:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#5C5C58;padding:10px 12px;border-bottom:1px solid #DADAD4}
+td{padding:14px 12px;border-bottom:1px solid #EDEDE8}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.bar{height:8px;border-radius:999px;background:#EDEDE8;overflow:hidden}
+.bar > div{height:100%;background:#00BABC;border-radius:999px}
+@media (max-width:900px){
+.app{grid-template-columns:minmax(0,1fr)}
+.side{padding:16px;gap:14px}
+.nav{flex-direction:row;overflow-x:auto}
+.me{display:none}
+.main{padding:24px 16px 48px}
+.g2,.g3,.g4,.split{grid-template-columns:minmax(0,1fr)}
+}
+
+.side.staff{background:#0F2A2A}
+.side.staff .nav a:hover{background:#1C3D3D}
+.side.staff .me{border-top-color:#25494A}
+.role{display:inline-flex;align-self:flex-start;margin:-22px 10px 0;padding:3px 10px;border-radius:999px;background:#FDBA8C;color:#121212;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em}
+.switch{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;border:1px dashed #5C5C58;color:#C9C9C4;text-decoration:none;font-size:13px}
+.switch:hover{color:#fff;border-color:#C9C9C4}
+.notice{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px 20px;border-radius:14px;background:#121212;color:#F2F2EE;flex-wrap:wrap}
+.notice b{color:#00BABC}
+.info{padding:14px 16px;border-radius:12px;background:#F2F2EE;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal span{font-size:12px;color:#5C5C58;padding:4px 0}
+.cal button{min-height:40px;border-radius:8px;border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:#121212}
+.cal button:hover{background:#EDEDE8}
+.cal button.off{color:#B5B5AF;cursor:default}
+.cal button.today{box-shadow:inset 0 0 0 1px #121212}
+.cal button.sel{background:#121212;color:#fff}
+.tabs{display:flex;gap:4px;background:#fff;border:1px solid #DADAD4;border-radius:12px;padding:4px;align-self:flex-start;flex-wrap:wrap}
+.tabs button{min-height:40px;padding:0 16px;border-radius:8px;border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:#3F3F3B}
+.tabs button.on{background:#121212;color:#fff;font-weight:600}
+.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.btn.warn{background:#fff;border-color:#C2410C;color:#9A3412}
+.ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.scrim{position:fixed;inset:0;background:rgba(18,18,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:#fff;border-radius:18px;width:480px;max-width:100%;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+.hatch{background:repeating-linear-gradient(135deg,#FBE7D7 0 6px,#F6D3B8 6px 12px);color:#9A3412}
+</style>
+</helmet>
+<div class="app">
+<aside class="side">
+<a class="brand" href="Main.dc.html"><b>42</b>gs<span style="color: #8A8A85">-cluster</span></a>
+
+<nav class="nav" aria-label="주요 메뉴">
+<a href="Main.dc.html" class="on"><span class="n">00</span><span>홈</span></a>
+<a href="Meeting.dc.html"><span class="n">01</span><span>면담 신청</span></a>
+<a href="Room.dc.html"><span class="n">02</span><span>회의실 예약</span></a>
+<a href="Library.dc.html"><span class="n">03</span><span>오아시스 도서</span></a>
+<a href="Reviews.dc.html"><span class="n">04</span><span>교육과정 후기</span></a>
+<a href="https://gs42stat.hijae.dev/home" target="_blank" rel="noopener"><span class="n">05</span><span>gs42stats</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left: auto; opacity: .7"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden">(새 창)</span></a>
+</nav>
+<div class="me"><div class="av">IN</div><div style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 600; font-size: 14px">[intra_id]</span><span style="font-size: 12px; color: #A3A39E">42경산 · 교육생</span></div></div>
+<a class="switch" href="StaffMain.dc.html">교육운영팀 화면 보기</a>
+</aside>
+<main class="main">
+
+<div class="head">
+<div>
+<p class="label">2026.10.09 FRI · 42 GYEONGSAN</p>
+<h1 class="h1" style="margin-top: 8px">안녕하세요, [intra_id]님</h1>
+<p class="sub">클러스터에서 필요한 일을 한 곳에서 처리하세요.</p>
+</div>
+<div style="width: 360px; max-width: 100%"><label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden">통합 검색</label><input id="q" class="input" type="search" placeholder="도서, 회의실, 교육과정 검색"></div>
+</div>
+
+<div class="notice" role="status">
+<span style="display: flex; flex-direction: column; gap: 2px"><span class="label" style="color: #A3A39E">후기 요청 알림</span><span><b>경북 특화형 데이터센터 기초과정</b> 수료를 축하해요. 다음 교육생을 위해 후기를 남겨 주세요.</span></span>
+<a class="btn teal" href="Reviews.dc.html">후기 작성하기</a>
+</div>
+
+<section class="g4" aria-label="내 현황">
+<div class="card" style="display: flex; flex-direction: column; gap: 10px">
+<p class="label">다음 면담</p>
+<p style="font-size: 22px; font-weight: 700">10.13 15:00</p>
+<p class="muted" style="font-size: 14px">1층 사무실 앞 · 대면</p>
+<span class="pill ok" style="align-self: flex-start">확정</span>
+</div>
+<div class="card" style="display: flex; flex-direction: column; gap: 10px">
+<p class="label">회의실 요청</p>
+<p style="font-size: 22px; font-weight: 700">10.16 15:00–18:00</p>
+<p class="muted" style="font-size: 14px">다목적회의실 · 3명</p>
+<span class="pill wait" style="align-self: flex-start">승인 대기</span>
+</div>
+<div class="card" style="display: flex; flex-direction: column; gap: 10px">
+<p class="label">희망 도서</p>
+<p style="font-size: 22px; font-weight: 700">1건 신청</p>
+<p class="muted" style="font-size: 14px">Designing Data-Intensive Apps</p>
+<span class="pill neu" style="align-self: flex-start">검토 중</span>
+</div>
+<div class="card" style="display: flex; flex-direction: column; gap: 10px">
+<p class="label">작성할 후기</p>
+<p style="font-size: 22px; font-weight: 700">1건</p>
+<p class="muted" style="font-size: 14px">마감 [MM.DD]</p>
+<span class="pill wait" style="align-self: flex-start">작성 대기</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="font-size: 18px">바로가기</h2>
+<div class="g3">
+<a href="Meeting.dc.html" class="card" style="text-decoration: none; color: #121212; display: flex; flex-direction: column; gap: 18px; min-height: 140px"><span class="mono" style="font-size: 13px; color: #00797B">01</span><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">면담 신청</span><span class="muted" style="font-size: 14px">대면 면담 일정 잡기</span></span></a>
+<a href="Room.dc.html" class="card" style="text-decoration: none; color: #121212; display: flex; flex-direction: column; gap: 18px; min-height: 140px"><span class="mono" style="font-size: 13px; color: #00797B">02</span><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">회의실 예약</span><span class="muted" style="font-size: 14px">날짜 선택 후 예약 요청 · 운영팀 승인</span></span></a>
+<a href="Library.dc.html" class="card" style="text-decoration: none; color: #121212; display: flex; flex-direction: column; gap: 18px; min-height: 140px"><span class="mono" style="font-size: 13px; color: #00797B">03</span><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">오아시스 도서</span><span class="muted" style="font-size: 14px">도서 검색 · 분실 신고 · 희망 도서</span></span></a>
+<a href="Reviews.dc.html" class="card" style="text-decoration: none; color: #121212; display: flex; flex-direction: column; gap: 18px; min-height: 140px"><span class="mono" style="font-size: 13px; color: #00797B">04</span><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">교육과정 후기</span><span class="muted" style="font-size: 14px">아카데미 운영 과정 후기 읽고 쓰기</span></span></a>
+<a href="https://gs42stat.hijae.dev/home" target="_blank" rel="noopener" class="card" style="text-decoration: none; color: #121212; display: flex; flex-direction: column; gap: 18px; min-height: 140px"><span class="row"><span class="mono" style="font-size: 13px; color: #00797B">05</span><span class="muted" style="font-size: 12px">외부 링크 ↗</span></span><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">gs42stats</span><span class="muted" style="font-size: 14px">클러스터 · 과제 진행 통계 (새 창)</span></span></a>
+<div class="card" style="display: flex; flex-direction: column; gap: 10px; min-height: 140px; background: #F2F2EE">
+<span class="label">문의는 #pedago</span>
+<p style="font-size: 14px">프리즈, 타 사업 참여, 기숙사 이용 등 문의 내용을 함께 적어 주시면 담당자 대응이 빨라집니다. 운영팀 개인 DM은 먼저 보내지 말아 주세요.</p>
+</div>
+</div>
+</section>
+
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
