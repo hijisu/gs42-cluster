@@ -110,7 +110,7 @@ class ApproveReservationUseCase(_Staff):
 
     def execute(self, reservation_id: int) -> StaffReservationView:
         reservation = _load(self._reservations, reservation_id)
-        _bookable_room(self._rooms, reservation.room_id)
+        room = _bookable_room(self._rooms, reservation.room_id)
         self._approve(reservation)
         self._events.publish(
             ReservationApproved(
@@ -119,6 +119,7 @@ class ApproveReservationUseCase(_Staff):
                 room_id=reservation.room_id,
                 start_at=reservation.time_range.start,
                 end_at=reservation.time_range.end,
+                room_name=room.name,
             )
         )
         return self._one(reservation.id)
@@ -133,12 +134,14 @@ class RejectReservationUseCase(_Staff):
         reservation = _load(self._reservations, reservation_id)
         reservation.reject(reason)
         self._reservations.save(reservation)
+        room = self._rooms.get(reservation.room_id)
         self._events.publish(
             ReservationRejected(
                 reservation_id=reservation.id,
                 user_id=reservation.user_id,
                 room_id=reservation.room_id,
                 reason=reservation.reject_reason,
+                room_name=room.name if room else "",
             )
         )
         return self._one(reservation.id)
@@ -149,8 +152,9 @@ class ReassignReservationUseCase(ApproveReservationUseCase):
 
     def execute(self, reservation_id: int, room_id: int) -> StaffReservationView:
         reservation = _load(self._reservations, reservation_id)
-        _bookable_room(self._rooms, room_id)
+        target = _bookable_room(self._rooms, room_id)
         from_room_id = reservation.room_id
+        origin = self._rooms.get(from_room_id)
         reservation.reassign(room_id)
         self._approve(reservation)
         self._events.publish(
@@ -161,6 +165,8 @@ class ReassignReservationUseCase(ApproveReservationUseCase):
                 to_room_id=room_id,
                 start_at=reservation.time_range.start,
                 end_at=reservation.time_range.end,
+                from_room_name=origin.name if origin else "",
+                to_room_name=target.name,
             )
         )
         return self._one(reservation.id)
@@ -195,7 +201,7 @@ class StaffBookUseCase(ApproveReservationUseCase):
         self._rules = rules
 
     def execute(self, cmd: StaffBookingCommand) -> StaffReservationView:
-        _bookable_room(self._rooms, cmd.room_id)
+        room = _bookable_room(self._rooms, cmd.room_id)
         time_range = TimeRange(cmd.start_at, cmd.end_at)
         self._rules().validate(time_range, now=self._clock())
         target = cmd.user_id or cmd.staff_id
@@ -219,6 +225,7 @@ class StaffBookUseCase(ApproveReservationUseCase):
                     room_id=reservation.room_id,
                     start_at=time_range.start,
                     end_at=time_range.end,
+                    room_name=room.name,
                 )
             )
         return self._one(reservation.id)
