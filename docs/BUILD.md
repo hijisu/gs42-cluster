@@ -42,7 +42,17 @@ TBD (설치 · 실행 · 테스트 · 린트)
 
 ## 프론트엔드
 
-TBD (설치 · 실행 · 테스트 · 빌드)
+```bash
+cd frontend
+npm install
+npm run dev        # 개발 서버 (http://localhost:5173)
+npm run typecheck  # 타입 검사
+npm test           # vitest
+npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
+```
+
+- 구조: `src/app`(라우터·메뉴 정의), `src/components`(공통 컴포넌트), `src/styles`(스타일·토큰), `src/features/<context>/`(기능별 화면).
+- 라우트는 `src/app/routes.ts`의 메뉴 정의와 `design/*.dc.html` 파일 이름이 1:1이다.
 
 ## 42 OAuth 앱 등록
 
