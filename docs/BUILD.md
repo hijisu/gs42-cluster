@@ -69,6 +69,14 @@ curl -c cookies.txt -X POST -H 'Content-Type: application/json' \
 curl -b cookies.txt http://localhost:8000/api/auth/me
 ```
 
+### 개발용 면담 슬롯 시드
+
+면담 유형 6종은 마이그레이션으로 들어갑니다. 슬롯과 기본 담당자는 개발용 명령으로 채웁니다(`DJANGO_DEBUG=true`에서만, 반복 실행해도 안전).
+
+```bash
+python manage.py seed_meeting_demo --days 7   # 모의 운영팀(staff)을 기본 담당자로, 평일 10·11·13·14·15·16시 슬롯 생성
+```
+
 실제 로그인은 42 intra OAuth 앱 등록 후 `FORTYTWO_UID/SECRET`을 `.env`에 넣어 확인합니다(아래 "42 OAuth 앱 등록"). 역할은 `STAFF_INTRA_IDS`가 우선이며 42 응답의 `staff?`는 보조입니다.
 
 ## 프론트엔드
