@@ -77,6 +77,12 @@ curl -b cookies.txt http://localhost:8000/api/auth/me
 python manage.py seed_meeting_demo --days 7   # 모의 운영팀(staff)을 기본 담당자로, 평일 10·11·13·14·15·16시 슬롯 생성
 ```
 
+### 개발용 교육과정·후기 시드
+
+```bash
+python manage.py seed_review_demo   # 교육과정 3개, 참여자(student·intra_a·intra_b), 후기 예시 (DEBUG 전용, 반복 실행 안전)
+```
+
 실제 로그인은 42 intra OAuth 앱 등록 후 `FORTYTWO_UID/SECRET`을 `.env`에 넣어 확인합니다(아래 "42 OAuth 앱 등록"). 역할은 `STAFF_INTRA_IDS`가 우선이며 42 응답의 `staff?`는 보조입니다.
 
 ## 프론트엔드
