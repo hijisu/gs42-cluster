@@ -56,3 +56,35 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .noti-item.unread .noti-title{font-weight:700}
 .noti-item.unread::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c-teal);position:absolute;margin-left:-14px;margin-top:8px}
 .noti-title{font-weight:500}
+
+/* 월간 캘린더 */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--sp-1);text-align:center}
+.cal span{font-size:12px;color:var(--c-muted);padding:var(--sp-1) 0}
+.cal button{min-height:40px;border-radius:var(--r-sm);border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:var(--c-ink)}
+.cal button:hover{background:var(--c-line-soft)}
+.cal button.off{color:var(--c-disabled);cursor:default}
+.cal button.today{box-shadow:inset 0 0 0 1px var(--c-ink)}
+.cal button.sel{background:var(--c-ink);color:var(--c-surface)}
+
+/* 장소 × 시간 타임라인 */
+.timeline-scroll{overflow-x:auto}
+.timeline{min-width:680px}
+.tl-row{display:grid;grid-template-columns:150px minmax(0,1fr)}
+.tl-body{border-top:1px solid var(--c-line-soft)}
+.tl-name{padding:var(--sp-3) 0;display:flex;flex-direction:column}
+.tl-cells{display:grid;padding:10px 0;min-height:var(--touch)}
+.tl-cell{border-left:1px dashed var(--c-line)}
+.tl-cell.approved{background:var(--c-ink);border-left-color:var(--c-ink)}
+.tl-cell.pending{background:repeating-linear-gradient(135deg,var(--c-warn-bg) 0 6px,var(--c-warn-stripe) 6px 12px);border-left-color:var(--c-warn-bg)}
+.tl-cell.blocked{background:var(--c-line-soft);border-left-color:var(--c-line-soft)}
+.legend{display:flex;gap:18px;font-size:13px;flex-wrap:wrap}
+.legend span{display:flex;gap:6px;align-items:center}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;box-sizing:border-box}
+.sw.approved{background:var(--c-ink)}
+.sw.pending{background:repeating-linear-gradient(135deg,var(--c-warn-bg) 0 6px,var(--c-warn-stripe) 6px 12px)}
+.sw.free{border:1px dashed var(--c-disabled)}
+.sw.blocked{background:var(--c-line-soft)}
+
+.list{display:flex;flex-direction:column}
+.list>div{padding:14px 0;border-bottom:1px solid var(--c-line-soft)}
+.list>div:last-child{border-bottom:0}
