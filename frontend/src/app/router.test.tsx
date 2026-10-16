@@ -1,30 +1,12 @@
-import { render, screen, within } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { routes } from './router'
+import { screen, within } from '@testing-library/react'
+import { anonymous, asUser, mockApi, renderAt } from '../test-utils'
 import { staffNav, studentNav } from './routes'
-import type { Me, Role } from '../features/auth/api'
+import type { Role } from '../features/auth/api'
 
 const paths = [...studentNav, ...staffNav].map((n) => n.path)
 
 function mockMe(role: Role | null) {
-  const me: Me = { id: 1, intra_id: 'jisu', name: '지수', role: role ?? 'student', slack_id: null }
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () =>
-      role ? new Response(JSON.stringify(me), { status: 200 }) : new Response(JSON.stringify({ detail: 'x' }), { status: 401 }),
-    ),
-  )
-}
-
-function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  )
-  return router
+  mockApi(role ? asUser(role) : anonymous)
 }
 
 afterEach(() => vi.unstubAllGlobals())
