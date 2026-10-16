@@ -9,6 +9,7 @@ from reviews.interfaces import views as review_views
 from reviews.interfaces.staff_urls import staff_urlpatterns as review_staff_urlpatterns
 from reviews.interfaces.urls import course_urlpatterns, review_urlpatterns
 from rooms.interfaces import views as room_views
+from rooms.interfaces.staff_urls import staff_urlpatterns as room_staff_urlpatterns
 from rooms.interfaces.urls import reservation_urlpatterns, room_urlpatterns
 
 urlpatterns = [
@@ -27,6 +28,11 @@ urlpatterns = [
     # 운영팀 전용 API. 모든 /api/staff/* 뷰는 IsStaff를 적용한다.
     path(
         "staff/",
-        include(staff_urlpatterns + meeting_staff_urlpatterns + review_staff_urlpatterns),
+        include(
+            staff_urlpatterns
+            + meeting_staff_urlpatterns
+            + review_staff_urlpatterns
+            + room_staff_urlpatterns
+        ),
     ),
 ]

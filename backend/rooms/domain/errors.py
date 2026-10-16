@@ -31,3 +31,15 @@ class RoomNotFound(NotFoundError):
 
 class ReservationNotFound(NotFoundError):
     code = "reservation_not_found"
+
+
+class ReasonRequired(InvalidRequestError):
+    code = "reason_required"
+
+
+class InvalidRules(InvalidRequestError):
+    code = "invalid_rules"
+
+
+class RoomCodeTaken(ConflictError):
+    code = "room_code_taken"

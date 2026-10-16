@@ -15,6 +15,7 @@ from rooms.infrastructure.repositories import (
     DjangoReservationReadModel,
     DjangoReservationRepository,
     DjangoRoomRepository,
+    DjangoRulesRepository,
 )
 
 
@@ -23,11 +24,13 @@ def list_rooms() -> ListRoomsUseCase:
 
 
 def get_rules() -> GetRulesUseCase:
-    return GetRulesUseCase()
+    return GetRulesUseCase(DjangoRulesRepository().get)
 
 
 def get_availability() -> GetAvailabilityUseCase:
-    return GetAvailabilityUseCase(DjangoRoomRepository(), DjangoReservationRepository())
+    return GetAvailabilityUseCase(
+        DjangoRoomRepository(), DjangoReservationRepository(), DjangoRulesRepository().get
+    )
 
 
 def request_reservation() -> RequestReservationUseCase:
@@ -37,6 +40,7 @@ def request_reservation() -> RequestReservationUseCase:
         DjangoReservationReadModel(),
         event_bus,
         timezone.now,
+        DjangoRulesRepository().get,
     )
 
 

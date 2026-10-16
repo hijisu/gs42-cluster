@@ -19,6 +19,11 @@ from rooms.domain.rules import DEFAULT_RULES, KST, RoomRules
 from rooms.domain.time_range import TimeRange
 
 Clock = Callable[[], datetime]
+RulesProvider = Callable[[], RoomRules]
+
+
+def default_rules() -> RoomRules:
+    return DEFAULT_RULES
 
 
 @dataclass(frozen=True)
@@ -64,11 +69,11 @@ class ListRoomsUseCase:
 
 
 class GetRulesUseCase:
-    def __init__(self, rules: RoomRules = DEFAULT_RULES) -> None:
+    def __init__(self, rules: RulesProvider = default_rules) -> None:
         self._rules = rules
 
     def execute(self) -> RoomRules:
-        return self._rules
+        return self._rules()
 
 
 class GetAvailabilityUseCase:
@@ -76,15 +81,16 @@ class GetAvailabilityUseCase:
         self,
         rooms: RoomRepository,
         reservations: ReservationRepository,
-        rules: RoomRules = DEFAULT_RULES,
+        rules: RulesProvider = default_rules,
     ) -> None:
         self._rooms = rooms
         self._reservations = reservations
         self._rules = rules
 
     def execute(self, day: date, viewer_id: int) -> list[RoomAvailability]:
-        start = datetime.combine(day, time(self._rules.open_hour), tzinfo=KST)
-        end = datetime.combine(day, time(self._rules.close_hour), tzinfo=KST)
+        rules = self._rules()
+        start = datetime.combine(day, time(rules.open_hour), tzinfo=KST)
+        end = datetime.combine(day, time(rules.close_hour), tzinfo=KST)
         day_reservations = self._reservations.active_between(start, end)
         result = []
         for room in self._rooms.list_all():
@@ -102,7 +108,7 @@ class GetAvailabilityUseCase:
                 for r in sorted(mine, key=lambda r: r.time_range.start)
             ]
             hours = []
-            for hour in range(self._rules.open_hour, self._rules.close_hour):
+            for hour in range(rules.open_hour, rules.close_hour):
                 cell = TimeRange(
                     datetime.combine(day, time(hour), tzinfo=KST),
                     datetime.combine(day, time(hour), tzinfo=KST) + timedelta(hours=1),
@@ -129,7 +135,7 @@ class RequestReservationUseCase:
         read_model: ReservationReadModel,
         events: EventDispatcher,
         clock: Clock,
-        rules: RoomRules = DEFAULT_RULES,
+        rules: RulesProvider = default_rules,
     ) -> None:
         self._rooms = rooms
         self._reservations = reservations
@@ -145,7 +151,7 @@ class RequestReservationUseCase:
         if room.status == RoomStatus.BLOCKED.value:
             raise RoomBlocked("예약을 받지 않는 장소입니다")
         time_range = TimeRange(cmd.start_at, cmd.end_at)
-        self._rules.validate(time_range, now=self._clock())
+        self._rules().validate(time_range, now=self._clock())
 
         reservation = self._reservations.add(
             RoomReservation(
