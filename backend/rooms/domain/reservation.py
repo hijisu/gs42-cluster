@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from common.domain.errors import ForbiddenError
-from rooms.domain.errors import InvalidTransition
+from rooms.domain.errors import InvalidTransition, ReasonRequired
 from rooms.domain.time_range import TimeRange
 
 
@@ -50,9 +50,12 @@ class RoomReservation:
         self.status = ReservationStatus.APPROVED
 
     def reject(self, reason: str) -> None:
+        """pending → rejected. 사유는 필수(교육생에게 그대로 보여 준다)."""
         self._require({ReservationStatus.PENDING}, "reject")
+        if not reason.strip():
+            raise ReasonRequired("반려 사유를 입력해 주세요")
         self.status = ReservationStatus.REJECTED
-        self.reject_reason = reason
+        self.reject_reason = reason.strip()
 
     def reassign(self, room_id: int) -> None:
         """다른 장소로 대체 배정한다. pending/approved에서 가능."""

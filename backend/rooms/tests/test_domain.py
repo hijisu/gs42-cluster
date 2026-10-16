@@ -186,3 +186,45 @@ def test_pending_overlaps_are_allowed_to_approve_until_one_is_approved():
 
 def test_duration():
     assert rng(10, 12).duration == timedelta(hours=2)
+
+
+# ── 운영 규칙 추가분 ──
+def test_reject_requires_non_blank_reason_and_keeps_state():
+    from rooms.domain.errors import ReasonRequired
+
+    r = res()
+    with pytest.raises(ReasonRequired):
+        r.reject("   ")
+    assert r.status == ReservationStatus.PENDING
+    r.reject("  기존 예약  ")
+    assert r.reject_reason == "기존 예약"
+
+
+def test_rules_define_validates_hours_and_usage_text():
+    from rooms.domain.errors import InvalidRules
+    from rooms.domain.rules import RoomRules
+
+    rules = RoomRules.define(8, 23, [" 쓰레기 치우기 ", "", "TV 끄기"])
+    assert (rules.open_hour, rules.close_hour, rules.usage_rules) == (
+        8,
+        23,
+        ("쓰레기 치우기", "TV 끄기"),
+    )
+    for args in [
+        (10, 10, ["a"]),
+        (22, 9, ["a"]),
+        (-1, 5, ["a"]),
+        (9, 25, ["a"]),
+        (9, 22, ["", "  "]),
+    ]:
+        with pytest.raises(InvalidRules):
+            RoomRules.define(*args)
+
+
+def test_custom_rules_change_operating_hours():
+    from rooms.domain.rules import RoomRules
+
+    wide = RoomRules.define(7, 23, ["규칙"])
+    wide.validate(TimeRange(at(7), at(8)), NOW)
+    with pytest.raises(OutsideHours):
+        DEFAULT_RULES.validate(TimeRange(at(7), at(8)), NOW)
