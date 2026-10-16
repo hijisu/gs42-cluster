@@ -5,7 +5,7 @@ from reviews.application.ports import CourseStats
 from reviews.domain.course import Course, CourseStatus, normalize_intra_id
 from reviews.domain.errors import AlreadyReviewed
 from reviews.domain.review import Review
-from reviews.infrastructure.models import CourseRow, ReviewRow
+from reviews.infrastructure.models import CourseParticipant, CourseRow, ReviewRow
 
 
 def _course(row: CourseRow) -> Course:
@@ -22,7 +22,40 @@ def _course(row: CourseRow) -> Course:
     )
 
 
+def _course_fields(course: Course) -> dict:
+    return {
+        "name": course.name,
+        "start_date": course.start_date,
+        "end_date": course.end_date,
+        "location": course.location,
+        "intro": course.intro,
+        "status": course.status.value,
+        "review_deadline": course.review_deadline,
+    }
+
+
 class DjangoCourseRepository:
+    @transaction.atomic
+    def add(self, course: Course) -> Course:
+        course.id = CourseRow.objects.create(**_course_fields(course)).pk
+        self._sync_participants(course)
+        return course
+
+    @transaction.atomic
+    def save(self, course: Course) -> None:
+        CourseRow.objects.filter(pk=course.id).update(**_course_fields(course))
+        self._sync_participants(course)
+
+    @staticmethod
+    def _sync_participants(course: Course) -> None:
+        CourseParticipant.objects.bulk_create(
+            [
+                CourseParticipant(course_id=course.id, intra_id=i)
+                for i in sorted(course.participants)
+            ],
+            ignore_conflicts=True,
+        )
+
     def list_all(self) -> list[Course]:
         return [_course(r) for r in CourseRow.objects.prefetch_related("participants")]
 
@@ -83,3 +116,9 @@ class DjangoReviewRepository:
     def stats_by_course(self) -> dict[int, CourseStats]:
         rows = ReviewRow.objects.values("course_id").annotate(avg=Avg("rating"), n=Count("id"))
         return {r["course_id"]: CourseStats(round(float(r["avg"]), 1), r["n"]) for r in rows}
+
+    def reviewer_intra_ids_by_course(self) -> dict[int, set[str]]:
+        result: dict[int, set[str]] = {}
+        for course_id, intra_id in ReviewRow.objects.values_list("course_id", "author__intra_id"):
+            result.setdefault(course_id, set()).add(normalize_intra_id(intra_id))
+        return result

@@ -19,3 +19,11 @@ class AlreadyReviewed(ConflictError):
 
 class InvalidReview(InvalidRequestError):
     code = "invalid_review"
+
+
+class InvalidCourse(InvalidRequestError):
+    code = "invalid_course"
+
+
+class InvalidIntraId(InvalidRequestError):
+    code = "invalid_intra_id"

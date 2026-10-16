@@ -4,11 +4,9 @@ from datetime import datetime, time, timedelta
 
 from django.db import transaction
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
-from accounts.interfaces.authentication import Session401Authentication
-from accounts.interfaces.permissions import IsStaff
+from accounts.interfaces.decorators import staff_api
 from meetings.application.staff_usecases import ConfirmCommand, ProposeCommand
 from meetings.interfaces import deps
 from meetings.interfaces.staff_serializers import (
@@ -22,15 +20,6 @@ from meetings.interfaces.staff_serializers import (
     staff_meeting_payload,
     staff_type_payload,
 )
-
-
-def staff_api(methods):
-    def decorator(view):
-        view = permission_classes([IsStaff])(view)
-        view = authentication_classes([Session401Authentication])(view)
-        return api_view(methods)(view)
-
-    return decorator
 
 
 def _range(start_date, end_date):
