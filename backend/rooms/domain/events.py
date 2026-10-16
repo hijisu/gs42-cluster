@@ -27,6 +27,7 @@ class ReservationApproved(DomainEvent):
     room_id: int
     start_at: datetime
     end_at: datetime
+    room_name: str = ""
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class ReservationRejected(DomainEvent):
     user_id: int
     room_id: int
     reason: str
+    room_name: str = ""
 
 
 @dataclass(frozen=True)
@@ -47,3 +49,5 @@ class ReservationReassigned(DomainEvent):
     to_room_id: int
     start_at: datetime
     end_at: datetime
+    from_room_name: str = ""
+    to_room_name: str = ""
