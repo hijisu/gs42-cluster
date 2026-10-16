@@ -110,3 +110,11 @@ def mock_login(request):
 @permission_classes([IsStaff])
 def staff_ping(request):
     return Response({"status": "ok"})
+
+
+@api_view(["GET"])
+@authentication_classes([Session401Authentication])
+@permission_classes([IsStaff])
+def staff_members(request):
+    members = deps.list_staff_members().execute()
+    return Response([{"id": m.id, "intra_id": m.intra_id, "name": m.name} for m in members])

@@ -19,3 +19,11 @@ class MeetingNotFound(NotFoundError):
 
 class MeetingTypeNotFound(NotFoundError):
     code = "meeting_type_not_found"
+
+
+class StaffNotFound(NotFoundError):
+    code = "staff_not_found"
+
+
+class SlotHasMeeting(ConflictError):
+    code = "slot_has_meeting"

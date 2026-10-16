@@ -1,0 +1,26 @@
+// 메뉴·라우트 정의. design/*.dc.html 파일 이름과 1:1 (Main→/, StaffMain→/staff ...).
+export interface NavItem {
+  no: string
+  label: string
+  path: string
+  /** 시안 파일 이름 */
+  design: string
+}
+
+export const studentNav: NavItem[] = [
+  { no: '00', label: '홈', path: '/', design: 'Main' },
+  { no: '01', label: '면담 신청', path: '/meeting', design: 'Meeting' },
+  { no: '02', label: '회의실 예약', path: '/room', design: 'Room' },
+  { no: '03', label: '오아시스 도서', path: '/library', design: 'Library' },
+  { no: '04', label: '교육과정 후기', path: '/reviews', design: 'Reviews' },
+]
+
+export const staffNav: NavItem[] = [
+  { no: '00', label: '운영 홈', path: '/staff', design: 'StaffMain' },
+  { no: '01', label: '면담 관리', path: '/staff/meeting', design: 'StaffMeeting' },
+  { no: '02', label: '회의실 관리', path: '/staff/room', design: 'StaffRoom' },
+  { no: '03', label: '도서 관리', path: '/staff/library', design: 'StaffLibrary' },
+  { no: '04', label: '교육과정 · 후기 관리', path: '/staff/courses', design: 'StaffCourses' },
+]
+
+export const STATS_URL = 'https://gs42stat.hijae.dev/home'

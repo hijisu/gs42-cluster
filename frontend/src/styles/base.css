@@ -1,0 +1,24 @@
+/* 레이아웃 기본 스타일. 디자인 토큰·공통 컴포넌트는 #4에서 이 폴더에 정리한다. */
+*{box-sizing:border-box}
+body{margin:0;background:#F2F2EE;color:#121212;font-family:'Pretendard',system-ui,sans-serif}
+a{color:#00797B}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden}
+.app{display:flex;min-height:100vh}
+.side{width:240px;flex-shrink:0;background:#121212;color:#fff;padding:20px 12px;display:flex;flex-direction:column;gap:20px}
+.side.staff{background:#0F2A2A}
+.brand{color:#fff;text-decoration:none;font-size:20px;padding:0 12px}
+.brand span{color:#8A8A85}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{display:flex;gap:12px;align-items:center;min-height:44px;padding:0 12px;border-radius:10px;color:#C9C9C4;text-decoration:none;font-size:15px}
+.nav a:hover{background:#262626;color:#fff}
+.nav a.active{background:#00BABC;color:#121212;font-weight:600}
+.nav .n{font-family:monospace;font-size:12px;opacity:.75}
+.switch{margin-top:auto;color:#C9C9C4;padding:0 12px}
+.main{flex:1;padding:28px;min-width:0}
+.h1{margin:0 0 12px;font-size:28px}
+@media (max-width:768px){
+  .app{flex-direction:column}
+  .side{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
+  .nav{flex-direction:row;overflow-x:auto}
+  .switch{margin-top:0}
+}
