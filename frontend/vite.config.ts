@@ -23,6 +23,10 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    // 개발 중 /api 요청은 백엔드(Django)로 전달한다.
+    proxy: { '/api': 'http://localhost:8000' },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
