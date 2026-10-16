@@ -44,3 +44,15 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .slot-time{font-size:13px;display:flex;align-items:center}
 .slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-brand-dim);display:flex;align-items:center;justify-content:center;font-size:13px}
 .chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
+
+/* 알림 배너·평점 점·과정 요약 */
+.notice{display:flex;gap:var(--sp-4);align-items:center;justify-content:space-between;padding:var(--sp-4) var(--sp-5);border-radius:14px;background:var(--c-ink);color:var(--c-bg);flex-wrap:wrap}
+.notice b{color:var(--c-teal)}
+.dots{display:inline-flex;gap:var(--sp-1)}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--c-line)}
+.dots span.on{background:var(--c-ink)}
+.rating-line{display:flex;gap:10px;align-items:center}
+.review-foot{padding-top:var(--sp-3);border-top:1px solid var(--c-line-soft)}
+.course-summary{display:flex;gap:var(--sp-5);align-items:center;flex-wrap:wrap}
+.course-summary .stats{margin-left:auto;display:flex;gap:var(--sp-6)}
+.stat{font-size:22px;font-weight:700}
