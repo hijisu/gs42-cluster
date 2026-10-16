@@ -39,3 +39,13 @@ class LoginAsMock:
         else:
             user.role = role
         return self._users.save(user)
+
+
+class ListStaffMembers:
+    """담당자 배정 UI용 운영팀 목록."""
+
+    def __init__(self, users: UserRepository) -> None:
+        self._users = users
+
+    def execute(self) -> list[UserAccount]:
+        return self._users.list_staff()

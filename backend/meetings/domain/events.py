@@ -18,3 +18,20 @@ class MeetingCanceled(DomainEvent):
     meeting_id: int
     student_id: int
     staff_id: int | None
+
+
+@dataclass(frozen=True)
+class MeetingConfirmed(DomainEvent):
+    meeting_id: int
+    student_id: int
+    staff_id: int
+    slot_at: datetime
+    location: str
+
+
+@dataclass(frozen=True)
+class MeetingProposed(DomainEvent):
+    meeting_id: int
+    student_id: int
+    staff_id: int
+    proposed_at: datetime

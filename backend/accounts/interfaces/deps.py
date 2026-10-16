@@ -2,7 +2,7 @@
 
 from django.conf import settings
 
-from accounts.application.login import LoginAsMock, LoginWithProfile
+from accounts.application.login import ListStaffMembers, LoginAsMock, LoginWithProfile
 from accounts.infrastructure.fortytwo import FortyTwoOAuthClient
 from accounts.infrastructure.repository import DjangoUserRepository
 
@@ -21,3 +21,7 @@ def login_with_profile() -> LoginWithProfile:
 
 def login_as_mock() -> LoginAsMock:
     return LoginAsMock(DjangoUserRepository())
+
+
+def list_staff_members() -> ListStaffMembers:
+    return ListStaffMembers(DjangoUserRepository())

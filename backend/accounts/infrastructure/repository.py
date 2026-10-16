@@ -24,3 +24,7 @@ class DjangoUserRepository:
             defaults={"name": user.name, "role": user.role.value, "slack_id": user.slack_id},
         )
         return _to_domain(row)
+
+    def list_staff(self) -> list[UserAccount]:
+        rows = User.objects.filter(role=Role.STAFF.value, is_active=True).order_by("name", "id")
+        return [_to_domain(r) for r in rows]

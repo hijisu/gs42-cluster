@@ -3,6 +3,16 @@
 from django.utils import timezone
 
 from common.infrastructure.event_bus import event_bus
+from meetings.application.staff_usecases import (
+    AssignMeetingUseCase,
+    ConfirmMeetingUseCase,
+    GetAvailabilityUseCase,
+    ListMeetingTypesForStaffUseCase,
+    ListStaffMeetingsUseCase,
+    ProposeMeetingUseCase,
+    SetAvailabilityUseCase,
+    SetDefaultStaffUseCase,
+)
 from meetings.application.usecases import (
     CancelMeetingUseCase,
     GetSlotsUseCase,
@@ -14,6 +24,8 @@ from meetings.infrastructure.repositories import (
     DjangoMeetingReadModel,
     DjangoMeetingRepository,
     DjangoMeetingTypeRepository,
+    DjangoStaffDirectory,
+    DjangoStaffMeetingReadModel,
 )
 
 
@@ -42,3 +54,46 @@ def cancel_meeting() -> CancelMeetingUseCase:
 
 def list_my_meetings() -> ListMyMeetingsUseCase:
     return ListMyMeetingsUseCase(DjangoMeetingReadModel())
+
+
+def list_staff_meetings() -> ListStaffMeetingsUseCase:
+    return ListStaffMeetingsUseCase(DjangoStaffMeetingReadModel())
+
+
+def assign_meeting() -> AssignMeetingUseCase:
+    return AssignMeetingUseCase(
+        DjangoMeetingRepository(), DjangoStaffDirectory(), DjangoStaffMeetingReadModel()
+    )
+
+
+def confirm_meeting() -> ConfirmMeetingUseCase:
+    return ConfirmMeetingUseCase(
+        DjangoMeetingRepository(),
+        DjangoStaffDirectory(),
+        DjangoStaffMeetingReadModel(),
+        event_bus,
+    )
+
+
+def propose_meeting() -> ProposeMeetingUseCase:
+    return ProposeMeetingUseCase(
+        DjangoMeetingRepository(), DjangoStaffMeetingReadModel(), event_bus, timezone.now
+    )
+
+
+def get_availability() -> GetAvailabilityUseCase:
+    return GetAvailabilityUseCase(DjangoAvailabilityRepository())
+
+
+def set_availability() -> SetAvailabilityUseCase:
+    return SetAvailabilityUseCase(DjangoAvailabilityRepository(), DjangoMeetingRepository())
+
+
+def staff_meeting_types() -> ListMeetingTypesForStaffUseCase:
+    return ListMeetingTypesForStaffUseCase(DjangoStaffMeetingReadModel())
+
+
+def set_default_staff() -> SetDefaultStaffUseCase:
+    return SetDefaultStaffUseCase(
+        DjangoMeetingTypeRepository(), DjangoStaffDirectory(), DjangoStaffMeetingReadModel()
+    )
