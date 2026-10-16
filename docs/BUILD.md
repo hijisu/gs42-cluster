@@ -38,7 +38,26 @@ TBD (docker compose 구성 후 작성)
 
 ## 백엔드
 
-TBD (설치 · 실행 · 테스트 · 린트)
+Python 3.12+ (3.13에서 확인), Django 5.2 LTS, PostgreSQL 16. 루트의 `.env`를 읽으며(이미 설정된 환경변수 우선), 로컬 실행 시 `POSTGRES_HOST=localhost`로 덮어씁니다.
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+# 로컬 DB (docker compose 구성 전 임시)
+docker run -d --name gs42-db -e POSTGRES_DB=gs42 -e POSTGRES_USER=gs42 \
+  -e POSTGRES_PASSWORD=<비밀번호> -p 5432:5432 postgres:16
+
+export POSTGRES_HOST=localhost POSTGRES_PASSWORD=<비밀번호>
+python manage.py migrate
+python manage.py runserver 8000     # GET http://localhost:8000/api/health
+
+pytest                              # 도메인 테스트는 DB 없이, 통합 테스트는 pytest-django(DB 필요)
+ruff check . && ruff format --check .
+```
+
+`DJANGO_DEBUG=false`에서는 `DJANGO_SECRET_KEY`가 필수입니다.
 
 ## 프론트엔드
 
