@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
+import { StyleGuidePage } from '../features/home/StyleGuidePage'
 import { staffNav, studentNav } from './routes'
 
 const page = (title: string) => <PlaceholderPage title={title} />
@@ -22,6 +23,7 @@ export const routes = [
       { path: 'room', element: page('회의실 예약') },
       { path: 'library', element: page('오아시스 도서') },
       { path: 'reviews', element: page('교육과정 후기') },
+      ...(import.meta.env.DEV ? [{ path: 'styleguide', element: <StyleGuidePage /> }] : []),
     ],
   },
   {
