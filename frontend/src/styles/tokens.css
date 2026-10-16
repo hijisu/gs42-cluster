@@ -1,0 +1,58 @@
+/* 디자인 토큰: 색·간격·폰트·모서리는 이 파일에서만 정의한다. (design/Main.dc.html 기준) */
+:root {
+  /* color */
+  --c-ink: #121212;
+  --c-ink-hover: #333333;
+  --c-brand-dim: #8A8A85;
+  --c-teal: #00BABC;
+  --c-teal-dark: #00797B;
+  --c-teal-deeper: #005A5C;
+  --c-teal-soft: #D5F2F2;
+  --c-teal-text: #00585A;
+  --c-bg: #F2F2EE;
+  --c-surface: #FFFFFF;
+  --c-line: #DADAD4;
+  --c-line-soft: #EDEDE8;
+  --c-line-input: #C8C8C2;
+  --c-muted: #5C5C58;
+  --c-body-soft: #3F3F3B;
+  --c-disabled: #B5B5AF;
+  --c-warn-bg: #FBE7D7;
+  --c-warn-text: #9A3412;
+  --c-warn-line: #C2410C;
+  --c-accent-peach: #FDBA8C;
+  --c-side-text: #C9C9C4;
+  --c-side-hover: #262626;
+  --c-side-line: #2E2E2E;
+  --c-side-sub: #A3A39E;
+  --c-staff-bg: #0F2A2A;
+  --c-staff-hover: #1C3D3D;
+  --c-staff-line: #25494A;
+  --c-scrim: rgba(18, 18, 18, 0.55);
+
+  /* font */
+  --font-sans: 'IBM Plex Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --fs-base: 15px;
+
+  /* space (4px 단위) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 28px;
+  --sp-8: 40px;
+
+  /* radius */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 18px;
+  --r-pill: 999px;
+
+  /* layout */
+  --side-w: 248px;
+  --touch: 44px;
+}
