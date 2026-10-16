@@ -3,11 +3,17 @@ import { Layout } from '../components/Layout'
 import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
 import { StyleGuidePage } from '../features/home/StyleGuidePage'
+import { RequireAuth } from '../features/auth/guards'
+import { LoginPage } from '../features/auth/LoginPage'
 import { staffNav, studentNav } from './routes'
 
 const page = (title: string) => <PlaceholderPage title={title} />
 
 export const routes = [
+  { path: '/login', element: <LoginPage /> },
+  {
+    element: <RequireAuth />,
+    children: [
   {
     path: '/',
     element: (
@@ -26,6 +32,11 @@ export const routes = [
       ...(import.meta.env.DEV ? [{ path: 'styleguide', element: <StyleGuidePage /> }] : []),
     ],
   },
+  ],
+  },
+  {
+    element: <RequireAuth role="staff" />,
+    children: [
   {
     path: '/staff',
     element: (
@@ -43,6 +54,9 @@ export const routes = [
       { path: 'courses', element: page('교육과정 · 후기 관리') },
     ],
   },
+    ],
+  },
 ]
+
 
 export const router = createBrowserRouter(routes)

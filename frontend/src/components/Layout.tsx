@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { STATS_URL, type NavItem } from '../app/routes'
+import { useLogout, useMe } from '../features/auth/hooks'
 
 interface LayoutProps {
   variant: 'student' | 'staff'
@@ -7,14 +8,12 @@ interface LayoutProps {
   switchTo: { to: string; label: string }
 }
 
-// 사용자 정보는 인증 프론트(#9)에서 실제 값으로 교체한다.
-const profile = {
-  student: { initials: 'IN', name: '[intra_id]', role: '42경산 · 교육생' },
-  staff: { initials: 'GS', name: '[운영팀 이름]', role: '교육운영팀' },
-}
+const roleLabel = { student: '42경산 · 교육생', staff: '교육운영팀' }
 
 export function Layout({ variant, nav, switchTo }: LayoutProps) {
-  const me = profile[variant]
+  const { data: me } = useMe()
+  const logout = useLogout()
+  const navigate = useNavigate()
   return (
     <div className="app">
       <aside className={`side ${variant}`}>
@@ -39,16 +38,29 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
             <span className="sr-only">(새 창)</span>
           </a>
         </nav>
-        <div className="me">
-          <div className="av">{me.initials}</div>
-          <div className="me-text">
-            <span className="me-name">{me.name}</span>
-            <span className="me-role">{me.role}</span>
+        {me && (
+          <div className="me">
+            <div className="av">{me.intra_id.slice(0, 2).toUpperCase()}</div>
+            <div className="me-text">
+              <span className="me-name">{me.intra_id}</span>
+              <span className="me-role">{roleLabel[me.role]}</span>
+            </div>
           </div>
-        </div>
-        <NavLink className="switch" to={switchTo.to}>
-          {switchTo.label}
-        </NavLink>
+        )}
+        {/* 운영팀 계정에만 화면 전환 토글을 보여준다 */}
+        {me?.role === 'staff' && (
+          <NavLink className="switch" to={switchTo.to}>
+            {switchTo.label}
+          </NavLink>
+        )}
+        <button
+          type="button"
+          className="switch"
+          disabled={logout.isPending}
+          onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login', { replace: true }) })}
+        >
+          로그아웃
+        </button>
       </aside>
       <main className="main">
         <Outlet />
