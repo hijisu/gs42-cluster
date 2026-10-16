@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout'
 import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
 import { StyleGuidePage } from '../features/home/StyleGuidePage'
+import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
 import { staffNav, studentNav } from './routes'
@@ -25,7 +26,7 @@ export const routes = [
     ),
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'meeting', element: page('면담 신청') },
+      { path: 'meeting', element: <MeetingPage /> },
       { path: 'room', element: page('회의실 예약') },
       { path: 'library', element: page('오아시스 도서') },
       { path: 'reviews', element: page('교육과정 후기') },
