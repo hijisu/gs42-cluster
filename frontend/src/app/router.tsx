@@ -4,6 +4,7 @@ import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
 import { StyleGuidePage } from '../features/home/StyleGuidePage'
 import { ReviewPage } from '../features/review/ReviewPage'
+import { RoomPage } from '../features/room/RoomPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -28,7 +29,7 @@ export const routes = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'meeting', element: <MeetingPage /> },
-      { path: 'room', element: page('회의실 예약') },
+      { path: 'room', element: <RoomPage /> },
       { path: 'library', element: page('오아시스 도서') },
       { path: 'reviews', element: <ReviewPage /> },
       ...(import.meta.env.DEV ? [{ path: 'styleguide', element: <StyleGuidePage /> }] : []),
