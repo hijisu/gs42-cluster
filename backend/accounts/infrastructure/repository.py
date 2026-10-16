@@ -1,0 +1,26 @@
+from accounts.domain.role import Role
+from accounts.domain.user import UserAccount
+from accounts.infrastructure.models import User
+
+
+def _to_domain(row: User) -> UserAccount:
+    return UserAccount(
+        id=row.pk,
+        intra_id=row.intra_id,
+        name=row.name,
+        role=Role(row.role),
+        slack_id=row.slack_id,
+    )
+
+
+class DjangoUserRepository:
+    def get_by_intra_id(self, intra_id: str) -> UserAccount | None:
+        row = User.objects.filter(intra_id=intra_id).first()
+        return _to_domain(row) if row else None
+
+    def save(self, user: UserAccount) -> UserAccount:
+        row, _ = User.objects.update_or_create(
+            intra_id=user.intra_id,
+            defaults={"name": user.name, "role": user.role.value, "slack_id": user.slack_id},
+        )
+        return _to_domain(row)

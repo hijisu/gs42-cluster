@@ -59,6 +59,18 @@ ruff check . && ruff format --check .
 
 `DJANGO_DEBUG=false`에서는 `DJANGO_SECRET_KEY`가 필수입니다.
 
+### 인증 (개발용 모의 로그인)
+
+`DJANGO_DEBUG=true`일 때만 `POST /api/auth/mock-login`이 열립니다(운영에서는 404). 시드 계정은 첫 호출 때 생성됩니다.
+
+```bash
+curl -c cookies.txt -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"staff"}' http://localhost:8000/api/auth/mock-login   # role: student | staff
+curl -b cookies.txt http://localhost:8000/api/auth/me
+```
+
+실제 로그인은 42 intra OAuth 앱 등록 후 `FORTYTWO_UID/SECRET`을 `.env`에 넣어 확인합니다(아래 "42 OAuth 앱 등록"). 역할은 `STAFF_INTRA_IDS`가 우선이며 42 응답의 `staff?`는 보조입니다.
+
 ## 프론트엔드
 
 TBD (설치 · 실행 · 테스트 · 빌드)

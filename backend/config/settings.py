@@ -81,6 +81,18 @@ TIME_ZONE = os.environ.get("TIME_ZONE", "Asia/Seoul")
 USE_TZ = True
 LANGUAGE_CODE = "ko-kr"
 
+AUTH_USER_MODEL = "accounts.User"
+
+# ── 인증 ──
+FORTYTWO_UID = os.environ.get("FORTYTWO_UID", "")
+FORTYTWO_SECRET = os.environ.get("FORTYTWO_SECRET", "")
+FORTYTWO_REDIRECT_URI = os.environ.get(
+    "FORTYTWO_REDIRECT_URI", "http://localhost:8000/api/auth/callback"
+)
+STAFF_INTRA_IDS = _env_list("STAFF_INTRA_IDS")
+# 모의 로그인은 DJANGO_DEBUG=true 에서만 허용한다.
+MOCK_LOGIN_ENABLED = DEBUG
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
@@ -96,8 +108,9 @@ CSRF_COOKIE_SECURE = not DEBUG
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "accounts.interfaces.authentication.Session401Authentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
 }
