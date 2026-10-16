@@ -18,6 +18,7 @@ export function mockApi(...handlers: Handler[]) {
         if (r) return new Response(r.status === 204 ? null : JSON.stringify(r.json ?? {}), { status: r.status ?? 200 })
       }
       // 핸들러가 없으면 화면이 깨지지 않는 빈 응답을 돌려준다.
+      if (url.includes('/notifications')) return new Response(JSON.stringify({ unread_count: 0, items: [] }), { status: 200 })
       if (url.includes('/rooms/availability')) return new Response(JSON.stringify({ date: '', rooms: [] }), { status: 200 })
       if (url.endsWith('/rooms/rules')) return new Response(JSON.stringify({ open_hour: 9, close_hour: 22, step_minutes: 30, usage_rules: [] }), { status: 200 })
       return new Response('[]', { status: 200 })

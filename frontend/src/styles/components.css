@@ -45,6 +45,18 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-brand-dim);display:flex;align-items:center;justify-content:center;font-size:13px}
 .chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
 
+/* 알림 벨·목록 */
+.bell{display:flex;gap:var(--sp-3);align-items:center;min-height:var(--touch);padding:0 var(--sp-3);border-radius:var(--r-md);border:0;background:none;color:var(--c-side-text);font:inherit;cursor:pointer;text-align:left}
+.bell:hover{background:var(--c-side-hover);color:#fff}
+.side.staff .bell:hover{background:var(--c-staff-hover)}
+.badge{margin-left:auto;min-width:22px;padding:1px 7px;border-radius:var(--r-pill);background:var(--c-teal);color:var(--c-ink);font-family:var(--font-mono);font-size:12px;font-weight:700;text-align:center}
+.noti-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:50vh;overflow-y:auto}
+.noti-item{display:flex;flex-direction:column;gap:2px;width:100%;padding:var(--sp-3);border:0;border-bottom:1px solid var(--c-line-soft);background:none;font:inherit;text-align:left;cursor:pointer;color:var(--c-ink)}
+.noti-item:hover{background:var(--c-bg)}
+.noti-item.unread .noti-title{font-weight:700}
+.noti-item.unread::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c-teal);position:absolute;margin-left:-14px;margin-top:8px}
+.noti-title{font-weight:500}
+
 /* 월간 캘린더 */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--sp-1);text-align:center}
 .cal span{font-size:12px;color:var(--c-muted);padding:var(--sp-1) 0}

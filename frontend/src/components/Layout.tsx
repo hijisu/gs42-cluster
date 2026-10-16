@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { STATS_URL, type NavItem } from '../app/routes'
 import { useLogout, useMe } from '../features/auth/hooks'
+import { NotificationBanner, NotificationBell } from '../features/notification/Notifications'
 
 interface LayoutProps {
   variant: 'student' | 'staff'
@@ -38,6 +39,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
             <span className="sr-only">(새 창)</span>
           </a>
         </nav>
+        {me && <NotificationBell />}
         {me && (
           <div className="me">
             <div className="av">{me.intra_id.slice(0, 2).toUpperCase()}</div>
@@ -63,6 +65,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
         </button>
       </aside>
       <main className="main">
+        {me && <NotificationBanner />}
         <Outlet />
       </main>
     </div>
