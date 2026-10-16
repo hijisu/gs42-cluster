@@ -53,6 +53,14 @@ class MeetingRequestRow(models.Model):
     class Meta:
         app_label = "meetings"
         db_table = "meetings_meetingrequest"
+        constraints = [
+            # 같은 담당자의 같은 시각에 확정 면담은 하나만. 중복 확정의 최종 방어선.
+            models.UniqueConstraint(
+                fields=["staff", "slot_at"],
+                condition=models.Q(status="confirmed"),
+                name="uniq_confirmed_staff_slot",
+            )
+        ]
         indexes = [
             models.Index(fields=["student", "-slot_at"]),
             models.Index(fields=["status", "slot_at"]),

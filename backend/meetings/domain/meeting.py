@@ -37,6 +37,11 @@ class MeetingRequest:
         if self.status not in allowed:
             raise InvalidTransition(f"{self.status.value} 상태에서는 {action}할 수 없습니다")
 
+    def assign(self, staff_id: int) -> None:
+        """담당자를 배정/변경한다. pending/proposed에서만 가능."""
+        self._require({MeetingStatus.PENDING, MeetingStatus.PROPOSED}, "assign")
+        self.staff_id = staff_id
+
     def propose(self, staff_id: int, proposed_at: datetime, note: str = "") -> None:
         """다른 시간을 제안한다. pending/proposed → proposed."""
         self._require({MeetingStatus.PENDING, MeetingStatus.PROPOSED}, "propose")

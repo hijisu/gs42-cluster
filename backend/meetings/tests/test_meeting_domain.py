@@ -108,3 +108,15 @@ def test_past_slots_are_closed():
 def test_slots_sorted_by_time_and_unoffered_times_absent():
     result = compute_slots([(1, T + timedelta(hours=1)), (1, T)], [], NOW)
     assert [s.start_at for s in result] == [T, T + timedelta(hours=1)]
+
+
+def test_assign_in_pending_and_proposed_only():
+    m = new_meeting()
+    m.assign(5)
+    assert m.staff_id == 5
+    m.propose(5, T)
+    m.assign(6)
+    assert m.staff_id == 6
+    m.confirm(6, "x")
+    with pytest.raises(InvalidTransition):
+        m.assign(7)

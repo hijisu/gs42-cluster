@@ -12,4 +12,5 @@ auth_urlpatterns = [
 
 staff_urlpatterns = [
     path("ping", views.staff_ping, name="staff-ping"),
+    path("members", views.staff_members, name="staff-members"),
 ]
