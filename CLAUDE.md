@@ -1,5 +1,5 @@
-# gs42-cluster
+@AGENTS.md
 
-## 커밋 컨벤션
+## Claude Code 전용
 
-커밋 메시지는 @CONTRIBUTING.md 의 Conventional Commits 규칙을 따른다.
+- (현재 없음. Claude Code에만 필요한 지침이 생기면 여기에 추가한다.)
