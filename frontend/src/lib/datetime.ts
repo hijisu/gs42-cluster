@@ -56,3 +56,18 @@ export function kstDateFromToday(days: number, now: Date = new Date()): string {
   d.setUTCDate(d.getUTCDate() + days)
   return d.toISOString().slice(0, 10)
 }
+
+/** KST 날짜(YYYY-MM-DD)와 시각(HH:mm)을 서버로 보낼 UTC ISO로 바꾼다. */
+export function kstToIso(date: string, time: string): string {
+  return new Date(`${date}T${time}:00+09:00`).toISOString()
+}
+
+/** '15:00–18:00' */
+export function formatTimeRange(startIso: string, endIso: string): string {
+  return `${kstTime(startIso)}–${kstTime(endIso)}`
+}
+
+/** 'YYYY-MM-DD' → '10.16 (금)' */
+export function formatDayLabel(date: string): string {
+  return `${formatMonthDay(date)} (${weekdayKo(date)})`
+}
