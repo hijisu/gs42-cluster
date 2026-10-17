@@ -166,7 +166,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 - CI의 백엔드는 운영과 같은 `DJANGO_DEBUG=false`, 더미 시크릿, `postgres:16` 서비스로 실행합니다(`.env` 없음).
 - `lint-imports`(import-linter, 설정은 `backend/.importlinter`)는 AGENTS.md의 규칙을 검사합니다: `domain`·`application`은 Django/DRF를 import하지 않고, `domain ← application ← interfaces` 바깥 계층을 거꾸로 import하지 않으며, `infrastructure`는 `interfaces`를 import하지 않고, `accounts`·`meetings`·`rooms`·`reviews`는 `notifications`를 import하지 않고(이벤트로만 연동), `meetings`·`rooms`·`reviews`는 서로를 import하지 않습니다. 새 Context나 앱을 추가하면 `.importlinter`의 `root_packages`와 계약에 추가합니다.
 - 프론트의 ESLint는 TypeScript 7에 JS 컴파일러 API가 없어 `typescript-eslint` 대신 Babel 파서(`eslint.config.js`)를 씁니다. 타입 관련 검사는 `tsc`가 맡습니다.
-- main 보호 규칙의 필수 체크 이름은 `backend`, `frontend`입니다(적용은 사람 확인 후).
+- **main 보호 규칙**(ruleset `main protection`, 2026-10-17 적용): PR 필수(main 직접 푸시 금지), 병합은 squash만, force push·브랜치 삭제 금지, 필수 체크는 `backend`·`frontend`(위 CI job)입니다. 승인 수는 0이며 위험 PR의 `review:ok` 라벨 규칙은 규칙(ruleset)이 아니라 팀 규칙입니다. 규칙을 바꾸려면 사람이 repo Settings → Rules에서 합니다.
 
 ## 42 OAuth 앱 등록
 
