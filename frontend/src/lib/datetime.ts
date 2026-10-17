@@ -71,3 +71,12 @@ export function formatTimeRange(startIso: string, endIso: string): string {
 export function formatDayLabel(date: string): string {
   return `${formatMonthDay(date)} (${weekdayKo(date)})`
 }
+
+/** '방금 전' / 'N분 전' / 'N시간 전' / 'N일 전' */
+export function timeAgo(iso: string, now: Date = new Date()): string {
+  const min = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 60000))
+  if (min < 1) return '방금 전'
+  if (min < 60) return `${min}분 전`
+  if (min < 60 * 24) return `${Math.floor(min / 60)}시간 전`
+  return `${Math.floor(min / 1440)}일 전`
+}
