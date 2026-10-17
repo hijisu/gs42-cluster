@@ -31,6 +31,8 @@ cp .env.example .env
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
 | `FRONTEND_ORIGIN` / `VITE_API_BASE_URL` | 프론트엔드 주소·API 경로. compose에서는 `FRONTEND_ORIGIN`이 `FRONTEND_HOST_PORT`로 자동 계산됨 | O |
+| `PROD_HTTP_PORT` | 운영 구성(`docker-compose.prod.yml`)이 호스트에 여는 HTTP 포트. 기본 80 | - |
+| `DJANGO_COOKIE_SECURE` | (선택) Secure 쿠키 여부. 기본은 `DJANGO_DEBUG=false`일 때 true. 로컬 http 검증에서만 false | - |
 | `API_PROXY_TARGET` | (선택) 호스트에서 `npm run dev`할 때 `/api` 프록시 대상. 기본 `http://localhost:8000`, compose는 `http://backend:8000` 고정 | - |
 | `VAPID_*` | Web Push 키 (Phase 2) | - |
 | `SLACK_BOT_TOKEN` | Slack 알림 (Phase 3) | - |
@@ -132,6 +134,31 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 
 TBD (intra 앱 등록 절차, redirect URI)
 
-## 배포
+## 배포 (운영 구성 로컬 검증)
 
-TBD (Phase 1 배포 이슈에서 작성)
+AWS 서버·도메인·외부 HTTPS는 아직 없습니다. 운영과 같은 구성(gunicorn, 정적 파일 서빙, 같은 origin의 `/api` 프록시, `DEBUG=false`)을 **`http://localhost`에서만** 컨테이너로 띄워 검증합니다.
+
+```bash
+cp .env.example .env     # 이미 있으면 생략
+# .env 의 DJANGO_SECRET_KEY 를 실제 값으로 바꾼다 (예시 값 change-me 로는 기동하지 않는다)
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+
+docker compose -f docker-compose.prod.yml up -d --build
+open http://localhost        # PROD_HTTP_PORT 를 바꿨다면 http://localhost:<포트>
+docker compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker-compose.prod.yml down          # 데이터 유지 / -v 는 DB 볼륨까지 삭제
+```
+
+| 서비스 | 역할 | 외부 노출 |
+| --- | --- | --- |
+| `web` | Caddy. 프론트 빌드 산출물을 서빙(SPA 폴백, 해시 자산은 장기 캐시, `index.html`·`sw.js`는 no-cache)하고 `/api/*`를 backend로 프록시 | `PROD_HTTP_PORT`(기본 80) |
+| `backend` | gunicorn(비루트 사용자). 시작할 때 `migrate`를 실행. 워커 수는 `GUNICORN_WORKERS`(기본 2) | 없음 |
+| `db` | PostgreSQL 16, `prod-db-data` 볼륨(개발용 `db-data`와 별개) | 없음 |
+
+- 프론트와 `/api`가 같은 origin이라 세션 쿠키·CSRF가 그대로 동작합니다. CSRF는 요청 Host와 같은 Origin을 허용하므로 포트를 바꿔도(`PROD_HTTP_PORT`) 추가 설정이 필요 없습니다.
+- 운영 모드(`DJANGO_DEBUG=false`)에서는 **모의 로그인이 꺼지고**(`POST /api/auth/mock-login`이 404) 예시 시크릿 키(`change-me`)로는 기동하지 않습니다. 로그인은 42 OAuth(`FORTYTWO_UID/SECRET`을 `.env`에 넣은 경우)로만 가능하며, 없으면 모의 로그인이 막혀 있는지까지만 확인할 수 있습니다.
+- `docker-compose.prod.yml`은 로컬 http 검증을 위해 backend에 `DJANGO_COOKIE_SECURE=false`를 지정합니다. HTTPS로 실제 배포할 때는 이 줄을 지워 Secure 쿠키(기본값)를 사용해야 합니다.
+- Django는 정적 파일을 서빙하지 않습니다(JSON API만 제공). 정적 파일은 모두 `web`이 서빙합니다.
+- `.env`(비밀값)는 이미지에 포함되지 않고 compose의 `env_file`로만 주입됩니다. 이미지 빌드 제외 목록은 루트 `.dockerignore`와 `backend/.dockerignore`.
+- 개발용(`docker-compose.yml`)과 운영 구성은 동시에 띄울 수 있습니다(프로젝트 이름이 `gs42`, `gs42-prod`로 다르고 운영 구성은 `PROD_HTTP_PORT`만 호스트에 엽니다).
+- 외부 접속용 배포(AWS, 도메인, HTTPS 인증서)는 이 범위에 포함되지 않으며 필요해지면 별도 이슈로 진행합니다.
