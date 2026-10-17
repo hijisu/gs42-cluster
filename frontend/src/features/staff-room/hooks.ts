@@ -1,5 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { approve, createDirect, createRoom, fetchStaffReservations, patchRoom, reassign, reject, saveRules } from './api'
+import {
+  approve,
+  createBlock,
+  createDirect,
+  createRoom,
+  deleteBlock,
+  deleteOccurrence,
+  fetchBlocks,
+  fetchStaffReservations,
+  patchRoom,
+  reassign,
+  reject,
+  saveRules,
+  updateBlock,
+  updateOccurrence,
+  type BlockInput,
+} from './api'
 
 const root = ['staff', 'reservations'] as const
 
@@ -48,4 +64,41 @@ export function useCreateRoom() {
 export function usePatchRoom() {
   const qc = useQueryClient()
   return useMutation({ mutationFn: ({ id, ...body }: { id: number; status: 'open' | 'blocked' }) => patchRoom(id, body), onSuccess: () => qc.invalidateQueries({ queryKey: ['rooms'] }) })
+}
+
+// ----- 예약 차단 기간 -----
+const blocksKey = ['staff', 'room-blocks'] as const
+export const useBlocks = (from: string, to: string) => useQuery({ queryKey: [...blocksKey, from, to], queryFn: () => fetchBlocks(from, to) })
+
+/** 차단이 바뀌면 목록과 교육생·운영 회의실 현황(차단 시간 표시)을 새로 받는다. */
+function useRefreshBlocks() {
+  const qc = useQueryClient()
+  return () => Promise.all([qc.invalidateQueries({ queryKey: blocksKey }), qc.invalidateQueries({ queryKey: ['rooms'] })])
+}
+export function useCreateBlock() {
+  const refresh = useRefreshBlocks()
+  return useMutation({ mutationFn: createBlock, onSuccess: (r) => r.saved && refresh() })
+}
+export function useUpdateBlock() {
+  const refresh = useRefreshBlocks()
+  return useMutation({
+    mutationFn: ({ id, body, check_only }: { id: number; body: Partial<BlockInput>; check_only: boolean }) => updateBlock(id, { ...body, check_only }),
+    onSuccess: (r) => r.saved && refresh(),
+  })
+}
+export function useUpdateOccurrence() {
+  const refresh = useRefreshBlocks()
+  return useMutation({
+    mutationFn: ({ id, day, body, check_only }: { id: number; day: string; body: Partial<Pick<BlockInput, 'room_id' | 'start_at' | 'end_at' | 'reason'>>; check_only: boolean }) =>
+      updateOccurrence(id, day, { ...body, check_only }),
+    onSuccess: (r) => r.saved && refresh(),
+  })
+}
+export function useDeleteBlock() {
+  const refresh = useRefreshBlocks()
+  return useMutation({ mutationFn: deleteBlock, onSuccess: refresh })
+}
+export function useDeleteOccurrence() {
+  const refresh = useRefreshBlocks()
+  return useMutation({ mutationFn: ({ id, day }: { id: number; day: string }) => deleteOccurrence(id, day), onSuccess: refresh })
 }

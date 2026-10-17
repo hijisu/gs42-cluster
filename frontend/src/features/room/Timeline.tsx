@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import { Card } from '../../components'
-import { formatDayLabel } from '../../lib/datetime'
+import { formatDayLabel, kstTime } from '../../lib/datetime'
 import type { Availability } from './api'
 import { hourStateLabel } from './labels'
 
 // 선택한 날짜의 장소 × 시간 타임라인 (확정/대기/빔/차단)
 export function Timeline({ date, data, title = '예약 현황', action }: { date: string; data: Availability; title?: string; action?: ReactNode }) {
   const hours = data.rooms[0]?.hours.map((h) => h.hour) ?? []
+  const closedNotes = data.rooms.flatMap(({ room, closed }) => (closed ?? []).map((c) => `${room.name} ${kstTime(c.start_at)}–${kstTime(c.end_at)} ${c.reason}`))
   const cols = `repeat(${hours.length}, minmax(0, 1fr))`
   return (
     <Card className="stack">
@@ -53,6 +54,13 @@ export function Timeline({ date, data, title = '예약 현황', action }: { date
         <span><i className="sw free" />비어 있음</span>
         <span><i className="sw blocked" />이용 불가</span>
       </div>
+      {closedNotes.length > 0 && (
+        <ul className="muted small" aria-label="이용 불가 시간 안내" style={{ margin: 0, paddingLeft: 18 }}>
+          {closedNotes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      )}
     </Card>
   )
 }

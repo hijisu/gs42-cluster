@@ -4,6 +4,7 @@ import { kstDateFromToday } from '../../lib/datetime'
 import { Calendar } from '../room/Calendar'
 import { useAvailability, useRooms, useRules } from '../room/hooks'
 import { Timeline } from '../room/Timeline'
+import { BlocksPanel } from './BlocksPanel'
 import { DirectModal } from './DirectModal'
 import { useStaffPending } from './hooks'
 import { PendingCard } from './PendingCard'
@@ -65,6 +66,8 @@ export function StaffRoomPage() {
           {rooms.data && <RoomsPanel rooms={rooms.data} />}
         </div>
       </div>
+
+      <BlocksPanel rooms={rooms.data ?? []} />
 
       <RejectModal reservation={rejecting} onClose={() => setRejecting(null)} />
       <DirectModal open={direct} date={date} rooms={rooms.data ?? []} onClose={() => setDirect(false)} />

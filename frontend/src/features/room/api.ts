@@ -22,6 +22,8 @@ export interface RoomAvailability {
   room: Room
   hours: { hour: number; state: HourState }[]
   reservations: { id: number; start_at: string; end_at: string; status: 'pending' | 'approved'; purpose: string; headcount: number; mine: boolean }[]
+  /** 운영팀이 차단한 시간(반복 일정 포함, 그 날짜 기준) */
+  closed?: { start_at: string; end_at: string; reason: string }[]
 }
 
 export interface Availability {
