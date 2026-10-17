@@ -46,7 +46,7 @@ export function SlotGrid({ slots, selected, onSelect }: SlotGridProps) {
           다음
         </Button>
       </div>
-      <div className="slot-grid" role="group" aria-label="희망 시간 선택" style={{ gridTemplateColumns: `64px repeat(${pageDates.length}, minmax(0, 1fr))` }}>
+      <div className="slot-grid" role="group" aria-label="희망 시간 선택" style={{ gridTemplateColumns: `48px repeat(${pageDates.length}, minmax(44px, 1fr))` }}>
         <div />
         {pageDates.map((d) => (
           <div key={d} className="slot-head">

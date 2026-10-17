@@ -111,8 +111,43 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .bar{height:8px;border-radius:var(--r-pill);background:var(--c-line-soft);overflow:hidden}
 .bar>div{height:100%;background:var(--c-teal);border-radius:var(--r-pill)}
 
-@media (max-width:480px){
-  .tl-row{grid-template-columns:92px minmax(0,1fr)}
-  .timeline{min-width:520px}
+/* 알림 벨(모바일 상단 바용 아이콘형) */
+.bell.compact{position:relative;width:44px;height:44px;min-height:44px;padding:0;justify-content:center;gap:0}
+.bell.compact .badge{position:absolute;top:2px;right:0;margin:0;min-width:20px;font-size:12px;padding:0 5px}
+
+/* 좌측 드로어(모바일 메뉴) */
+.scrim.left{justify-content:flex-start;align-items:stretch;padding:0}
+.modal.drawer{width:min(320px,86vw);height:100%;max-width:none;border-radius:0 var(--r-xl) var(--r-xl) 0;background:var(--c-ink);color:var(--c-bg);overflow-y:auto;gap:var(--sp-3)}
+.modal.drawer .modal-title{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--c-side-sub);font-weight:500}
+.modal.drawer .nav a:hover{background:var(--c-side-hover)}
+.modal.drawer .me{margin-top:var(--sp-2)}
+
+/* ===== 모바일 ===== */
+@media (max-width:900px){
+  /* 터치 대상은 최소 44px */
+  .btn,.btn.sm,.chip,.tabs button,.cal button,.nav a,.switch,.bell{min-height:44px}
+  .btn.sm,.chip{min-width:44px}
+  /* 달력 7열: 카드 안쪽 여백과 칸 간격을 줄여 칸 폭을 최대한 확보 */
+  .cal{gap:0}
+  .card{padding:var(--sp-4)}
+  .check{min-height:44px}
+  .check input{width:20px;height:20px;flex-shrink:0}
+  .pill-x{min-width:32px;min-height:32px;margin:-6px -8px -6px 2px}
+  .noti-item{min-height:44px}
+  /* 탭·필터 줄: 줄바꿈 대신 가로 스크롤 */
+  .tabs{max-width:100%;flex-wrap:nowrap;overflow-x:auto}
+  .tabs button{flex:0 0 auto;white-space:nowrap}
+  /* 이용수칙 등 모달은 화면 가장자리에서 여백만 남기고 꽉 채운다 */
   .modal{padding:var(--sp-5)}
+}
+
+/* 타임라인: 좁은 화면에서는 장소 이름 아래에 13칸 바를 놓아 가로 스크롤 없이 전 시간대를 보여준다 */
+@media (max-width:600px){
+  .timeline{min-width:0}
+  .tl-row{grid-template-columns:minmax(0,1fr)}
+  .tl-row:not(.tl-body) .label{display:none}
+  .tl-name{flex-direction:row;align-items:baseline;gap:var(--sp-2);padding:var(--sp-3) 0 0}
+  .tl-cells{padding:6px 0 10px;min-height:0}
+  .tl-cell{min-height:28px}
+  .slot-grid{min-width:0}
 }

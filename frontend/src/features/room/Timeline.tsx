@@ -20,7 +20,7 @@ export function Timeline({ date, data, title = '예약 현황', action }: { date
             <span className="label">장소</span>
             <div className="tl-cells" style={{ gridTemplateColumns: cols }}>
               {hours.map((h) => (
-                <span key={h} className="mono muted" style={{ fontSize: 11 }}>
+                <span key={h} className="mono muted" style={{ fontSize: 12 }}>
                   {String(h).padStart(2, '0')}
                 </span>
               ))}

@@ -29,13 +29,13 @@ export function Calendar({ selected, onSelect }: CalendarProps) {
   return (
     <div className="stack" style={{ gap: 10 }}>
       <div className="row">
-        <Chip aria-label="이전 달" disabled={atCurrentMonth} onClick={() => move(-1)} style={{ minHeight: 36, padding: '0 12px' }}>
+        <Chip aria-label="이전 달" disabled={atCurrentMonth} onClick={() => move(-1)} style={{ minHeight: 44, minWidth: 44, padding: '0 12px' }}>
           ‹
         </Chip>
         <span style={{ fontWeight: 700 }}>
           {ym.y}년 {ym.m}월
         </span>
-        <Chip aria-label="다음 달" onClick={() => move(1)} style={{ minHeight: 36, padding: '0 12px' }}>
+        <Chip aria-label="다음 달" onClick={() => move(1)} style={{ minHeight: 44, minWidth: 44, padding: '0 12px' }}>
           ›
         </Chip>
       </div>

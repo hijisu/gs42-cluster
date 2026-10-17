@@ -27,7 +27,7 @@ export function DefaultStaffPanel({ types, members }: { types: StaffMeetingType[
             <select
               id={`default-${t.id}`}
               className="input"
-              style={{ width: 150, minHeight: 36 }}
+              style={{ width: 150, minHeight: 44 }}
               value={current(t) ?? ''}
               onChange={(e) => setEdits({ ...edits, [t.id]: e.target.value === '' ? null : Number(e.target.value) })}
             >
