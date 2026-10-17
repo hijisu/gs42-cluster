@@ -21,6 +21,8 @@ export const errorLabel: Record<string, string> = {
   staff_not_found: '운영팀 계정이 아닌 담당자예요.',
   meeting_not_found: '면담 요청을 찾을 수 없어요.',
   meeting_type_not_found: '면담 유형을 찾을 수 없어요.',
+  availability_past: '지난 날짜의 가능 시간은 바꿀 수 없어요.',
+  availability_too_far: '오늘부터 4주 안에서만 설정할 수 있어요.',
   slot_has_meeting: '확정된 면담이 있는 시간은 닫을 수 없어요.',
 }
 

@@ -1,8 +1,7 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { asUser, mockApi, renderAt, type Handler } from '../../test-utils'
-import { formatMonthDay, kstDateFromToday, kstToIso, weekdayKo } from '../../lib/datetime'
-import { addDays, weekStart } from './availabilityGrid'
+import { formatMonthDay, kstToIso, weekdayKo } from '../../lib/datetime'
 import type { StaffMeeting } from './api'
 
 const members = [
@@ -157,64 +156,110 @@ describe('운영 면담 관리 화면', () => {
       { id: 2, default_staff_id: 1 },
     ])
   })
+})
 
-  it('주 단위 칸을 눌러 가능 시간을 바꾸고 그 주 범위로 저장한다', async () => {
-    const calls = await openPage(lists({}), (req) => (req.method === 'PUT' && req.url.endsWith('/staff/availability') ? { json: { slots: [], customized_days: [] } } : undefined))
-    const monday = weekStart(kstDateFromToday(0))
-    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
-    await userEvent.click(await within(grid).findByRole('button', { name: `${formatMonthDay(monday)} (${weekdayKo(monday)}) 10:00` }))
-    await userEvent.click(screen.getByRole('button', { name: '저장' }))
-    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
-    const body = calls.find((c) => c.method === 'PUT')!.body as { from: string; to: string; slots: string[] }
-    expect(body.from).toBe(monday)
-    expect(body.to).toBe(addDays(monday, 6))
-    expect(body.slots).toEqual([kstToIso(monday, '10:00')])
+describe('운영 면담 가능 시간 설정', () => {
+  // 수요일(2026-10-14, KST)로 고정: 월·화는 지난 날짜, 이번 주 금요일은 2026-10-16
+  const TODAY = '2026-10-14'
+  const MONDAY = '2026-10-12'
+  const FRIDAY = '2026-10-16'
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(`${TODAY}T03:00:00Z`))
   })
+  afterEach(() => vi.useRealTimers())
 
-  it('시작~종료 범위로 열고 닫을 수 있다', async () => {
-    const calls = await openPage(lists({}), (req) => (req.method === 'PUT' && req.url.endsWith('/staff/availability') ? { json: { slots: [], customized_days: [] } } : undefined))
-    await userEvent.click(await screen.findByRole('button', { name: '일' }))
-    await userEvent.selectOptions(screen.getByLabelText('시작'), '13:00')
-    await userEvent.selectOptions(screen.getByLabelText('종료'), '14:30')
-    await userEvent.click(screen.getByRole('button', { name: '열기' }))
-    await userEvent.click(screen.getByRole('button', { name: '저장' }))
-    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
-    const body = calls.find((c) => c.method === 'PUT')!.body as { from: string; to: string; slots: string[] }
-    expect(body.from).toBe(body.to)
-    expect(body.slots).toEqual(['13:00', '13:30', '14:00'].map((t) => kstToIso(body.from, t)))
-  })
+  const empty = { slots: [], customized_days: [] }
+  const putOk: Handler = (req) => (req.method === 'PUT' && req.url.endsWith('/staff/availability') ? { json: empty } : undefined)
+  const cell = (date: string, time: string) => `${formatMonthDay(date)} (${weekdayKo(date)}) ${time}`
 
-  it('종료가 시작보다 이르면 열기/닫기를 막는다', async () => {
+  it('평일 5열만 보여주고 오늘 열을 강조한다. 일 보기·범위 입력·되돌리기는 없다', async () => {
     await openPage(lists({}))
-    await userEvent.selectOptions(await screen.findByLabelText('시작'), '15:00')
-    await userEvent.selectOptions(screen.getByLabelText('종료'), '14:00')
-    expect(screen.getByRole('alert')).toHaveTextContent('종료 시간은 시작 시간보다 늦어야')
-    expect(screen.getByRole('button', { name: '열기' })).toBeDisabled()
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    expect(within(grid).getAllByText(/\(.\)$/)).toHaveLength(5)
+    expect(within(grid).queryByText(/\(토\)|\(일\)/)).toBeNull()
+    expect(within(grid).getByText('10.14 (수)').parentElement).toHaveClass('today')
+    expect(screen.queryByRole('button', { name: '일' })).toBeNull()
+    expect(screen.queryByText('시간 범위로 설정')).toBeNull()
+    expect(screen.queryByRole('button', { name: '기본값으로 되돌리기' })).toBeNull()
+    expect(screen.getByText('오늘부터 4주 안에서 설정할 수 있어요. 칸을 누르거나 끌어서 열고 닫아요.')).toBeInTheDocument()
   })
 
-  it('직접 설정한 날은 표시하고 기본값으로 되돌릴 수 있다', async () => {
-    const monday = weekStart(kstDateFromToday(0))
-    let resetDone = false
-    const calls = await openPage(
-      lists({}),
-      (req) => (req.method === 'DELETE' && req.url.includes('/staff/availability') ? ((resetDone = true), { json: { slots: [], customized_days: [] } }) : undefined),
-      (req) => (req.method === 'GET' && req.url.includes('/staff/availability') ? { json: { slots: [], customized_days: resetDone ? [] : [monday] } } : undefined),
-    )
-    expect(await screen.findByText('직접 설정')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '기본값으로 되돌리기' }))
-    await waitFor(() => expect(calls.some((c) => c.method === 'DELETE')).toBe(true))
-    expect(calls.find((c) => c.method === 'DELETE')!.url).toContain(`from=${monday}&to=${addDays(monday, 6)}`)
-    await waitFor(() => expect(screen.queryByText('직접 설정')).toBeNull())
+  it('지난 날짜 칸은 잠겨 선택할 수 없다', async () => {
+    await openPage(lists({}))
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    expect(within(grid).queryByRole('button', { name: cell(MONDAY, '10:00') })).toBeNull()
+    expect(within(grid).getByRole('button', { name: cell(TODAY, '10:00') })).toBeInTheDocument()
   })
 
-  it('저장하지 않은 변경이 있으면 날짜 이동을 막고, 확정 면담 시간 닫기 오류를 안내한다', async () => {
-    await openPage(lists({}), (req) => (req.method === 'PUT' && req.url.endsWith('/staff/availability') ? { status: 409, json: { code: 'slot_has_meeting' } } : undefined))
-    const monday = weekStart(kstDateFromToday(0))
-    await userEvent.click(await screen.findByRole('button', { name: `${formatMonthDay(monday)} (${weekdayKo(monday)}) 09:00` }))
-    expect(screen.getByRole('button', { name: '다음 주' })).toBeDisabled()
+  it('칸을 눌러 바꾸고 저장하면 오늘~금요일 범위로 보낸다', async () => {
+    const calls = await openPage(lists({}), putOk)
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
+    const target = within(grid).getByRole('button', { name: cell(FRIDAY, '10:00') })
+    fireEvent.pointerDown(target, { pointerType: 'mouse', button: 0 })
+    fireEvent.pointerUp(window)
+    expect(screen.getByText(/저장하지 않은 변경이 있어요/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: '저장' }))
-    expect(await screen.findByText('확정된 면담이 있는 시간은 닫을 수 없어요.')).toBeInTheDocument()
+    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
+    const body = calls.find((c) => c.method === 'PUT')!.body as { from: string; to: string; slots: string[] }
+    expect(body.from).toBe(TODAY)
+    expect(body.to).toBe(FRIDAY)
+    expect(body.slots).toEqual([kstToIso(FRIDAY, '10:00')])
+  })
+
+  it('끌면 지나간 칸을 한꺼번에 열고, 끌어서 닫을 수도 있다', async () => {
+    const calls = await openPage(lists({}), putOk)
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    const a = within(grid).getByRole('button', { name: cell(FRIDAY, '10:00') })
+    const b = within(grid).getByRole('button', { name: cell(FRIDAY, '10:30') })
+    const c = within(grid).getByRole('button', { name: cell(FRIDAY, '11:00') })
+    const at: Record<string, HTMLElement> = { a, b, c }
+    document.elementFromPoint = (x: number) => at[['a', 'b', 'c'][x]] ?? null
+    fireEvent.pointerDown(a, { pointerType: 'mouse', button: 0 })
+    fireEvent.pointerMove(window, { clientX: 1, clientY: 0 })
+    fireEvent.pointerMove(window, { clientX: 2, clientY: 0 })
+    fireEvent.pointerUp(window)
+    expect([a, b, c].map((el) => el.getAttribute('aria-pressed'))).toEqual(['true', 'true', 'true'])
+    // 이미 열린 칸에서 시작해 끌면 닫는다
+    fireEvent.pointerDown(b, { pointerType: 'mouse', button: 0 })
+    fireEvent.pointerMove(window, { clientX: 2, clientY: 0 })
+    fireEvent.pointerUp(window)
+    expect([a, b, c].map((el) => el.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false'])
+    await userEvent.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(calls.some((c2) => c2.method === 'PUT')).toBe(true))
+    expect((calls.find((c2) => c2.method === 'PUT')!.body as { slots: string[] }).slots).toEqual([kstToIso(FRIDAY, '10:00')])
+  })
+
+  it('변경 취소로 되돌리고, 변경이 있으면 주 이동을 막는다', async () => {
+    await openPage(lists({}))
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    const target = within(grid).getByRole('button', { name: cell(FRIDAY, '09:00') })
+    fireEvent.pointerDown(target, { pointerType: 'mouse', button: 0 })
+    fireEvent.pointerUp(window)
+    expect(screen.getByRole('button', { name: '다음 주' })).toBeDisabled()
     await userEvent.click(screen.getByRole('button', { name: '변경 취소' }))
+    expect(target.getAttribute('aria-pressed')).toBe('false')
     expect(screen.getByRole('button', { name: '다음 주' })).toBeEnabled()
+  })
+
+  it('오늘부터 4주까지만 이동할 수 있다', async () => {
+    const calls = await openPage(lists({}))
+    expect(await screen.findByRole('button', { name: '이전 주' })).toBeDisabled()
+    for (let i = 0; i < 3; i++) await userEvent.click(screen.getByRole('button', { name: '다음 주' }))
+    expect(screen.getByRole('button', { name: '다음 주' })).toBeDisabled()
+    await waitFor(() => expect(screen.getByText('11.02 ~ 11.06')).toBeInTheDocument())
+    expect(calls.some((c) => c.url.includes('from=2026-11-02&to=2026-11-08'))).toBe(true)
+    await userEvent.click(screen.getByRole('button', { name: '오늘' }))
+    await waitFor(() => expect(screen.getByText('10.12 ~ 10.16')).toBeInTheDocument())
+  })
+
+  it('서버의 기간 오류 코드를 안내 문구로 보여준다', async () => {
+    await openPage(lists({}), (req) => (req.method === 'PUT' ? { status: 400, json: { code: 'availability_too_far' } } : undefined))
+    const grid = await screen.findByRole('group', { name: '가능 시간 선택' })
+    fireEvent.pointerDown(within(grid).getByRole('button', { name: cell(FRIDAY, '10:00') }), { pointerType: 'mouse', button: 0 })
+    fireEvent.pointerUp(window)
+    await userEvent.click(screen.getByRole('button', { name: '저장' }))
+    expect(await screen.findByText('오늘부터 4주 안에서만 설정할 수 있어요.')).toBeInTheDocument()
   })
 })
