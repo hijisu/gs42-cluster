@@ -8,10 +8,12 @@ const pad = (n: number) => String(n).padStart(2, '0')
 interface CalendarProps {
   selected: string
   onSelect: (date: string) => void
+  /** 운영팀은 지난 날짜의 현황도 볼 수 있다 */
+  allowPast?: boolean
 }
 
-// 월간 캘린더. 오늘(KST) 이전 날짜는 선택할 수 없다.
-export function Calendar({ selected, onSelect }: CalendarProps) {
+// 월간 캘린더. 기본적으로 오늘(KST) 이전 날짜는 선택할 수 없다.
+export function Calendar({ selected, onSelect, allowPast = false }: CalendarProps) {
   const today = kstDateFromToday(0)
   const [ym, setYm] = useState(() => ({ y: Number(selected.slice(0, 4)), m: Number(selected.slice(5, 7)) }))
 
@@ -19,7 +21,7 @@ export function Calendar({ selected, onSelect }: CalendarProps) {
   const lead = first.getUTCDay()
   const count = new Date(Date.UTC(ym.y, ym.m, 0)).getUTCDate()
   const monthStart = `${ym.y}-${pad(ym.m)}-01`
-  const atCurrentMonth = monthStart <= `${today.slice(0, 7)}-01`
+  const atCurrentMonth = !allowPast && monthStart <= `${today.slice(0, 7)}-01`
 
   const move = (delta: number) => {
     const d = new Date(Date.UTC(ym.y, ym.m - 1 + delta, 1))
@@ -48,7 +50,7 @@ export function Calendar({ selected, onSelect }: CalendarProps) {
         ))}
         {Array.from({ length: count }, (_, i) => {
           const date = `${ym.y}-${pad(ym.m)}-${pad(i + 1)}`
-          const past = date < today
+          const past = !allowPast && date < today
           const cls = [past ? 'off' : '', date === today ? 'today' : '', date === selected ? 'sel' : ''].filter(Boolean).join(' ')
           return (
             <button key={date} type="button" className={cls} disabled={past} aria-pressed={date === selected} aria-label={`${ym.m}월 ${i + 1}일`} onClick={() => onSelect(date)}>

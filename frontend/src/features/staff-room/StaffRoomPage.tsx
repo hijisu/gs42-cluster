@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Button, Field } from '../../components'
+import { Button, Card } from '../../components'
 import { kstDateFromToday } from '../../lib/datetime'
+import { Calendar } from '../room/Calendar'
 import { useAvailability, useRooms, useRules } from '../room/hooks'
 import { Timeline } from '../room/Timeline'
 import { DirectModal } from './DirectModal'
@@ -28,8 +29,20 @@ export function StaffRoomPage() {
           <h1 className="h1" style={{ marginTop: 8 }}>회의실 관리</h1>
           <p className="sub">교육생의 예약 요청을 확인하고 승인하세요. 승인하면 교육생 화면에 이용수칙이 함께 표시됩니다.</p>
         </div>
-        <div style={{ width: 180 }}>
-          <Field label="날짜" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+      </div>
+
+      <div className="room-split">
+        <Card className="stack" style={{ gap: 16 }}>
+          <h2 className="card-title">날짜 선택</h2>
+          <Calendar selected={date} onSelect={setDate} allowPast />
+          <Button variant="ghost" size="sm" onClick={() => setDirect(true)}>
+            운영팀 직접 예약
+          </Button>
+        </Card>
+        <div className="col">
+          {availability.isPending && <p className="muted" role="status">회의실 현황을 불러오는 중…</p>}
+          {availability.isError && <p role="alert">회의실 현황을 불러오지 못했어요.</p>}
+          {availability.data && <Timeline date={date} data={availability.data} title="회의실 현황" />}
         </div>
       </div>
 
@@ -44,20 +57,6 @@ export function StaffRoomPage() {
               <PendingCard key={r.id} reservation={r} rooms={rooms.data ?? []} onReject={setRejecting} />
             ))}
           </section>
-          {availability.isPending && <p className="muted" role="status">회의실 현황을 불러오는 중…</p>}
-          {availability.isError && <p role="alert">회의실 현황을 불러오지 못했어요.</p>}
-          {availability.data && (
-            <Timeline
-              date={date}
-              data={availability.data}
-              title="회의실 현황"
-              action={
-                <Button variant="ghost" size="sm" onClick={() => setDirect(true)}>
-                  운영팀 직접 예약
-                </Button>
-              }
-            />
-          )}
         </div>
         <div className="col">
           {(rules.isError || rooms.isError) && <p role="alert">이용수칙·장소 목록을 불러오지 못했어요.</p>}
