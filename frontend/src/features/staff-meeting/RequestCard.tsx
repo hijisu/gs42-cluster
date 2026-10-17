@@ -12,7 +12,8 @@ interface RequestCardProps {
   members: StaffMember[]
   types: StaffMeetingType[]
   meId: number | undefined
-  onPropose: (m: StaffMeeting) => void
+  /** 제안 모달을 연다. 카드에 입력한 장소를 기본값으로 넘긴다. */
+  onPropose: (m: StaffMeeting, location: string) => void
 }
 
 export function RequestCard({ meeting, members, types, meId, onPropose }: RequestCardProps) {
@@ -71,7 +72,7 @@ export function RequestCard({ meeting, members, types, meId, onPropose }: Reques
           </div>
           {error && <p role="alert" className="login-error">{error}</p>}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="sm" onClick={() => onPropose(meeting)}>
+            <Button variant="ghost" size="sm" onClick={() => onPropose(meeting, location.trim())}>
               다른 시간 제안
             </Button>
             <Button

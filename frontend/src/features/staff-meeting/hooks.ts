@@ -49,7 +49,7 @@ export function useConfirm() {
 export function usePropose() {
   const refresh = useRefresh()
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: number; proposed_at: string; note?: string }) => proposeMeeting(id, body),
+    mutationFn: ({ id, ...body }: { id: number; proposed_at: string; note?: string; location?: string }) => proposeMeeting(id, body),
     onSuccess: refresh,
     onError: (e) => {
       if ((e as { code?: string }).code === 'invalid_transition') refresh()

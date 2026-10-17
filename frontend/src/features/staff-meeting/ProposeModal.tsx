@@ -6,11 +6,13 @@ import type { StaffMeeting } from './api'
 import { usePropose } from './hooks'
 import { errorLabel } from './labels'
 
-export function ProposeModal({ meeting, onClose }: { meeting: StaffMeeting | null; onClose: () => void }) {
+export function ProposeModal({ meeting, defaultLocation, onClose }: { meeting: StaffMeeting | null; defaultLocation: string; onClose: () => void }) {
   const propose = usePropose()
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [note, setNote] = useState('')
+  // 수락하면 이 장소로 확정된다. 요청 카드에 입력한 장소를 기본값으로 쓴다(모달은 면담마다 새로 만들어진다).
+  const [location, setLocation] = useState(defaultLocation)
   const [submitted, setSubmitted] = useState(false)
 
   const close = () => {
@@ -40,7 +42,7 @@ export function ProposeModal({ meeting, onClose }: { meeting: StaffMeeting | nul
             onClick={() => {
               setSubmitted(true)
               if (!meeting || missing) return
-              propose.mutate({ id: meeting.id, proposed_at: kstToIso(date, time), note: note.trim() || undefined }, { onSuccess: close })
+              propose.mutate({ id: meeting.id, proposed_at: kstToIso(date, time), note: note.trim() || undefined, location: location.trim() || undefined }, { onSuccess: close })
             }}
           >
             {propose.isPending ? '제안 중…' : '시간 제안하기'}
@@ -53,6 +55,7 @@ export function ProposeModal({ meeting, onClose }: { meeting: StaffMeeting | nul
         <Field label="날짜" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={submitted && date === '' ? '날짜를 선택해 주세요.' : undefined} />
         <Field label="시간" type="time" step={60} value={time} onChange={(e) => setTime(e.target.value)} error={submitted && time === '' ? '시간을 선택해 주세요.' : undefined} />
       </div>
+      <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} hint="교육생이 수락하면 이 장소로 확정돼요" />
       <Field label="메모(선택)" value={note} onChange={(e) => setNote(e.target.value)} />
       {error && <p role="alert" className="login-error">{error}</p>}
     </Modal>
