@@ -3,3 +3,4 @@ djangorestframework>=3.16
 django-cors-headers>=4.7
 psycopg[binary]>=3.2
 gunicorn>=23
+pywebpush>=2.0

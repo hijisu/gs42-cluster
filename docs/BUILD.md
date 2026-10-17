@@ -59,7 +59,7 @@ cp .env.example .env
 | `GUNICORN_WORKERS` | 운영 구성 backend(gunicorn)의 워커 수. 기본 2 | - |
 | `DJANGO_COOKIE_SECURE` | (선택) Secure 쿠키 여부. 기본은 `DJANGO_DEBUG=false`일 때 true. 로컬 http 검증에서만 false | - |
 | `API_PROXY_TARGET` | (선택) 호스트에서 `npm run dev`할 때 `/api` 프록시 대상. 기본 `http://localhost:8000`, compose는 `http://backend:8000` 고정 | - |
-| `VAPID_*` | Web Push 키 (Phase 2) | - |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | 웹 푸시(VAPID) 키와 연락처. 비우면 푸시가 꺼지고 앱 안 알림만 동작. 생성: `manage.py generate_vapid_keys` ([웹 푸시](#웹-푸시-vapid) 참고) | - |
 | `SLACK_BOT_TOKEN` | Slack 알림 (Phase 3) | - |
 
 ## 로컬 실행
@@ -141,6 +141,23 @@ python manage.py seed_review_demo   # 교육과정 3개, 참여자(student·intr
 ```
 
 실제 로그인은 42 intra OAuth 앱 등록 후 `FORTYTWO_UID/SECRET`을 `.env`에 넣어 확인합니다(아래 "42 OAuth 앱 등록"). 역할은 `STAFF_INTRA_IDS`가 우선이며 42 응답의 `staff?`는 보조입니다.
+
+### 웹 푸시 (VAPID)
+
+브라우저 푸시는 서버의 VAPID 키가 있어야 켜집니다. **키가 없으면 푸시는 꺼지고 앱 안 알림만 동작**하며 `GET /api/push/public-key`와 구독 등록은 503(`push_not_configured`)을 돌려줍니다.
+
+```bash
+python manage.py generate_vapid_keys            # docker: docker compose exec backend python manage.py generate_vapid_keys
+# 출력된 VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY 두 줄을 .env 에 붙여 넣는다 (개인키는 비밀값: 커밋·채팅·이슈 금지)
+docker compose up -d                            # .env 변경 적용 (restart 는 .env 를 다시 읽지 않는다)
+```
+
+- 서버는 `VAPID_PRIVATE_KEY`에서 공개키를 계산해 브라우저에 내려줍니다. `.env`의 `VAPID_PUBLIC_KEY`가 개인키와 짝이 아니면 경고를 남기고 계산한 값을 씁니다. 개인키 형식이 잘못돼도 서버는 뜨고 푸시만 꺼집니다(로그 확인).
+- 알림은 면담 확정·시간 제안, 회의실 승인·반려·대체, 후기 요청 때 만들어지며, 구독한 기기마다 `{title, body, link, type}`이 암호화(aes128gcm)되어 전송됩니다. 구독이 없는 사용자는 앱 안 알림만 받고, 푸시 서비스가 만료(404/410)로 응답한 구독은 자동으로 삭제됩니다.
+- 구독 API: `GET /api/push/public-key`, `POST /api/push/subscriptions`(브라우저의 `PushSubscription.toJSON()`), `DELETE /api/push/subscriptions`(body `{endpoint}`).
+- 서버가 구독 endpoint로 직접 요청을 보내므로(SSRF 방지) **https이고 알려진 푸시 서비스 호스트만 허용**합니다: `fcm.googleapis.com`(Chrome·Edge·Samsung), `*.push.services.mozilla.com`(Firefox), `*.push.apple.com`(Safari/iOS), `*.notify.windows.com`. 공백·제어문자·비ASCII가 있거나 형식이 잘못된 주소를 포함해 그 밖의 주소는 400(`invalid_subscription`)입니다. 서버에서 이 호스트들로 나가는 HTTPS 연결이 필요합니다.
+- 브라우저 요건: `localhost`는 보안 컨텍스트라 HTTPS 없이 확인할 수 있고, 그 외 주소는 HTTPS가 필요합니다. **iOS(16.4+)는 홈 화면에 설치한 PWA에서만** 푸시가 동작합니다.
+- 확인 방법: 앱에서 알림(벨) → '푸시 알림 켜기' → 권한 허용 → 다른 계정으로 면담 확정 또는 회의실 승인 → 푸시 수신. 이 마지막 단계(실제 브라우저·푸시 서비스 수신)는 자동 테스트가 아니라 사람이 확인합니다.
 
 ## 프론트엔드
 

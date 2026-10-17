@@ -2,14 +2,23 @@
 
 from common.infrastructure.event_bus import event_bus
 from notifications.application.handlers import NotificationHandlers, register_handlers
+from notifications.application.push import WebPushNotifier
 from notifications.application.service import NotificationService
+from notifications.infrastructure.push import DjangoPushSubscriptionRepository, PyWebPushSender
 from notifications.infrastructure.repositories import DjangoUserDirectory, InAppNotifier
+from notifications.interfaces.push_config import load_push_config
 
 _registered = False
 
 
 def channels() -> list:
-    return [InAppNotifier()]
+    """앱 안 알림은 항상 켜져 있고, VAPID 개인키가 설정되면 웹 푸시 채널이 추가된다."""
+    result: list = [InAppNotifier()]
+    config = load_push_config()
+    if config is not None:
+        sender = PyWebPushSender(config.private_key, config.subject)
+        result.append(WebPushNotifier(DjangoPushSubscriptionRepository(), sender))
+    return result
 
 
 def register() -> None:
