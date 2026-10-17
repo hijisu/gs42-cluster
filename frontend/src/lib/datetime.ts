@@ -80,3 +80,12 @@ export function timeAgo(iso: string, now: Date = new Date()): string {
   if (min < 60 * 24) return `${Math.floor(min / 60)}시간 전`
   return `${Math.floor(min / 1440)}일 전`
 }
+
+const EN_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+/** '2026.10.09 FRI' (KST 기준 오늘) */
+export function kstTodayLabel(now: Date = new Date()): string {
+  const d = kstDate(now.toISOString())
+  const day = EN_WEEKDAYS[new Date(`${d}T00:00:00Z`).getUTCDay()]
+  return `${d.replaceAll('-', '.')} ${day}`
+}

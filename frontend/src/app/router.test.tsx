@@ -24,13 +24,6 @@ describe('routes', () => {
     expect(screen.getByRole('main')).toBeInTheDocument()
   })
 
-  it('임시 홈에 면담/회의실 바로가기가 있다', async () => {
-    mockMe('student')
-    renderAt('/')
-    const main = within(await screen.findByRole('main'))
-    expect(main.getByRole('link', { name: '면담 신청' })).toHaveAttribute('href', '/meeting')
-    expect(main.getByRole('link', { name: '회의실 예약' })).toHaveAttribute('href', '/room')
-  })
 })
 
 describe('인증 가드', () => {

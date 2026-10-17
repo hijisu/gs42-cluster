@@ -151,3 +151,16 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .tl-cell{min-height:28px}
   .slot-grid{min-width:0}
 }
+
+/* 홈 대시보드 */
+.home-search{position:relative;width:360px;max-width:100%}
+.search-results{position:absolute;z-index:4;left:0;right:0;top:calc(100% + 4px);margin:0;padding:var(--sp-1);list-style:none;background:var(--c-surface);border:1px solid var(--c-line);border-radius:var(--r-md);box-shadow:0 8px 24px rgba(18,18,18,.12)}
+.search-results a{display:block;padding:var(--sp-3);border-radius:var(--r-sm);color:var(--c-ink);text-decoration:none;min-height:44px}
+.search-results a:hover{background:var(--c-bg)}
+.summary-big{font-size:22px;font-weight:700}
+.summary-link{margin-top:auto;font-size:14px;display:inline-flex;align-items:center;min-height:44px}
+.shortcut{text-decoration:none;color:var(--c-ink);display:flex;flex-direction:column;gap:18px;min-height:140px}
+.shortcut:hover{border-color:var(--c-ink)}
+.shortcut-no{font-size:13px;color:var(--c-teal-dark)}
+.shortcut-title{font-size:18px;font-weight:700}
+@media (max-width:900px){.shortcut{min-height:96px;gap:var(--sp-3)}}
