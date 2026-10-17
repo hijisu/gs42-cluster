@@ -14,7 +14,8 @@ FROM base AS dev
 RUN pip install -r requirements-dev.txt
 # 소스는 compose에서 볼륨으로 마운트한다(코드 수정이 바로 반영됨).
 EXPOSE 8000
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# 포트는 .env 의 BACKEND_PORT(기본 8000)를 따른다.
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:${BACKEND_PORT:-8000}"]
 
 FROM base AS prod
 RUN pip install -r requirements.txt \

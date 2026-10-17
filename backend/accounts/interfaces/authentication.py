@@ -1,4 +1,7 @@
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import PermissionDenied
+
+from common.interfaces.csrf import LanDevCSRFCheck
 
 
 class Session401Authentication(SessionAuthentication):
@@ -6,3 +9,10 @@ class Session401Authentication(SessionAuthentication):
 
     def authenticate_header(self, request) -> str:
         return "Session"
+
+    def enforce_csrf(self, request):
+        check = LanDevCSRFCheck(lambda r: None)
+        check.process_request(request)
+        reason = check.process_view(request, None, (), {})
+        if reason:
+            raise PermissionDenied(f"CSRF Failed: {reason}")

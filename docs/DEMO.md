@@ -54,7 +54,7 @@ docker compose exec backend python manage.py seed_demo --reset
 
 ```bash
 python3 scripts/e2e_demo.py --runs 2          # 처음부터 끝까지 2회
-python3 scripts/e2e_demo.py --base http://localhost:8000 --runs 2 --skip-spa   # 백엔드 직접
+python3 scripts/e2e_demo.py --base http://localhost:8000 --runs 2 --skip-spa   # 호스트에서 runserver 로 띄운 백엔드 직접(compose 백엔드는 호스트에 포트를 열지 않음)
 ```
 
 - 한 회차에 33개 단계를 검사합니다: 로그인, 운영 API 권한(교육생 403), 이용수칙, 현황표 셀 상태, 요청→승인/배정·확정 상태 변화, 알림 도착·읽음, 슬롯 마감/복구, 취소.
