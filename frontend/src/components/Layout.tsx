@@ -64,11 +64,16 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
       <b>42</b>gs<span>-cluster</span>
     </NavLink>
   )
+  const avatar = me && (
+    <>
+      {me.image_url && me.image_url !== failedImage
+        ? <img src={me.image_url} alt={`${me.intra_id} 프로필 사진`} referrerPolicy="no-referrer" onError={() => setFailedImage(me.image_url ?? null)} />
+        : me.intra_id.slice(0, 2).toUpperCase()}
+    </>
+  )
   const account = me && (
     <div className="me">
-      <div className="av">{me.image_url && me.image_url !== failedImage
-        ? <img src={me.image_url} alt={`${me.intra_id} 프로필 사진`} referrerPolicy="no-referrer" onError={() => setFailedImage(me.image_url ?? null)} />
-        : me.intra_id.slice(0, 2).toUpperCase()}</div>
+      <div className="av">{avatar}</div>
       <div className="me-text">
         <span className="me-name">{me.intra_id}</span>
         <span className="me-role">{roleLabel[me.role]}</span>
@@ -108,7 +113,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
             {variant === 'staff' && <span className="role">STAFF</span>}
             <span className="topbar-end">
               {me && <NotificationBell compact />}
-              {me && <div className="av" aria-label={`${me.intra_id} 계정`} role="img">{me.intra_id.slice(0, 2).toUpperCase()}</div>}
+              {me && <div className="av" aria-label={`${me.intra_id} 계정`} role="img">{avatar}</div>}
             </span>
           </header>
           <Modal open={menuOpen} title="메뉴" placement="left" onClose={() => setMenuOpen(false)}>
@@ -124,9 +129,9 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
           {variant === 'staff' && <span className="role">STAFF</span>}
           <MenuLinks nav={nav} />
           {me && <NotificationBell />}
-          {account}
           {switcher}
           {logoutButton}
+          {account}
         </aside>
       )}
       <main id="main" className="main" tabIndex={-1}>

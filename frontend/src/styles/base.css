@@ -10,7 +10,7 @@ h1,h2,h3,p{margin:0}
 .muted{color:var(--c-muted)}
 
 .app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh;background:var(--c-bg)}
-.side{background:var(--c-ink);color:var(--c-bg);padding:var(--sp-7) 18px;display:flex;flex-direction:column;gap:36px}
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--c-ink);color:var(--c-bg);padding:var(--sp-7) 18px;display:flex;flex-direction:column;gap:36px}
 .side.staff{background:var(--c-staff-bg)}
 .brand{display:flex;align-items:baseline;gap:2px;color:var(--c-bg);text-decoration:none;font-family:var(--font-mono);font-size:20px;font-weight:700;padding:0 10px}
 .brand:hover{color:var(--c-surface)}
