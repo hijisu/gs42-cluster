@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 
 from rooms.application.ports import (
     ReservationView,
@@ -9,11 +9,12 @@ from rooms.application.ports import (
     StaffReservationRow,
     UserInfo,
 )
+from rooms.domain.block import Repeat, RoomBlock
 from rooms.domain.errors import ReservationNotFound, RoomCodeTaken, RoomConflict
 from rooms.domain.reservation import ReservationStatus, RoomReservation
 from rooms.domain.rules import DEFAULT_RULES, RoomRules
 from rooms.domain.time_range import TimeRange
-from rooms.infrastructure.models import Room, RoomReservationRow, RoomRulesRow
+from rooms.infrastructure.models import Room, RoomBlockRow, RoomReservationRow, RoomRulesRow
 
 
 def _room_info(row: Room) -> RoomInfo:
@@ -192,3 +193,60 @@ class DjangoStaffReadModel(DjangoReservationReadModel):
         if row is None:
             raise ReservationNotFound("예약을 찾을 수 없습니다")
         return self._row(row)
+
+
+def _block(row: RoomBlockRow) -> RoomBlock:
+    return RoomBlock(
+        id=row.pk,
+        room_id=row.room_id,
+        time_range=TimeRange(row.start_at, row.end_at),
+        reason=row.reason,
+        repeat=Repeat(row.repeat),
+        weekdays=frozenset(row.weekdays),
+        until=row.until,
+        skipped={date.fromisoformat(d) for d in row.skipped},
+    )
+
+
+def _block_fields(block: RoomBlock) -> dict:
+    return {
+        "room_id": block.room_id,
+        "start_at": block.time_range.start,
+        "end_at": block.time_range.end,
+        "reason": block.reason,
+        "repeat": block.repeat.value,
+        "weekdays": sorted(block.weekdays),
+        "until": block.until,
+        "skipped": sorted(d.isoformat() for d in block.skipped),
+    }
+
+
+class DjangoBlockRepository:
+    def add(self, block: RoomBlock, created_by: int | None) -> RoomBlock:
+        block.id = RoomBlockRow.objects.create(created_by_id=created_by, **_block_fields(block)).pk
+        return block
+
+    def get(self, block_id: int) -> RoomBlock | None:
+        row = RoomBlockRow.objects.filter(pk=block_id).first()
+        return _block(row) if row else None
+
+    def save(self, block: RoomBlock) -> None:
+        RoomBlockRow.objects.filter(pk=block.id).update(**_block_fields(block))
+
+    def delete(self, block_id: int) -> bool:
+        deleted, _ = RoomBlockRow.objects.filter(pk=block_id).delete()
+        return bool(deleted)
+
+    def for_rooms_between(
+        self, room_ids: list[int] | None, start: datetime, end: datetime
+    ) -> list[RoomBlock]:
+        # 첫 회차가 구간 끝 이전에 시작하고, 반복이 없거나 종료일이 구간 시작 날짜 이후인 시리즈
+        rows = RoomBlockRow.objects.filter(start_at__lt=end)
+        if room_ids is not None:
+            rows = rows.filter(room_id__in=room_ids)
+        recurring_until = (start - timedelta(days=1)).date()
+        rows = rows.filter(
+            models.Q(repeat="none", end_at__gt=start)
+            | (~models.Q(repeat="none") & models.Q(until__gte=recurring_until))
+        )
+        return [_block(r) for r in rows]

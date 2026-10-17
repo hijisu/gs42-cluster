@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from rooms.domain.block import RoomBlock
 from rooms.domain.reservation import RoomReservation
 from rooms.domain.rules import RoomRules
 
@@ -99,3 +100,19 @@ class ReservationReadModel(Protocol):
         ...
 
     def get_for_staff(self, reservation_id: int) -> StaffReservationRow: ...
+
+
+class BlockRepository(Protocol):
+    def add(self, block: RoomBlock, created_by: int | None) -> RoomBlock: ...
+
+    def get(self, block_id: int) -> RoomBlock | None: ...
+
+    def save(self, block: RoomBlock) -> None: ...
+
+    def delete(self, block_id: int) -> bool: ...
+
+    def for_rooms_between(
+        self, room_ids: list[int] | None, start: datetime, end: datetime
+    ) -> list[RoomBlock]:
+        """[start, end)와 겹칠 수 있는 차단 시리즈(전개는 도메인). room_ids가 None이면 모든 장소."""
+        ...

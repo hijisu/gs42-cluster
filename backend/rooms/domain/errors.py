@@ -43,3 +43,15 @@ class InvalidRules(InvalidRequestError):
 
 class RoomCodeTaken(ConflictError):
     code = "room_code_taken"
+
+
+class InvalidBlock(InvalidRequestError):
+    code = "invalid_block"
+
+
+class RoomBlockedPeriod(ConflictError):
+    code = "room_block_conflict"
+
+
+class BlockNotFound(NotFoundError):
+    code = "block_not_found"

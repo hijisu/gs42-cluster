@@ -80,3 +80,26 @@ class RoomRulesRow(models.Model):
     class Meta:
         app_label = "rooms"
         db_table = "rooms_roomrules"
+
+
+class RoomBlockRow(models.Model):
+    """예약 차단 기간(시리즈). start_at/end_at 은 첫 회차, 반복 규칙은 domain.block 이 전개한다."""
+
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="+")
+    start_at = models.DateTimeField()
+    end_at = models.DateTimeField()
+    reason = models.CharField(max_length=200)
+    repeat = models.CharField(max_length=16, default="none")
+    weekdays = models.JSONField(default=list)  # 0=월 … 6=일
+    until = models.DateField(null=True, blank=True)
+    skipped = models.JSONField(default=list)  # 건너뛴 회차 날짜(YYYY-MM-DD)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "rooms"
+        db_table = "rooms_roomblock"
+        ordering = ["start_at", "id"]
+        indexes = [models.Index(fields=["room", "start_at"])]

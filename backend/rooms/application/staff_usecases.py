@@ -5,6 +5,7 @@ from datetime import date, datetime, time, timedelta
 
 from common.domain.events import EventDispatcher
 from rooms.application.ports import (
+    BlockRepository,
     ReservationReadModel,
     ReservationRepository,
     RoomInfo,
@@ -13,7 +14,7 @@ from rooms.application.ports import (
     StaffReservationRow,
     StaffReservationView,
 )
-from rooms.application.usecases import Clock
+from rooms.application.usecases import Clock, ensure_not_blocked
 from rooms.domain.conflict import ConflictChecker
 from rooms.domain.errors import ReservationNotFound, RoomBlocked, RoomNotFound
 from rooms.domain.events import ReservationApproved, ReservationReassigned, ReservationRejected
@@ -45,10 +46,12 @@ class _Staff:
         rooms: RoomRepository,
         reservations: ReservationRepository,
         read_model: ReservationReadModel,
+        blocks: BlockRepository | None = None,
     ) -> None:
         self._rooms = rooms
         self._reservations = reservations
         self._read = read_model
+        self._blocks = blocks
 
     def _with_conflicts(self, rows: list[StaffReservationRow]) -> list[StaffReservationView]:
         if not rows:
@@ -94,13 +97,16 @@ class ListStaffReservationsUseCase(_Staff):
 
 
 class ApproveReservationUseCase(_Staff):
-    def __init__(self, rooms, reservations, read_model, events: EventDispatcher) -> None:
-        super().__init__(rooms, reservations, read_model)
+    def __init__(
+        self, rooms, reservations, read_model, events: EventDispatcher, blocks=None
+    ) -> None:
+        super().__init__(rooms, reservations, read_model, blocks)
         self._events = events
 
     def _approve(self, reservation: RoomReservation) -> None:
         # 같은 장소의 승인 처리를 직렬화한 뒤 충돌을 검사한다(DB 배타 제약이 최종 방어선).
         self._reservations.lock_room(reservation.room_id)
+        ensure_not_blocked(self._blocks, reservation.room_id, reservation.time_range)
         others = self._reservations.active_between(
             reservation.time_range.start, reservation.time_range.end
         )
@@ -195,8 +201,9 @@ class StaffBookUseCase(ApproveReservationUseCase):
         events,
         clock: Clock,
         rules,  # RulesProvider
+        blocks=None,
     ) -> None:
-        super().__init__(rooms, reservations, read_model, events)
+        super().__init__(rooms, reservations, read_model, events, blocks)
         self._clock = clock
         self._rules = rules
 

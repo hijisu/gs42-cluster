@@ -4,12 +4,14 @@ from datetime import date, datetime, time, timedelta
 
 from common.domain.events import EventDispatcher
 from rooms.application.ports import (
+    BlockRepository,
     ReservationReadModel,
     ReservationRepository,
     ReservationView,
     RoomInfo,
     RoomRepository,
 )
+from rooms.domain.block import BlockPolicy
 from rooms.domain.conflict import ConflictChecker
 from rooms.domain.errors import ReservationNotFound, RoomBlocked, RoomNotFound
 from rooms.domain.events import ReservationCanceled, ReservationRequested
@@ -49,10 +51,26 @@ class AvailabilityBlock:
 
 
 @dataclass(frozen=True)
+class ClosedPeriod:
+    start_at: datetime
+    end_at: datetime
+    reason: str
+
+
+@dataclass(frozen=True)
 class RoomAvailability:
     room: RoomInfo
     blocks: list[AvailabilityBlock]
     hours: list[tuple[int, str]]  # (시, "approved" | "pending" | "free" | "blocked")
+    closed: list[ClosedPeriod]  # 그 날의 예약 차단 기간(운영팀 설정)
+
+
+def ensure_not_blocked(blocks: BlockRepository | None, room_id: int, time_range: TimeRange) -> None:
+    """운영팀이 설정한 예약 차단 기간(반복 포함)과 겹치면 예약할 수 없다."""
+    if blocks is None:
+        return
+    found = blocks.for_rooms_between([room_id], time_range.start, time_range.end)
+    BlockPolicy.ensure_free(found, room_id, time_range)
 
 
 def _with_conflict(view: ReservationView, reservation: RoomReservation, others) -> ReservationView:
@@ -82,16 +100,20 @@ class GetAvailabilityUseCase:
         rooms: RoomRepository,
         reservations: ReservationRepository,
         rules: RulesProvider = default_rules,
+        blocks: BlockRepository | None = None,
     ) -> None:
         self._rooms = rooms
         self._reservations = reservations
         self._rules = rules
+        self._blocks = blocks
 
     def execute(self, day: date, viewer_id: int) -> list[RoomAvailability]:
         rules = self._rules()
         start = datetime.combine(day, time(rules.open_hour), tzinfo=KST)
         end = datetime.combine(day, time(rules.close_hour), tzinfo=KST)
         day_reservations = self._reservations.active_between(start, end)
+        series = self._blocks.for_rooms_between(None, start, end) if self._blocks else []
+        window = TimeRange(start, end)
         result = []
         for room in self._rooms.list_all():
             mine = [r for r in day_reservations if r.room_id == room.id]
@@ -107,6 +129,12 @@ class GetAvailabilityUseCase:
                 )
                 for r in sorted(mine, key=lambda r: r.time_range.start)
             ]
+            closed = [
+                ClosedPeriod(o.time_range.start, o.time_range.end, b.reason)
+                for b in series
+                if b.room_id == room.id
+                for o in b.occurrences(window)
+            ]
             hours = []
             for hour in range(rules.open_hour, rules.close_hour):
                 cell = TimeRange(
@@ -114,7 +142,9 @@ class GetAvailabilityUseCase:
                     datetime.combine(day, time(hour), tzinfo=KST) + timedelta(hours=1),
                 )
                 states = {r.status for r in mine if r.time_range.overlaps(cell)}
-                if room.status == RoomStatus.BLOCKED.value:
+                if room.status == RoomStatus.BLOCKED.value or any(
+                    c.start_at < cell.end and cell.start < c.end_at for c in closed
+                ):
                     state = "blocked"
                 elif ReservationStatus.APPROVED in states:
                     state = "approved"
@@ -123,7 +153,7 @@ class GetAvailabilityUseCase:
                 else:
                     state = "free"
                 hours.append((hour, state))
-            result.append(RoomAvailability(room=room, blocks=blocks, hours=hours))
+            result.append(RoomAvailability(room=room, blocks=blocks, hours=hours, closed=closed))
         return result
 
 
@@ -136,6 +166,7 @@ class RequestReservationUseCase:
         events: EventDispatcher,
         clock: Clock,
         rules: RulesProvider = default_rules,
+        blocks: BlockRepository | None = None,
     ) -> None:
         self._rooms = rooms
         self._reservations = reservations
@@ -143,6 +174,7 @@ class RequestReservationUseCase:
         self._events = events
         self._clock = clock
         self._rules = rules
+        self._blocks = blocks
 
     def execute(self, cmd: RequestReservationCommand) -> ReservationView:
         room = self._rooms.get(cmd.room_id)
@@ -152,6 +184,7 @@ class RequestReservationUseCase:
             raise RoomBlocked("예약을 받지 않는 장소입니다")
         time_range = TimeRange(cmd.start_at, cmd.end_at)
         self._rules().validate(time_range, now=self._clock())
+        ensure_not_blocked(self._blocks, room.id, time_range)
 
         reservation = self._reservations.add(
             RoomReservation(
