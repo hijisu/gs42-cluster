@@ -32,7 +32,8 @@ export function BookDetailModal({ book, onClose, onReport }: { book: Book | null
             <dd>{book.category}</dd>
             <dt>비치</dt>
             <dd>
-              {book.quantity}권
+              {book.available_quantity}권
+              {book.lost_count > 0 && <span className="muted small"> · 분실 신고 {book.lost_count}건 접수 중(전체 {book.quantity}권)</span>}
             </dd>
             {book.isbn && (
               <>

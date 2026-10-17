@@ -13,13 +13,15 @@ const book = (over: Partial<Book> = {}): Book => ({
   isbn: '9788966260959',
   category: '컴퓨터/IT',
   quantity: 2,
+  lost_count: 0,
+  available_quantity: 2,
   description: '애자일 소프트웨어 장인 정신',
   cover_url: '',
   link_url: 'https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1',
   pub_date: '2013-12-24',
   ...over,
 })
-const books = [book(), book({ id: 2, code: 'GSIA-HU-002', title: '사피엔스', author: '유발 하라리', category: '인문', quantity: 1, cover_url: 'https://image.example/c.jpg', isbn: '', link_url: '' })]
+const books = [book(), book({ id: 2, code: 'GSIA-HU-002', title: '사피엔스', author: '유발 하라리', category: '인문', quantity: 1, available_quantity: 1, cover_url: 'https://image.example/c.jpg', isbn: '', link_url: '' })]
 const wish = (over: Partial<BookWish> = {}): BookWish => ({ id: 1, title: '이것이 리눅스다', author: '우재남', reason: '', link_url: '', status: 'requested', staff_note: '', created_at: '2026-10-17T00:00:00Z', ...over })
 const report = (over: Partial<BookReport> = {}): BookReport => ({ id: 1, book_id: 1, book_code: 'GSIA-IT-001', book_title: '클린 코드 Clean Code', kind: 'lost', detail: '', status: 'received', created_at: '2026-10-17T00:00:00Z', ...over })
 
@@ -125,6 +127,24 @@ describe('오아시스 도서 화면', () => {
     await userEvent.click(await screen.findByRole('button', { name: '클린 코드 Clean Code' }))
     await userEvent.click(within(await screen.findByRole('dialog', { name: '클린 코드 Clean Code' })).getByRole('button', { name: '분실·훼손 신고' }))
     expect(await screen.findByRole('dialog', { name: '분실 · 훼손 신고' })).toBeInTheDocument()
+  })
+
+  it('분실 신고가 접수된 책은 분실 태그와 줄어든 비치 수를 보여주고, 처리되면 사라진다', async () => {
+    const lost = book({ quantity: 3, lost_count: 1, available_quantity: 2 })
+    await openPage('/library', search({ total: 1, results: [lost] }))
+    const card = (await screen.findByRole('button', { name: '클린 코드 Clean Code' })).closest('article') as HTMLElement
+    expect(within(card).getByText('2권 비치')).toBeInTheDocument()
+    expect(within(card).getByText('분실', { selector: '.pill' })).toBeInTheDocument()
+    expect(within(card).getByRole('button', { name: /신고/ })).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: '클린 코드 Clean Code' }))
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText(/분실 신고 1건 접수 중\(전체 3권\)/)).toBeInTheDocument()
+  })
+
+  it('분실 신고가 없으면 분실 태그가 없다', async () => {
+    await openPage('/library', search())
+    const card = (await screen.findByRole('button', { name: '클린 코드 Clean Code' })).closest('article') as HTMLElement
+    expect(within(card).queryByText('분실', { selector: '.pill' })).toBeNull()
   })
 
   it('희망 도서 신청: 도서명이 필수이고, 신청하면 내 내역에 반영된다', async () => {

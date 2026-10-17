@@ -10,6 +10,9 @@ export interface Book {
   isbn: string
   category: string
   quantity: number
+  /** 접수(미처리)된 분실 신고 수와 그에 따른 비치 수(파생값). quantity는 그대로다. */
+  lost_count: number
+  available_quantity: number
   description: string
   cover_url: string
   link_url: string
