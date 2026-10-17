@@ -18,6 +18,8 @@ class ConfirmSerializer(serializers.Serializer):
 class ProposeSerializer(serializers.Serializer):
     proposed_at = serializers.DateTimeField()
     note = serializers.CharField(allow_blank=True, max_length=2000, default="")
+    # 교육생이 수락하면 이 장소로 확정된다(생략하면 기존 장소 유지).
+    location = serializers.CharField(allow_blank=True, max_length=128, default="")
 
 
 class StatusQuerySerializer(serializers.Serializer):

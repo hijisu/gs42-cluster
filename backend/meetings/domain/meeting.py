@@ -42,12 +42,16 @@ class MeetingRequest:
         self._require({MeetingStatus.PENDING, MeetingStatus.PROPOSED}, "assign")
         self.staff_id = staff_id
 
-    def propose(self, staff_id: int, proposed_at: datetime, note: str = "") -> None:
-        """다른 시간을 제안한다. pending/proposed → proposed."""
+    def propose(
+        self, staff_id: int, proposed_at: datetime, note: str = "", location: str = ""
+    ) -> None:
+        """다른 시간을 제안한다. pending/proposed → proposed. 장소를 함께 주면 수락 시 그 장소로 확정된다."""
         self._require({MeetingStatus.PENDING, MeetingStatus.PROPOSED}, "propose")
         self.staff_id = staff_id
         self.proposed_at = proposed_at
         self.staff_note = note
+        if location.strip():
+            self.location = location.strip()
         self.status = MeetingStatus.PROPOSED
 
     def confirm(self, staff_id: int, location: str, note: str = "") -> None:

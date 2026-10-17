@@ -115,6 +115,7 @@ class ProposeCommand:
     acting_staff_id: int
     proposed_at: datetime
     note: str = ""
+    location: str = ""
 
 
 class ProposeMeetingUseCase:
@@ -135,7 +136,9 @@ class ProposeMeetingUseCase:
             raise InvalidSlot("제안 시간은 미래여야 합니다")
         meeting = _load(self._meetings, cmd.meeting_id)
         staff_id = meeting.staff_id or cmd.acting_staff_id
-        meeting.propose(staff_id=staff_id, proposed_at=cmd.proposed_at, note=cmd.note)
+        meeting.propose(
+            staff_id=staff_id, proposed_at=cmd.proposed_at, note=cmd.note, location=cmd.location
+        )
         self._meetings.save(meeting)
         self._events.publish(
             MeetingProposed(
