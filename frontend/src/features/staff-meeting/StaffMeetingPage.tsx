@@ -50,7 +50,7 @@ export function StaffMeetingPage() {
         ))}
       </div>
 
-      <div className="split">
+      <div className="split staff-meeting-split">
         <div className="col" role="tabpanel">
           {list.isPending && <p className="muted" role="status">불러오는 중…</p>}
           {list.isError && <p role="alert">면담 요청을 불러오지 못했어요.</p>}
