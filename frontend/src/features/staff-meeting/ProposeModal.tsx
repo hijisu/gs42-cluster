@@ -51,7 +51,7 @@ export function ProposeModal({ meeting, onClose }: { meeting: StaffMeeting | nul
       {meeting && <p className="muted small">{meeting.student.intra_id} 님에게 제안할 시간을 고르세요. 교육생이 확인하면 '시간 조율 중'으로 표시돼요. (희망 일시 {kstDate(meeting.slot_at)})</p>}
       <div className="g2" style={{ gap: 12 }}>
         <Field label="날짜" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={submitted && date === '' ? '날짜를 선택해 주세요.' : undefined} />
-        <Field label="시간" type="time" step={1800} value={time} onChange={(e) => setTime(e.target.value)} error={submitted && time === '' ? '시간을 선택해 주세요.' : undefined} />
+        <Field label="시간" type="time" step={60} value={time} onChange={(e) => setTime(e.target.value)} error={submitted && time === '' ? '시간을 선택해 주세요.' : undefined} />
       </div>
       <Field label="메모(선택)" value={note} onChange={(e) => setNote(e.target.value)} />
       {error && <p role="alert" className="login-error">{error}</p>}

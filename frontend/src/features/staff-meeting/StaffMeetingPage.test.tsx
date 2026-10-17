@@ -106,11 +106,11 @@ describe('운영 면담 관리 화면', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: '시간 제안하기' }))
     expect(await within(dialog).findByText('날짜를 선택해 주세요.')).toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('날짜'), '2030-10-16')
-    await userEvent.type(within(dialog).getByLabelText('시간'), '14:00')
+    await userEvent.type(within(dialog).getByLabelText('시간'), '14:07')
     await userEvent.click(within(dialog).getByRole('button', { name: '시간 제안하기' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     const post = calls.find((c) => c.url.endsWith('/propose'))!
-    expect(post.body).toEqual({ proposed_at: kstToIso('2030-10-16', '14:00') })
+    expect(post.body).toEqual({ proposed_at: kstToIso('2030-10-16', '14:07') })
   })
 
   it('확정 탭은 담당자·장소를 읽기 전용으로 보여준다', async () => {
