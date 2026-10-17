@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { CoursesTable } from './CoursesTable'
 import { CreateCourseForm } from './CreateCourseForm'
+import { EditCourseModal } from './EditCourseModal'
 import { useStaffCourses } from './hooks'
 import { ReviewRequestForm } from './ReviewRequestForm'
 
 export function StaffCoursePage() {
   const courses = useStaffCourses()
   const [selected, setSelected] = useState<number | null>(null)
+  const [editing, setEditing] = useState<number | null>(null)
   return (
     <>
       <div className="head">
@@ -18,11 +20,12 @@ export function StaffCoursePage() {
       </div>
       {courses.isPending && <p className="muted" role="status">불러오는 중…</p>}
       {courses.isError && <p role="alert">교육과정을 불러오지 못했어요.</p>}
-      {courses.data && <CoursesTable courses={courses.data} onRequest={setSelected} />}
+      {courses.data && <CoursesTable courses={courses.data} onRequest={setSelected} onEdit={setEditing} />}
       <div className="g2" style={{ alignItems: 'start' }}>
         <CreateCourseForm />
         <ReviewRequestForm courses={courses.data ?? []} selectedId={selected} onSelect={setSelected} />
       </div>
+      <EditCourseModal courseId={editing} onClose={() => setEditing(null)} />
     </>
   )
 }

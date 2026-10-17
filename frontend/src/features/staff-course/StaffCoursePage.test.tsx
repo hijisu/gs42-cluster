@@ -40,7 +40,7 @@ describe('운영 교육과정·후기 관리 화면', () => {
     expect(within(row).getByText('4명')).toBeInTheDocument()
     expect(within(row).getByText('25%')).toBeInTheDocument()
     expect(within(row).getByText('후기 수집 중')).toBeInTheDocument()
-    expect(within(table).getByText('모집 · 수요조사')).toBeInTheDocument()
+    expect(within(table).getByText('시작 전')).toBeInTheDocument()
     expect(within(table).getByText('종료', { selector: '.pill' })).toBeInTheDocument()
   })
 
@@ -65,7 +65,6 @@ describe('운영 교육과정·후기 관리 화면', () => {
       end_date: '2026-11-26',
       location: '유니버스룸',
       intro: '',
-      status: 'upcoming',
       review_deadline: null,
       intra_ids: ['alice', 'bob'],
       csv: '',
@@ -136,11 +135,66 @@ describe('운영 교육과정·후기 관리 화면', () => {
     expect(await screen.findByText(/후기를 받는 중인 과정이 없어요/)).toBeInTheDocument()
   })
 
-  it("'종료 · 후기 열기'로 과정을 종료 처리한다", async () => {
-    const calls = await openPage(list([upcoming]), (req) => (req.method === 'PATCH' ? { json: { ...upcoming, status: 'completed' } } : undefined))
-    await userEvent.click(await screen.findByRole('button', { name: /종료 처리·후기 열기/ }))
+  it('등록 폼에 상태 선택이 없다', async () => {
+    await openPage(list([]))
+    expect(await screen.findByRole('button', { name: '과정 등록' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('상태')).toBeNull()
+    expect(screen.queryByRole('button', { name: /후기 열기/ })).toBeNull()
+  })
+
+  it('과정을 수정해 저장한다(상태는 보내지 않는다)', async () => {
+    const detail = { ...course(), participants: [{ intra_id: 'alice', reviewed: true }, { intra_id: 'bob', reviewed: false }] }
+    const calls = await openPage(
+      list([course()]),
+      (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: detail } : undefined),
+      (req) => (req.method === 'PATCH' ? { json: course({ name: '이름 변경' }) } : undefined),
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+    const dialog = await screen.findByRole('dialog')
+    const name = await within(dialog).findByLabelText('과정명')
+    await userEvent.clear(name)
+    await userEvent.type(name, '이름 변경')
+    await userEvent.click(within(dialog).getByRole('button', { name: '정보 저장' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
-    expect(calls.find((c) => c.method === 'PATCH')!.url).toMatch(/\/staff\/courses\/5$/)
-    expect(calls.find((c) => c.method === 'PATCH')!.body).toEqual({ status: 'completed' })
+    const patch = calls.find((c) => c.method === 'PATCH')!
+    expect(patch.url).toMatch(/\/staff\/courses\/4$/)
+    expect(patch.body).toMatchObject({ name: '이름 변경', start_date: '2026-10-05', end_date: '2026-10-14' })
+    expect(patch.body).not.toHaveProperty('status')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('수정 폼에서 종료일이 시작일보다 이르면 저장하지 않는다', async () => {
+    const calls = await openPage(list([course()]), (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: { ...course(), participants: [] } } : undefined))
+    await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+    const dialog = await screen.findByRole('dialog')
+    const end = await within(dialog).findByLabelText('종료일')
+    await userEvent.clear(end)
+    await userEvent.type(end, '2026-10-01')
+    await userEvent.click(within(dialog).getByRole('button', { name: '정보 저장' }))
+    expect(await within(dialog).findByText('종료일은 시작일 이후여야 해요.')).toBeInTheDocument()
+    expect(calls.some((c) => c.method === 'PATCH')).toBe(false)
+  })
+
+  it('참여 학생을 추가하고, 후기 쓴 참여자는 확인 후 제거한다', async () => {
+    const detail = { ...course(), participants: [{ intra_id: 'alice', reviewed: true }, { intra_id: 'bob', reviewed: false }] }
+    const calls = await openPage(
+      list([course()]),
+      (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: detail } : undefined),
+      (req) => (req.method === 'POST' && req.url.endsWith('/staff/courses/4/participants') ? { json: { added: ['carol'], existing: ['bob'], course: detail } } : undefined),
+      (req) => (req.method === 'DELETE' && req.url.endsWith('/staff/courses/4/participants/alice') ? { json: { had_review: true, course: detail } } : undefined),
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.type(await within(dialog).findByLabelText('추가할 intra ID'), 'Carol, bob')
+    await userEvent.click(within(dialog).getByRole('button', { name: '추가' }))
+    expect(await within(dialog).findByText(/1명을 추가했어요\. 이미 있는 1명은 건너뛰었어요/)).toBeInTheDocument()
+    expect(calls.find((c) => c.method === 'POST')!.body).toEqual({ intra_ids: ['carol', 'bob'] })
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'alice 제거' }))
+    expect(within(dialog).getByText(/이미 후기를 썼어요/)).toBeInTheDocument()
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false)
+    await userEvent.click(within(dialog).getByRole('button', { name: '제거 확인' }))
+    expect(await within(dialog).findByText(/후기는 남고 작성률에서만 빠져요/)).toBeInTheDocument()
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
   })
 })
