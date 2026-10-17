@@ -76,22 +76,24 @@ function SlotRow({ time, dates, byKey, selected, onSelect }: SlotRowProps) {
       {dates.map((d) => {
         const slot = byKey.get(`${d} ${time}`)
         const label = `${formatMonthDay(d)} ${time}`
+        // 마우스를 올리거나 포커스하면 '10/21 (수) 14:00' 툴팁(운영 화면의 칸과 같은 방식). 불가·마감은 사유를 덧붙인다.
+        const tip = `${formatMonthDay(d)} (${weekdayKo(d)}) ${time}`
         if (!slot || slot.state === 'unavailable') {
           return (
-            <div key={d} className="slot-off" aria-label={`${label} 불가`}>
+            <div key={d} className="slot-off" tabIndex={0} data-tip={`${tip} · 불가`} aria-label={`${label} 불가`}>
               불가
             </div>
           )
         }
         if (slot.state === 'full' || !slot.available) {
           return (
-            <div key={d} className="slot-off" aria-label={`${label} 마감`}>
+            <div key={d} className="slot-off" tabIndex={0} data-tip={`${tip} · 마감`} aria-label={`${label} 마감`}>
               마감
             </div>
           )
         }
         return (
-          <Chip key={d} className="slot-btn" selected={selected === slot.start_at} aria-label={`${label} 가능`} onClick={() => onSelect(slot.start_at)}>
+          <Chip key={d} className="slot-btn" data-tip={tip} selected={selected === slot.start_at} aria-label={`${label} 가능`} onClick={() => onSelect(slot.start_at)}>
             {selected === slot.start_at ? '선택됨' : '가능'}
           </Chip>
         )

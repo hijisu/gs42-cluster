@@ -42,12 +42,13 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .modal-actions{display:flex;justify-content:flex-end;gap:var(--sp-2)}
 
 /* 시간 격자 (면담·회의실 공용) */
-.slot-wrap{display:flex;flex-direction:column;gap:var(--sp-3);overflow-x:auto}
-.slot-grid{display:grid;grid-template-columns:44px repeat(5,72px);justify-content:center;gap:4px;min-width:0}
+.slot-wrap{display:flex;flex-direction:column;gap:var(--sp-3)}
+/* 열 폭에 맞춰 블록이 늘어나고, 열 사이 간격은 화면 폭에 따라 8~20px로 조절한다 */
+.slot-grid{display:grid;grid-template-columns:44px repeat(5,minmax(0,1fr));column-gap:clamp(8px,1.1vw,20px);row-gap:6px;justify-content:stretch;min-width:0}
 .slot-head{text-align:center}
 .slot-time{font-size:13px;display:flex;align-items:center}
-.slot-off{min-height:28px;border-radius:var(--r-sm);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:12px}
-.chip.slot-btn{justify-content:center;border-radius:var(--r-sm);min-height:28px;padding:0;font-size:12px}
+.slot-off{width:100%;min-height:28px;border-radius:var(--r-sm);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:12px}
+.chip.slot-btn{justify-content:center;border-radius:var(--r-sm);min-height:28px;padding:0;font-size:12px;width:100%}
 
 /* 알림 배너·평점 점·과정 요약 */
 .notice{display:flex;gap:var(--sp-4);align-items:center;justify-content:space-between;padding:var(--sp-3) var(--sp-4);border-radius:14px;background:var(--c-ink);color:var(--c-bg);flex-wrap:wrap}
@@ -256,3 +257,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .clamp1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .review-item{cursor:pointer}
 .review-item:hover{border-color:var(--c-ink)}
+
+/* 신청 격자 칸 툴팁 */
+.slot-btn,.slot-off{position:relative}
+.slot-btn[data-tip]:hover::after,.slot-btn[data-tip]:focus-visible::after,.slot-off[data-tip]:hover::after,.slot-off[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:var(--c-ink);color:var(--c-surface);font-size:12px;line-height:1;padding:6px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5}

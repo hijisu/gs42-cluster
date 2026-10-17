@@ -75,6 +75,15 @@ describe('면담 신청 화면', () => {
     expect(screen.getByText('10.12 ~ 10.16')).toBeInTheDocument()
   })
 
+  it('칸에 올리면 요일·시간 툴팁이 뜨고, 불가·마감은 사유를 덧붙인다', async () => {
+    await openPage()
+    expect(await screen.findByRole('button', { name: /10\.15 15:00 가능/ })).toHaveAttribute('data-tip', '10.15 (목) 15:00')
+    expect(screen.getByLabelText('10.15 16:00 마감')).toHaveAttribute('data-tip', '10.15 (목) 16:00 · 마감')
+    expect(screen.getByLabelText('10.15 17:00 불가')).toHaveAttribute('data-tip', '10.15 (목) 17:00 · 불가')
+    // 키보드 포커스로도 툴팁을 볼 수 있도록 불가·마감 칸도 포커스를 받는다
+    expect(screen.getByLabelText('10.15 16:00 마감')).toHaveAttribute('tabindex', '0')
+  })
+
   it('신청하면 내역에 "배정 중"으로 즉시 반영된다', async () => {
     const calls = await openPage((req) => (req.method === 'POST' && req.url.endsWith('/meetings') ? { status: 201, json: created } : undefined))
     await userEvent.click(await screen.findByRole('button', { name: '프리즈' }))
