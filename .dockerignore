@@ -1,0 +1,16 @@
+# 이미지 빌드 컨텍스트(저장소 루트)에서 제외한다. 특히 .env(비밀값)는 절대 이미지에 들어가면 안 된다.
+.git
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+backend
+design
+docs
+presentation
+hijisu_assets
