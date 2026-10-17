@@ -7,7 +7,8 @@ import { useBooks, useDeleteBook } from './hooks'
 
 export function BooksPanel() {
   const [q, setQ] = useState('')
-  const books = useBooks(q.trim())
+  const [page, setPage] = useState(1)
+  const books = useBooks(q.trim(), page)
   const del = useDeleteBook()
   const [editing, setEditing] = useState<Book | 'new' | null>(null)
   const [removing, setRemoving] = useState<Book | null>(null)
@@ -37,15 +38,20 @@ export function BooksPanel() {
         <h2 className="card-title">도서 목록</h2>
         <Button onClick={() => setEditing('new')}>도서 추가</Button>
       </div>
-      <Field label="도서 검색" value={q} onChange={(e) => setQ(e.target.value)} placeholder="제목·저자·출판사·ISBN" />
+      <Field label="도서 검색" value={q} onChange={(e) => { setQ(e.target.value); setPage(1) }} placeholder="제목·저자·출판사·ISBN" />
       {books.isPending && <p className="muted" role="status">불러오는 중…</p>}
       {books.isError && <p role="alert">도서를 불러오지 못했어요.</p>}
       {error && <p role="alert" className="login-error">{error}</p>}
       {data && (
         <>
           <p className="muted small" role="status">
-            총 {data.total}종{data.total > data.results.length ? ` 중 ${data.results.length}종 표시 — 검색어로 좁혀 보세요` : ''}
+            총 {data.total}종{data.total > data.results.length ? ` 중 ${data.results.length}종 표시` : ''}
           </p>
+          {data.total > 20 && <nav aria-label="도서 페이지" className="row">
+            <Button variant="ghost" disabled={page <= 1 || books.isPlaceholderData} onClick={() => setPage(page - 1)}>이전</Button>
+            <span>{page} / {Math.ceil(data.total / 20)} 페이지</span>
+            <Button variant="ghost" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => setPage(page + 1)}>다음</Button>
+          </nav>}
           <Table caption="도서 목록" columns={columns} rows={data.results} rowKey={(b) => b.id} empty="조건에 맞는 도서가 없어요." />
         </>
       )}

@@ -12,16 +12,18 @@ import { WishForm } from './WishForm'
 /** 오아시스 도서(#28): 검색·카테고리, 상세, 분실·훼손 신고, 희망 도서 신청, 내 신청·신고 */
 export function LibraryPage() {
   const [params, setParams] = useSearchParams()
+  const page = Math.max(1, Number(params.get('page')) || 1)
   const q = params.get('q') ?? ''
   const category = params.get('category') ?? ''
   const [input, setInput] = useState(q)
   const [detail, setDetail] = useState<Book | null>(null)
   const [reporting, setReporting] = useState<Book | null>(null)
-  const books = useBooks(q, category)
+  const books = useBooks(q, category, true, page)
 
   // 검색어·카테고리는 주소에 두어 새로고침·뒤로가기·홈 검색 링크가 같은 결과를 보여 준다.
   const update = (next: { q?: string; category?: string }) => {
     const p = new URLSearchParams(params)
+    p.delete('page')
     for (const [k, v] of Object.entries(next)) v ? p.set(k, v) : p.delete(k)
     setParams(p, { replace: true })
   }
@@ -77,10 +79,15 @@ export function LibraryPage() {
               {data.total === 0
                 ? '검색 결과가 없어요. 다른 검색어를 써 보세요.'
                 : data.total > data.results.length
-                  ? `${data.total}종 중 ${data.results.length}종 표시 · 검색어나 분류를 좁혀 보세요`
+                  ? `${data.total}종 중 ${data.results.length}종 표시`
                   : `${data.total}종`}
             </p>
           )}
+          {data && data.total > 20 && <nav aria-label="도서 페이지" className="row">
+            <Button variant="ghost" disabled={page <= 1 || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page - 1)); setParams(p) }}>이전</Button>
+            <span>{page} / {Math.ceil(data.total / 20)} 페이지</span>
+            <Button variant="ghost" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page + 1)); setParams(p) }}>다음</Button>
+          </nav>}
           <div className="g4 book-grid">
             {data?.results.map((b) => (
               <BookCard key={b.id} book={b} onOpen={setDetail} onReport={setReporting} />

@@ -161,3 +161,13 @@ describe('운영 도서 관리 화면', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('이미 처리된 항목이에요')
   })
 })
+
+
+it('운영 도서 목록에서 페이지를 이동하고 검색하면 첫 페이지로 돌아간다', async () => {
+  const calls = await openPage(req => req.url.includes('/books/') ? { json: { total: 41, categories: [], results: [book()] } } : undefined)
+  await userEvent.click(await screen.findByRole('button', { name: '다음' }))
+  await waitFor(() => expect(calls.some(c => c.url.includes('page=2'))).toBe(true))
+  await userEvent.type(screen.getByLabelText('도서 검색'), '코드')
+  await waitFor(() => expect(calls.some(c => decodeURIComponent(c.url).includes('q=코드') && c.url.includes('page=1'))).toBe(true))
+  expect(screen.getByRole('button', { name: '이전' })).toBeDisabled()
+})

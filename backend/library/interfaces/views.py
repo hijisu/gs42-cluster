@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from library.interfaces import deps
 from library.interfaces.serializers import (
+    BookPageSerializer,
     ReportSerializer,
     WishSerializer,
     book_payload,
@@ -14,12 +15,19 @@ from library.interfaces.serializers import (
 
 @api_view(["GET"])
 def books(request):
+    pagination = BookPageSerializer(data=request.query_params)
+    pagination.is_valid(raise_exception=True)
     result = deps.search_books().execute(
-        request.query_params.get("q", ""), request.query_params.get("category", "")
+        request.query_params.get("q", ""),
+        request.query_params.get("category", ""),
+        **pagination.validated_data,
     )
     return Response(
         {
             "total": result.total,
+            "page": result.page,
+            "page_size": result.page_size,
+            "total_pages": result.total_pages,
             "categories": result.categories,
             "results": [book_payload(b) for b in result.books],
         }

@@ -59,7 +59,7 @@ describe('오아시스 도서 화면', () => {
     expect(without.querySelector('.book-cover-fallback')).toHaveClass(`cover-${coverIndex('GSIA-IT-001')}`)
   })
 
-  it('결과가 200건 상한을 넘으면 전체 수와 표시 수를 함께 안내한다', async () => {
+  it('결과가 한 페이지를 넘으면 전체 수와 표시 수를 함께 안내한다', async () => {
     await openPage('/library', search({ total: 518 }))
     expect(await screen.findByText(/518종 중 2종 표시/)).toBeInTheDocument()
   })
@@ -182,4 +182,14 @@ describe('coverIndex', () => {
       expect(coverIndex(c)).toBeLessThanOrEqual(8)
     }
   })
+})
+
+
+it('다음 페이지를 요청하고 분류 변경은 첫 페이지로 돌아간다', async () => {
+  const calls = await openPage('/library?q=코드', search({ total: 41 }))
+  await userEvent.click(await screen.findByRole('button', { name: '다음' }))
+  await waitFor(() => expect(urls(calls).some(u => u.includes('page=2') && u.includes('q=코드'))).toBe(true))
+  await userEvent.click(screen.getByRole('button', { name: '인문' }))
+  await waitFor(() => expect(urls(calls).some(u => u.includes('category=인문') && u.includes('page=1'))).toBe(true))
+  expect(screen.getByRole('button', { name: '이전' })).toBeDisabled()
 })

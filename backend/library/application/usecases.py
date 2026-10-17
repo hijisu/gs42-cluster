@@ -18,7 +18,7 @@ from library.domain.errors import (
 from library.domain.report import BookReport, ReportKind
 from library.domain.wish import Wish, WishStatus
 
-MAX_RESULTS = 200
+MAX_RESULTS = 20
 
 
 @dataclass(frozen=True)
@@ -26,16 +26,28 @@ class SearchResult:
     books: list[Book]
     total: int
     categories: list[str]
+    page: int
+    page_size: int
+    total_pages: int
 
 
 class SearchBooksUseCase:
     def __init__(self, books: BookRepository) -> None:
         self._books = books
 
-    def execute(self, query: str = "", category: str = "") -> SearchResult:
+    def execute(
+        self, query: str = "", category: str = "", page: int = 1, page_size: int = MAX_RESULTS
+    ) -> SearchResult:
+        page_size = min(max(page_size, 1), 100)
+        page = max(page, 1)
         found = self._books.search(query.strip(), category.strip())
         return SearchResult(
-            books=found[:MAX_RESULTS], total=len(found), categories=self._books.categories()
+            books=found[(page - 1) * page_size : page * page_size],
+            total=len(found),
+            categories=self._books.categories(),
+            page=page,
+            page_size=page_size,
+            total_pages=max(1, (len(found) + page_size - 1) // page_size),
         )
 
 
