@@ -50,5 +50,9 @@ def update_book() -> uc.UpdateBookUseCase:
     return uc.UpdateBookUseCase(DjangoBookRepository())
 
 
+def delete_book() -> uc.DeleteBookUseCase:
+    return uc.DeleteBookUseCase(DjangoBookRepository())
+
+
 def import_books() -> uc.ImportBooksUseCase:
     return uc.ImportBooksUseCase(DjangoBookRepository())

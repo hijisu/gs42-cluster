@@ -18,6 +18,7 @@ _BOOK_FIELDS = (
     "cover_url",
     "link_url",
     "pub_date",
+    "location",
 )
 
 
@@ -67,6 +68,10 @@ class DjangoBookRepository:
 
     def save(self, book: Book) -> None:
         BookRow.objects.filter(pk=book.id).update(**_values(book))
+
+    def delete(self, book_id: int) -> bool:
+        deleted, _ = BookRow.objects.filter(pk=book_id).delete()
+        return bool(deleted)
 
     @transaction.atomic
     def upsert_many(self, books: list[Book]) -> tuple[int, int]:

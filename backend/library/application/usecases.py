@@ -153,6 +153,15 @@ class UpdateBookUseCase:
         return updated
 
 
+class DeleteBookUseCase:
+    def __init__(self, books: BookRepository) -> None:
+        self._books = books
+
+    def execute(self, book_id: int) -> None:
+        if not self._books.delete(book_id):
+            raise BookNotFound("도서를 찾을 수 없습니다")
+
+
 class ImportBooksUseCase:
     def __init__(self, books: BookRepository) -> None:
         self._books = books

@@ -36,6 +36,7 @@ class BookWriteSerializer(serializers.Serializer):
     cover_url = serializers.URLField(allow_blank=True, max_length=500, default="")
     link_url = serializers.URLField(allow_blank=True, max_length=500, default="")
     pub_date = serializers.CharField(allow_blank=True, max_length=20, default="")
+    location = serializers.CharField(allow_blank=True, max_length=40, default="")
 
 
 def book_payload(b: Book) -> dict:
@@ -52,6 +53,7 @@ def book_payload(b: Book) -> dict:
         "cover_url": b.cover_url,
         "link_url": b.link_url,
         "pub_date": b.pub_date,
+        "location": b.location,
     }
 
 
