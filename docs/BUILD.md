@@ -83,6 +83,7 @@ docker compose down                         # 중지(데이터 유지) / down -v
 - 한 PC에서 클론/에이전트를 여러 개 돌릴 때는 `.env`의 `COMPOSE_PROJECT_NAME`과 `*_HOST_PORT`를 서로 다르게 지정합니다(예: `gs42-b`, 8100/5532/5273).
   - `FRONTEND_HOST_PORT`를 바꾸면 compose가 백엔드의 `FRONTEND_ORIGIN`(CSRF 신뢰 origin·CORS)을 `http://localhost:<FRONTEND_HOST_PORT>`로 자동 설정합니다. `.env`의 `FRONTEND_ORIGIN`은 호스트에서 직접 실행할 때만 쓰입니다.
   - `BACKEND_HOST_PORT`를 바꾸면 42 로그인용 `FORTYTWO_REDIRECT_URI`와 intra 앱에 등록한 redirect URI도 같은 포트로 맞춰야 합니다(모의 로그인만 쓰면 무관).
+- **`.env`를 수정한 뒤에는 `docker compose up -d`로 적용합니다.** `docker compose restart`는 `.env`(`env_file`)를 다시 읽지 않아 컨테이너 안의 값이 그대로 남습니다. `up -d`는 환경변수가 바뀐 서비스만 새로 만들며 DB 볼륨은 유지됩니다.
 - 프론트 컨테이너는 `node_modules`를 컨테이너 전용 볼륨에 두므로 호스트의 `node_modules`와 섞이지 않습니다. 의존성을 바꾼 뒤에는 `docker compose restart frontend`(시작 시 `npm ci`)를 실행합니다.
 - 컨테이너 없이 호스트에서 직접 실행하는 방법은 아래 "백엔드"·"프론트엔드" 절을 참고합니다.
 
@@ -98,7 +99,8 @@ pip install -r requirements-dev.txt
 # 로컬 DB: compose의 db 서비스만 띄운다 (.env의 POSTGRES_* 값 사용)
 docker compose up -d db
 
-export POSTGRES_HOST=localhost POSTGRES_PASSWORD=<.env의 비밀번호>   # DB_HOST_PORT를 바꿨다면 POSTGRES_PORT도 같은 값으로
+# 비밀번호 등은 루트 .env 에서 자동으로 읽는다. .env 는 compose 용(POSTGRES_HOST=db)이라 호스트 실행에서만 덮어쓴다.
+export POSTGRES_HOST=localhost       # DB_HOST_PORT 를 바꿨다면 POSTGRES_PORT 도 같은 값으로 지정
 python manage.py migrate
 python manage.py runserver 8000     # GET http://localhost:8000/api/health
 
@@ -175,7 +177,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 1. 42 intra에 로그인해 **Settings → API → "Register a new app"**(https://profile.intra.42.fr/oauth/applications/new)으로 이동합니다.
 2. 이름(예: `42gs-cluster dev`)을 적고, **Redirect URI**에 `.env`의 `FORTYTWO_REDIRECT_URI`와 **똑같은 값**을 등록합니다. 기본값은 `http://localhost:8000/api/auth/callback`이며 `BACKEND_HOST_PORT`를 바꿨다면 그 포트를 씁니다. Scope는 `public`이면 충분합니다.
 3. 발급된 **UID**와 **SECRET**을 `.env`의 `FORTYTWO_UID`, `FORTYTWO_SECRET`에 넣습니다. **채팅·이슈·PR·커밋에 붙여 넣지 않습니다**(`.env`는 gitignore 대상).
-4. 교육운영팀 계정은 `.env`의 `STAFF_INTRA_IDS`에 intra login을 쉼표로 적습니다(42 응답의 `staff?`는 보조). 바꾼 뒤 `docker compose restart backend`.
+4. 교육운영팀 계정은 `.env`의 `STAFF_INTRA_IDS`에 intra login을 쉼표로 적습니다(42 응답의 `staff?`는 보조). 바꾼 뒤 **`docker compose up -d`**로 적용합니다(`restart`는 `.env`를 다시 읽지 않아 값이 바뀌지 않습니다).
 5. http://localhost:5173/login 에서 **"42 intra로 로그인"**을 누르고 승인하면 사이드바에 내 `intra_id`가 보입니다. 운영팀으로 등록한 계정이면 '교육운영팀 화면 보기' 토글이 나타납니다.
 
 로그인에 실패하면 `/login?error=<코드>`로 돌아옵니다.
