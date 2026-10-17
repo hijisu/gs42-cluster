@@ -39,10 +39,11 @@ export function BookCard({ book, onOpen, onReport }: BookCardProps) {
         </button>
         <span className="muted small">{book.author || '저자 미상'}</span>
       </div>
-      <div className="row" style={{ marginTop: 'auto' }}>
-        <span style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Pill tone={book.quantity > 0 ? 'ok' : 'neu'}>{book.quantity > 0 ? `${book.quantity}권 비치` : '비치 없음'}</Pill>
-        </span>
+      <span className="book-status">
+        <Pill tone={book.available_quantity > 0 ? 'ok' : 'neu'}>{book.available_quantity > 0 ? `${book.available_quantity}권 비치` : '비치 없음'}</Pill>
+        {book.lost_count > 0 && <Pill tone="lost">분실</Pill>}
+      </span>
+      <div className="book-actions">
         <Button variant="danger" size="sm" aria-label={`${book.title} 신고`} onClick={() => onReport(book)}>
           신고
         </Button>
