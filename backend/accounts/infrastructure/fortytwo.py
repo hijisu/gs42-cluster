@@ -42,7 +42,13 @@ class FortyTwoOAuthClient:
                 "42 프로필에 login이 없습니다", stage="profile", reason="missing_login"
             )
         name = me.get("usual_full_name") or me.get("displayname") or login
-        return FortyTwoProfile(intra_id=login, name=name, is_staff=bool(me.get("staff?")))
+        image = me.get("image") or {}
+        image_url = image.get("link") or (image.get("versions") or {}).get("medium") or ""
+        if not isinstance(image_url, str) or not image_url.startswith("https://"):
+            image_url = ""
+        return FortyTwoProfile(
+            intra_id=login, name=name, is_staff=bool(me.get("staff?")), image_url=image_url
+        )
 
     @staticmethod
     def _call(stage: str, func, *args):

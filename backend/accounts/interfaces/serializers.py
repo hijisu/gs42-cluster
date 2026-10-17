@@ -7,6 +7,7 @@ class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     intra_id = serializers.CharField()
     name = serializers.CharField()
+    image_url = serializers.URLField(allow_blank=True)
     role = serializers.CharField()
     slack_id = serializers.CharField(allow_null=True)
 

@@ -10,6 +10,7 @@ def _to_domain(row: User) -> UserAccount:
         name=row.name,
         role=Role(row.role),
         slack_id=row.slack_id,
+        image_url=row.image_url,
     )
 
 
@@ -21,7 +22,12 @@ class DjangoUserRepository:
     def save(self, user: UserAccount) -> UserAccount:
         row, _ = User.objects.update_or_create(
             intra_id=user.intra_id,
-            defaults={"name": user.name, "role": user.role.value, "slack_id": user.slack_id},
+            defaults={
+                "name": user.name,
+                "role": user.role.value,
+                "slack_id": user.slack_id,
+                "image_url": user.image_url,
+            },
         )
         return _to_domain(row)
 
