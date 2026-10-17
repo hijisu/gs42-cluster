@@ -11,6 +11,7 @@ from accounts.domain.errors import AuthenticationFailed
 AUTHORIZE_URL = "https://api.intra.42.fr/oauth/authorize"
 TOKEN_URL = "https://api.intra.42.fr/oauth/token"
 ME_URL = "https://api.intra.42.fr/v2/me"
+REQUEST_HEADERS = {"User-Agent": "gs42-cluster/1.0", "Accept": "application/json"}
 
 
 class FortyTwoOAuthClient:
@@ -54,11 +55,15 @@ class FortyTwoOAuthClient:
                 "redirect_uri": self._redirect_uri,
             }
         ).encode()
-        request = urllib.request.Request(TOKEN_URL, data=data, method="POST")
+        request = urllib.request.Request(
+            TOKEN_URL, data=data, method="POST", headers=REQUEST_HEADERS
+        )
         with urllib.request.urlopen(request, timeout=self._timeout) as response:  # noqa: S310
             return json.load(response)["access_token"]
 
     def _get_json(self, url: str, token: str) -> dict:
-        request = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        request = urllib.request.Request(
+            url, headers={**REQUEST_HEADERS, "Authorization": f"Bearer {token}"}
+        )
         with urllib.request.urlopen(request, timeout=self._timeout) as response:  # noqa: S310
             return json.load(response)
