@@ -8,7 +8,8 @@ services:
     image: postgres:16
     env_file: .env
     ports:
-      - "${DB_HOST_PORT:-5432}:5432"
+      # 포트는 모두 루프백에만 연다(예시 비밀번호의 DB·모의 로그인이 같은 네트워크의 다른 PC에 노출되지 않게).
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -32,7 +33,7 @@ services:
       # 포트를 바꿔도 어긋나지 않게 한다(.env 의 FRONTEND_ORIGIN 은 compose 에서는 무시된다).
       FRONTEND_ORIGIN: "http://localhost:${FRONTEND_HOST_PORT:-5173}"
     ports:
-      - "${BACKEND_HOST_PORT:-8000}:8000"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8000}:8000"
     volumes:
       - ./backend:/app/backend
     depends_on:
@@ -47,7 +48,7 @@ services:
     environment:
       API_PROXY_TARGET: http://backend:8000
     ports:
-      - "${FRONTEND_HOST_PORT:-5173}:5173"
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app/frontend
       - frontend-node-modules:/app/frontend/node_modules

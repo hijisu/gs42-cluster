@@ -30,11 +30,16 @@ def _env_list(name: str, default: str = "") -> list[str]:
 
 
 DEBUG = _env_bool("DJANGO_DEBUG", False)
+# .env.example 의 예시 값. 운영(DEBUG=false)에서 쓰면 세션·CSRF 서명이 공개된 값에 의존하게 된다.
+EXAMPLE_SECRET_KEYS = {"change-me", "insecure-dev-only-key"}
+
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     if not DEBUG:
         raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false")
     SECRET_KEY = "insecure-dev-only-key"
+elif not DEBUG and SECRET_KEY in EXAMPLE_SECRET_KEYS:
+    raise RuntimeError("DJANGO_SECRET_KEY is still the example value; set a real secret in .env")
 
 ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
@@ -103,8 +108,11 @@ CSRF_TRUSTED_ORIGINS = [FRONTEND_ORIGIN]
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+# 운영(HTTPS)에서는 Secure 쿠키가 기본이다. http://localhost 로 운영 구성을 검증할 때만
+# DJANGO_COOKIE_SECURE=false 로 끈다(일부 브라우저는 http 의 Secure 쿠키를 저장하지 않는다).
+COOKIE_SECURE = _env_bool("DJANGO_COOKIE_SECURE", not DEBUG)
+SESSION_COOKIE_SECURE = COOKIE_SECURE
+CSRF_COOKIE_SECURE = COOKIE_SECURE
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

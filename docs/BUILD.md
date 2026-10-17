@@ -49,18 +49,21 @@ cp .env.example .env
 | `DJANGO_ALLOWED_HOSTS` | 허용 호스트(쉼표 구분) | O |
 | `TIME_ZONE` | 표시 시간대 (`Asia/Seoul`) | O |
 | `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트. compose에서는 `POSTGRES_HOST=db`로 자동 덮어씀 | O |
-| `COMPOSE_PROJECT_NAME` | compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경 | - |
+| `COMPOSE_PROJECT_NAME` | **개발용** compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경. 운영 구성은 `-p <이름>-prod`로 따로 지정 | - |
 | `DB_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT` | compose가 호스트에 여는 포트(기본 5432 / 8000 / 5173). 컨테이너 안 포트는 고정 | - |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
 | `FRONTEND_ORIGIN` / `VITE_API_BASE_URL` | 프론트엔드 주소·API 경로. compose에서는 `FRONTEND_ORIGIN`이 `FRONTEND_HOST_PORT`로 자동 계산됨 | O |
+| `PROD_HTTP_PORT` | 운영 구성(`docker-compose.prod.yml`)이 호스트 루프백(`127.0.0.1`)에 여는 HTTP 포트. 기본 80 | - |
+| `GUNICORN_WORKERS` | 운영 구성 backend(gunicorn)의 워커 수. 기본 2 | - |
+| `DJANGO_COOKIE_SECURE` | (선택) Secure 쿠키 여부. 기본은 `DJANGO_DEBUG=false`일 때 true. 로컬 http 검증에서만 false | - |
 | `API_PROXY_TARGET` | (선택) 호스트에서 `npm run dev`할 때 `/api` 프록시 대상. 기본 `http://localhost:8000`, compose는 `http://backend:8000` 고정 | - |
 | `VAPID_*` | Web Push 키 (Phase 2) | - |
 | `SLACK_BOT_TOKEN` | Slack 알림 (Phase 3) | - |
 
 ## 로컬 실행
 
-`docker compose up` 한 번으로 DB·백엔드·프론트를 함께 띄웁니다.
+`docker compose up` 한 번으로 DB·백엔드·프론트를 함께 띄웁니다. 포트는 모두 이 PC의 루프백(`127.0.0.1`)에만 열립니다(예시 비밀번호의 DB와 모의 로그인이 같은 네트워크의 다른 PC에 노출되지 않게).
 
 ```bash
 cp .env.example .env            # 처음 한 번 (비밀값은 .env에만 두고 커밋하지 않음)
@@ -198,6 +201,34 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 - 시안과 구현의 차이 기록: [docs/DESIGN_DIFFS.md](DESIGN_DIFFS.md)
 - 마이그레이션·CI·공통 파일(`docker-compose*.yml`, `.env.example`, 이 문서) 변경은 **위험 PR**이라 교차 리뷰어의 `review:ok` 라벨 후 머지합니다.
 
-## 배포
+## 배포 (운영 구성 로컬 검증)
 
-TBD (Phase 1 배포 이슈에서 작성)
+AWS 서버·도메인·외부 HTTPS는 아직 없습니다. 운영과 같은 구성(gunicorn, 정적 파일 서빙, 같은 origin의 `/api` 프록시, `DEBUG=false`)을 **`http://localhost`에서만** 컨테이너로 띄워 검증합니다.
+
+```bash
+cp .env.example .env     # 이미 있으면 생략
+# .env 의 DJANGO_SECRET_KEY 를 실제 값으로 바꾼다 (예시 값 change-me 로는 기동하지 않는다)
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+
+docker compose -p gs42-prod -f docker-compose.prod.yml up -d --build
+open http://localhost        # PROD_HTTP_PORT 를 바꿨다면 http://localhost:<포트>
+docker compose -p gs42-prod -f docker-compose.prod.yml logs -f backend
+docker compose -p gs42-prod -f docker-compose.prod.yml down          # 데이터 유지 / -v 는 DB 볼륨까지 삭제
+```
+
+**모든 운영 구성 명령에 `-p <이름>-prod`를 붙입니다.** `.env`의 `COMPOSE_PROJECT_NAME`(개발용 프로젝트 이름)이 compose 파일의 `name:`보다 우선하므로, `-p` 없이 실행하면 개발용 스택과 같은 프로젝트로 묶여 `db`·`backend` 서비스가 서로를 덮어씁니다. 한 PC에서 클론을 여러 개 쓰면 클론마다 `-p gs42-b-prod`처럼 다른 이름을 씁니다.
+
+| 서비스 | 역할 | 외부 노출 |
+| --- | --- | --- |
+| `web` | Caddy. 프론트 빌드 산출물을 서빙(SPA 폴백, 해시 자산은 장기 캐시, `index.html`·`sw.js`는 no-cache)하고 `/api/*`를 backend로 프록시 | `127.0.0.1:<PROD_HTTP_PORT>`(기본 80), 루프백 전용 |
+| `backend` | gunicorn(비루트 사용자). 시작할 때 `migrate`를 실행. 워커 수는 `GUNICORN_WORKERS`(기본 2) | 없음 |
+| `db` | PostgreSQL 16, `prod-db-data` 볼륨(개발용 `db-data`와 별개) | 없음 |
+
+- 프론트와 `/api`가 같은 origin이라 세션 쿠키·CSRF가 그대로 동작합니다. CSRF는 요청 Host와 같은 Origin을 허용하므로 포트를 바꿔도(`PROD_HTTP_PORT`) 추가 설정이 필요 없습니다.
+- 운영 모드(`DJANGO_DEBUG=false`)에서는 **모의 로그인이 꺼지고**(`POST /api/auth/mock-login`이 404) 예시 시크릿 키(`change-me`)로는 기동하지 않습니다. 로그인은 42 OAuth(`FORTYTWO_UID/SECRET`을 `.env`에 넣은 경우)로만 가능하며, 없으면 모의 로그인이 막혀 있는지까지만 확인할 수 있습니다.
+- `docker-compose.prod.yml`은 로컬 http 검증을 위해 backend에 `DJANGO_COOKIE_SECURE=false`를 지정합니다. HTTPS로 실제 배포할 때는 이 줄을 지워 Secure 쿠키(기본값)를 사용해야 합니다.
+- Django는 정적 파일을 서빙하지 않습니다(JSON API만 제공). 정적 파일은 모두 `web`이 서빙합니다.
+- `.env`(비밀값)는 이미지에 포함되지 않고 compose의 `env_file`로만 주입됩니다. 이미지 빌드 제외 목록은 루트 `.dockerignore`와 `backend/.dockerignore`.
+- 개발용(`docker-compose.yml`, 프로젝트 `gs42`)과 운영 구성(프로젝트 `gs42-prod`)은 컨테이너·네트워크·DB 볼륨이 서로 달라 동시에 띄울 수 있습니다. 운영 구성이 호스트에 여는 포트는 `PROD_HTTP_PORT`뿐이고, 어느 한쪽을 `down`해도 다른 쪽은 영향을 받지 않습니다.
+- 이 구성은 HTTPS 없이 Secure 쿠키를 끄므로 **루프백(`127.0.0.1`)에만 포트를 엽니다**. 다른 PC에서는 접속할 수 없습니다.
+- 외부 접속용 배포(AWS, 도메인, HTTPS 인증서)는 이 범위에 포함되지 않으며 필요해지면 별도 이슈로 진행합니다.
