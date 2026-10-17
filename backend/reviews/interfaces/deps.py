@@ -5,6 +5,7 @@ from reviews.application.usecases import (
     ListCourseReviewsUseCase,
     ListCoursesUseCase,
     ListTodoReviewsUseCase,
+    UpdateReviewUseCase,
     Viewer,
 )
 from reviews.infrastructure.repositories import DjangoCourseRepository, DjangoReviewRepository
@@ -32,5 +33,11 @@ def list_course_reviews() -> ListCourseReviewsUseCase:
 
 def create_review() -> CreateReviewUseCase:
     return CreateReviewUseCase(
+        DjangoCourseRepository(), DjangoReviewRepository(), timezone.localdate
+    )
+
+
+def update_review() -> UpdateReviewUseCase:
+    return UpdateReviewUseCase(
         DjangoCourseRepository(), DjangoReviewRepository(), timezone.localdate
     )

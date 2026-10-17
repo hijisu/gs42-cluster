@@ -227,3 +227,75 @@ def test_review_has_no_title_and_course_list_has_board_fields():
     item = next(c for c in client.get("/api/courses").json() if c["id"] == course.pk)
     assert {"name", "start_date", "end_date", "location", "review_count"} <= set(item)
     assert item["location"] == "유니버스룸" and item["review_count"] == 1
+
+
+def _write_review(client, course, **over):
+    body = {"course_id": course.pk, "rating": 3, "good": "원문", "tags": ["a"], "anonymous": False}
+    return client.post("/api/reviews", {**body, **over}, format="json")
+
+
+def test_author_edits_own_review_and_payload_reflects_it():
+    course = make_course()
+    client = login()
+    review_id = _write_review(client, course).json()["id"]
+    res = client.patch(
+        f"/api/reviews/{review_id}",
+        {"rating": 5, "good": "수정", "tags": ["#입문"], "anonymous": True},
+        format="json",
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert (
+        body["rating"] == 5
+        and body["good"] == "수정"
+        and body["tags"] == ["입문"]
+        and body["mine"] is True
+    )
+    assert body["author"] is None  # 익명으로 바꿨다
+    row = ReviewRow.objects.get(pk=review_id)
+    assert (row.rating, row.good, row.anonymous) == (5, "수정", True)
+    # 일부 항목만 보내면 나머지는 그대로
+    client.patch(f"/api/reviews/{review_id}", {"bad": "아쉬움"}, format="json")
+    row.refresh_from_db()
+    assert (row.rating, row.good, row.bad) == (5, "수정", "아쉬움")
+    stats = client.get("/api/courses").json()[0]
+    assert stats["average_rating"] == 5.0 and stats["review_count"] == 1
+
+
+def test_review_edit_is_author_only_and_has_no_delete():
+    course = make_course(participants=("student", "other"))
+    author = login()
+    review_id = _write_review(author, course).json()["id"]
+    other = APIClient()
+    other.post(
+        "/api/auth/mock-login", {"role": "student"}, format="json"
+    )  # 같은 계정(student)이면 본인이므로 직접 사용자 생성
+    stranger = User.objects.create(intra_id="other", role=Role.STUDENT.value)
+    other.force_authenticate(stranger)
+    res = other.patch(f"/api/reviews/{review_id}", {"rating": 1}, format="json")
+    assert res.status_code == 403 and res.json()["code"] == "not_review_author"
+    assert ReviewRow.objects.get(pk=review_id).rating == 3
+    assert author.delete(f"/api/reviews/{review_id}").status_code == 405
+    assert author.patch("/api/reviews/999999", {"rating": 1}, format="json").status_code == 404
+    assert APIClient().patch(
+        f"/api/reviews/{review_id}", {"rating": 1}, format="json"
+    ).status_code in (401, 403)
+
+
+def test_review_edit_validation_and_closed_period():
+    course = make_course()
+    client = login()
+    review_id = _write_review(client, course).json()["id"]
+    bad = client.patch(f"/api/reviews/{review_id}", {"rating": 9}, format="json")
+    assert bad.status_code == 400
+    too_many = client.patch(
+        f"/api/reviews/{review_id}", {"tags": [f"t{i}" for i in range(6)]}, format="json"
+    )
+    assert too_many.status_code == 400 and too_many.json()["code"] == "invalid_review"
+    # 마감일이 지나면 수정할 수 없다
+    CourseRow.objects.filter(pk=course.pk).update(
+        review_deadline=timezone.localdate() - timedelta(days=1)
+    )
+    closed = client.patch(f"/api/reviews/{review_id}", {"rating": 4}, format="json")
+    assert closed.status_code == 409 and closed.json()["code"] == "review_closed"
+    assert ReviewRow.objects.get(pk=review_id).rating == 3
