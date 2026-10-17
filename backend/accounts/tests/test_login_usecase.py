@@ -44,3 +44,13 @@ def test_mock_login_seeds_accounts():
     users = InMemoryUsers()
     assert LoginAsMock(users).execute(Role.STUDENT).intra_id == "student"
     assert LoginAsMock(users).execute(Role.STAFF).role == Role.STAFF
+
+
+def test_photo_is_refreshed_and_cleared_on_each_login():
+    users = InMemoryUsers()
+    login = LoginWithProfile(users, [])
+    first = login.execute(FortyTwoProfile("bob", "Bob", image_url="https://cdn.example/one.jpg"))
+    assert first.image_url.endswith("one.jpg")
+    second = login.execute(FortyTwoProfile("bob", "Bob", image_url="https://cdn.example/two.jpg"))
+    assert second.id == first.id and second.image_url.endswith("two.jpg")
+    assert login.execute(FortyTwoProfile("bob", "Bob")).image_url == ""

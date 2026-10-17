@@ -8,6 +8,7 @@ from common.domain.errors import ForbiddenError
 from common.infrastructure.dispatcher import InProcessEventDispatcher
 from meetings.application.ports import MeetingTypeInfo, MeetingView
 from meetings.application.usecases import (
+    AcceptMeetingProposalUseCase,
     CancelMeetingUseCase,
     RequestMeetingCommand,
     RequestMeetingUseCase,
@@ -19,7 +20,7 @@ from meetings.domain.errors import (
     MeetingTypeNotFound,
     SlotUnavailable,
 )
-from meetings.domain.events import MeetingCanceled, MeetingRequested
+from meetings.domain.events import MeetingCanceled, MeetingConfirmed, MeetingRequested
 from meetings.domain.meeting import MeetingStatus
 
 NOW = datetime(2026, 10, 12, 9, 0, tzinfo=UTC)
@@ -166,3 +167,16 @@ def test_cancel_twice_is_invalid_transition(env):
 def test_cancel_unknown_meeting_not_found(env):
     with pytest.raises(MeetingNotFound):
         env[3].execute(404, 1)
+
+
+def test_accept_publishes_confirmation_event(env, monkeypatch):
+    mem, _, request, _ = env
+    view = request.execute(cmd())
+    mem.rows[view.id].propose(9, SLOT + timedelta(minutes=7))
+    monkeypatch.setattr(mem, "has_confirmed", lambda *args, **kwargs: False, raising=False)
+    bus = InProcessEventDispatcher()
+    events = []
+    bus.subscribe(MeetingConfirmed, events.append)
+    updated = AcceptMeetingProposalUseCase(mem, mem, bus, lambda: NOW).execute(view.id, 1)
+    assert updated.status == "confirmed"
+    assert len(events) == 1 and events[0].slot_at == SLOT + timedelta(minutes=7)

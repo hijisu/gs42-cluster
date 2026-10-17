@@ -4,9 +4,36 @@
 {
 	admin off
 	auto_https off
+	# 기본 로거(업스트림이 죽었을 때의 오류 로그 포함)에도 같은 필터를 건다. 사이트 log만 필터하면 오류 로그에는 요청 URI·CSRF 토큰이 그대로 남는다.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			# 1회용 OAuth code·state와 CSRF 토큰 값은 로그에 남기지 않는다(Cookie·Authorization은 Caddy 기본으로 가려진다). Origin·Host는 남겨 403 원인을 가린다.
+			request>uri query {
+				replace code REDACTED
+				replace state REDACTED
+			}
+			request>headers>X-Csrftoken replace REDACTED
+		}
+	}
 }
 
 :{$WEB_PORT} {
+	# 접근 로그(상태코드·Origin·Host)를 stdout 으로. 403 등이 프록시·Vite·Django 중 어디서 났는지 `docker compose logs web` 로 확인한다.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			# 1회용 OAuth code·state와 CSRF 토큰 값은 로그에 남기지 않는다(Cookie·Authorization은 Caddy 기본으로 가려진다). Origin·Host는 남겨 403 원인을 가린다.
+			request>uri query {
+				replace code REDACTED
+				replace state REDACTED
+			}
+			request>headers>X-Csrftoken replace REDACTED
+		}
+	}
+
 	handle /api/* {
 		# 백엔드는 서비스 이름 Host 로만 받는다(DJANGO_ALLOWED_HOSTS 의 backend). Origin 헤더는 그대로 전달해 CSRF 가 판단한다.
 		reverse_proxy {$BACKEND_UPSTREAM} {

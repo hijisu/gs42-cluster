@@ -98,3 +98,5 @@ h1,h2,h3,p{margin:0}
 .icon-btn{flex:0 0 44px;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--r-md);background:none;color:inherit;cursor:pointer;position:relative}
 .icon-btn:hover{background:var(--c-side-hover)}
 @media (max-width:340px){.topbar .role{display:none}}
+
+.av img{width:100%;height:100%;object-fit:cover;border-radius:inherit}

@@ -14,6 +14,7 @@ from meetings.application.staff_usecases import (
     SetDefaultStaffUseCase,
 )
 from meetings.application.usecases import (
+    AcceptMeetingProposalUseCase,
     CancelMeetingUseCase,
     GetSlotsUseCase,
     ListMyMeetingsUseCase,
@@ -96,4 +97,10 @@ def staff_meeting_types() -> ListMeetingTypesForStaffUseCase:
 def set_default_staff() -> SetDefaultStaffUseCase:
     return SetDefaultStaffUseCase(
         DjangoMeetingTypeRepository(), DjangoStaffDirectory(), DjangoStaffMeetingReadModel()
+    )
+
+
+def accept_meeting_proposal() -> AcceptMeetingProposalUseCase:
+    return AcceptMeetingProposalUseCase(
+        DjangoMeetingRepository(), DjangoMeetingReadModel(), event_bus, timezone.now
     )

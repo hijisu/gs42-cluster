@@ -42,7 +42,10 @@ class FortyTwoOAuthClient:
                 "42 프로필에 login이 없습니다", stage="profile", reason="missing_login"
             )
         name = me.get("usual_full_name") or me.get("displayname") or login
-        return FortyTwoProfile(intra_id=login, name=name, is_staff=bool(me.get("staff?")))
+        image_url = _profile_image_url(me.get("image"))
+        return FortyTwoProfile(
+            intra_id=login, name=name, is_staff=bool(me.get("staff?")), image_url=image_url
+        )
 
     @staticmethod
     def _call(stage: str, func, *args):
@@ -85,3 +88,13 @@ class FortyTwoOAuthClient:
         )
         with urllib.request.urlopen(request, timeout=self._timeout) as response:  # noqa: S310
             return json.load(response)
+
+
+def _profile_image_url(image: object) -> str:
+    """42 프로필의 image에서 https 주소만 꺼낸다. 부가 정보라 형식이 달라도 로그인은 막지 않는다."""
+    if not isinstance(image, dict):
+        return ""
+    versions = image.get("versions")
+    medium = versions.get("medium") if isinstance(versions, dict) else None
+    url = image.get("link") or medium
+    return url if isinstance(url, str) and url.startswith("https://") else ""

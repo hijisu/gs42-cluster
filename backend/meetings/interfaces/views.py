@@ -64,3 +64,10 @@ def cancel(request, meeting_id: int):
     with transaction.atomic():
         view = deps.cancel_meeting().execute(meeting_id, request.user.pk)
     return Response(meeting_payload(view))
+
+
+@api_view(["POST"])
+def accept_proposal(request, meeting_id: int):
+    with transaction.atomic():
+        view = deps.accept_meeting_proposal().execute(meeting_id, request.user.pk)
+    return Response(meeting_payload(view))

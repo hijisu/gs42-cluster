@@ -90,3 +90,16 @@ describe('면담 신청 화면', () => {
     expect(await screen.findByText('취소됨', { selector: '.pill' })).toBeInTheDocument()
   })
 })
+
+
+it('제안 시간을 표시하고 수락하면 확정으로 갱신한다', async () => {
+  const proposal = { ...created, status: 'proposed', proposed_at: `${day}T06:07:00Z` }
+  const calls = await openPage(
+    (req) => req.url.endsWith('/meetings/me') ? { json: [proposal] } : undefined,
+    (req) => req.url.endsWith('/meetings/7/accept') ? { json: { ...proposal, status: 'confirmed', slot_at: proposal.proposed_at } } : undefined,
+  )
+  expect(await screen.findByText(/제안:/)).toHaveTextContent('15:07')
+  await userEvent.click(await screen.findByRole('button', { name: '제안 수락(확정하기)' }))
+  expect(await screen.findByText('확정', { selector: '.pill' })).toBeInTheDocument()
+  expect(calls.some(c => c.method === 'POST' && c.url.endsWith('/meetings/7/accept'))).toBe(true)
+})

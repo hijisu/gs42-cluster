@@ -17,7 +17,7 @@ from meetings.domain.errors import (
     MeetingTypeNotFound,
     SlotUnavailable,
 )
-from meetings.domain.events import MeetingCanceled, MeetingRequested
+from meetings.domain.events import MeetingCanceled, MeetingConfirmed, MeetingRequested
 from meetings.domain.meeting import MeetingRequest
 from meetings.domain.slots import SlotAvailability, compute_slots, is_aligned
 
@@ -127,3 +127,33 @@ class ListMyMeetingsUseCase:
 
     def execute(self, student_id: int) -> list[MeetingView]:
         return self._read.list_for_student(student_id)
+
+
+class AcceptMeetingProposalUseCase:
+    def __init__(
+        self,
+        meetings: MeetingRepository,
+        read_model: MeetingReadModel,
+        events: EventDispatcher,
+        clock: Clock,
+    ) -> None:
+        self._meetings, self._read, self._events, self._clock = meetings, read_model, events, clock
+
+    def execute(self, meeting_id: int, student_id: int) -> MeetingView:
+        meeting = self._meetings.get(meeting_id)
+        if meeting is None:
+            raise MeetingNotFound("면담을 찾을 수 없습니다")
+        meeting.accept_proposal(student_id, self._clock())
+        if self._meetings.has_confirmed(meeting.staff_id, meeting.slot_at, exclude_id=meeting.id):
+            raise SlotUnavailable("같은 담당자의 같은 시간에 이미 확정된 면담이 있습니다")
+        self._meetings.save(meeting)
+        self._events.publish(
+            MeetingConfirmed(
+                meeting_id=meeting.id,
+                student_id=meeting.student_id,
+                staff_id=meeting.staff_id,
+                slot_at=meeting.slot_at,
+                location=meeting.location,
+            )
+        )
+        return self._read.get_view(meeting.id)

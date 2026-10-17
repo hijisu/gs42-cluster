@@ -9,6 +9,7 @@ class FortyTwoProfile:
     intra_id: str
     name: str
     is_staff: bool = False
+    image_url: str = ""
 
 
 class FortyTwoClient(Protocol):

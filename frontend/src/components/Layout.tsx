@@ -56,6 +56,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
   const navigate = useNavigate()
   const mobile = useMediaQuery(MOBILE_QUERY)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [failedImage, setFailedImage] = useState<string | null>(null)
   const home = variant === 'staff' ? '/staff' : '/'
 
   const brand = (
@@ -65,7 +66,9 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
   )
   const account = me && (
     <div className="me">
-      <div className="av">{me.intra_id.slice(0, 2).toUpperCase()}</div>
+      <div className="av">{me.image_url && me.image_url !== failedImage
+        ? <img src={me.image_url} alt={`${me.intra_id} 프로필 사진`} referrerPolicy="no-referrer" onError={() => setFailedImage(me.image_url ?? null)} />
+        : me.intra_id.slice(0, 2).toUpperCase()}</div>
       <div className="me-text">
         <span className="me-name">{me.intra_id}</span>
         <span className="me-role">{roleLabel[me.role]}</span>
