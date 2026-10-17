@@ -90,7 +90,7 @@ describe('운영 회의실 관리 화면', () => {
     )
     await userEvent.click(within(await screen.findByTestId('pending-11')).getByRole('button', { name: '승인 · 이용수칙 전송' }))
     await waitFor(() => expect(screen.queryByTestId('pending-11')).toBeNull())
-    expect(screen.getByText('이 날짜에 승인 대기 중인 요청이 없어요.')).toBeInTheDocument()
+    expect(screen.getByText('승인 대기 중인 요청이 없어요.')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/approve'))).toBe(true)
   })
 
