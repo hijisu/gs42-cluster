@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../components'
+import { ApiError } from '../../lib/api'
 import { currentSubscription, disablePush, enablePush, pushSupport } from '../../lib/push'
 
 type State = 'loading' | 'on' | 'off'
@@ -41,8 +42,13 @@ export function PushSettings() {
         if (result === 'denied') setMessage('브라우저에서 알림이 차단돼 있어요. 주소창의 사이트 설정에서 알림을 허용해 주세요.')
         else setState('on')
       }
-    } catch {
-      setMessage('푸시 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.')
+    } catch (e) {
+      // 서버에 VAPID 키가 없으면 503 push_not_configured
+      setMessage(
+        e instanceof ApiError && e.code === 'push_not_configured'
+          ? '서버에 푸시 알림이 아직 설정되지 않았어요. 앱 안 알림만 표시돼요.'
+          : '푸시 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.',
+      )
     } finally {
       setBusy(false)
     }
