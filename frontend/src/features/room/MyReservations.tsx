@@ -95,6 +95,7 @@ export function MyReservations() {
         </div>
       )}
 
+      <p className="muted small">승인된 예약은 취소할 수 없어요. 변경이 필요하면 운영팀에 문의해 주세요.</p>
       <RulesModal open={rulesFor !== null} onClose={() => setRulesFor(null)} onConfirm={confirmRules} />
       <Modal
         open={target !== null}
