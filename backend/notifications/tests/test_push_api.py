@@ -148,6 +148,9 @@ def test_same_browser_logging_in_as_another_user_takes_over_the_subscription(vap
         {"endpoint": "https://internal.example.com/x"},
         {"endpoint": "http://fcm.googleapis.com/fcm/send/1"},
         {"endpoint": "https://169.254.169.254/latest/meta-data/"},
+        {"endpoint": "https://fcm.googleapis.com:abc/push"},  # bug #85: 500 이 아니라 400
+        {"endpoint": "https://fcm.googleapis.com:65536/push"},
+        {"endpoint": "https://[broken/push"},
         {"keys": {"p256dh": "not base64!", "auth": KEY_B}},
         {"keys": {"p256dh": KEY_A}},
         {"keys": None},
