@@ -3,7 +3,13 @@ import { approve, createDirect, createRoom, fetchStaffReservations, patchRoom, r
 
 const root = ['staff', 'reservations'] as const
 
-export const useStaffPending = (date: string) => useQuery({ queryKey: [...root, date, 'pending'], queryFn: () => fetchStaffReservations(date, 'pending') })
+/** 승인 대기는 날짜와 무관하게 전체를 받아 시작 시각 순으로 보여 한 곳에서 처리한다. */
+export const useStaffPending = () =>
+  useQuery({
+    queryKey: [...root, 'pending'],
+    queryFn: () => fetchStaffReservations('', 'pending'),
+    select: (list) => [...list].sort((a, b) => a.start_at.localeCompare(b.start_at)),
+  })
 
 /** 예약 상태가 바뀌면 운영·교육생 쪽 예약/현황 조회를 모두 새로 받는다(오류로 이미 처리된 요청일 때도). */
 function useRefresh() {

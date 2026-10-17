@@ -67,6 +67,21 @@ describe('운영 회의실 관리 화면', () => {
     expect(within(await screen.findByTestId('pending-12')).getByText('예약 가능')).toBeInTheDocument()
   })
 
+  it('승인 대기는 날짜와 무관하게 전체를 시작 시각 순으로 보여준다', async () => {
+    const later = kstDateFromToday(3)
+    const calls = await openPage(
+      pending([
+        reservation({ id: 21, purpose: '나중', conflict: false, conflict_ids: [], start_at: kstToIso(later, '10:00'), end_at: kstToIso(later, '11:00') }),
+        reservation({ id: 22, purpose: '먼저', conflict: false, conflict_ids: [], start_at: kstToIso(today, '10:00'), end_at: kstToIso(today, '11:00') }),
+      ]),
+    )
+    const cards = await screen.findAllByTestId(/^pending-/)
+    expect(cards.map((c) => c.dataset.testid)).toEqual(['pending-22', 'pending-21'])
+    const list = calls.find((c) => c.url.includes('/staff/reservations?'))!
+    expect(list.url).not.toContain('date=')
+    expect(list.url).toContain('status=pending')
+  })
+
   it('승인하면 요청이 사라진다', async () => {
     let approved = false
     const calls = await openPage(
