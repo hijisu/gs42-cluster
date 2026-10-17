@@ -12,6 +12,7 @@ from rooms.application.usecases import (
     RequestReservationUseCase,
 )
 from rooms.infrastructure.repositories import (
+    DjangoBlockRepository,
     DjangoReservationReadModel,
     DjangoReservationRepository,
     DjangoRoomRepository,
@@ -29,7 +30,10 @@ def get_rules() -> GetRulesUseCase:
 
 def get_availability() -> GetAvailabilityUseCase:
     return GetAvailabilityUseCase(
-        DjangoRoomRepository(), DjangoReservationRepository(), DjangoRulesRepository().get
+        DjangoRoomRepository(),
+        DjangoReservationRepository(),
+        DjangoRulesRepository().get,
+        DjangoBlockRepository(),
     )
 
 
@@ -41,6 +45,7 @@ def request_reservation() -> RequestReservationUseCase:
         event_bus,
         timezone.now,
         DjangoRulesRepository().get,
+        DjangoBlockRepository(),
     )
 
 

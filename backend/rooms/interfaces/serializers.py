@@ -73,6 +73,10 @@ def availability_payload(day, items: list[RoomAvailability]) -> dict:
                     }
                     for b in item.blocks
                 ],
+                "closed": [
+                    {"start_at": c.start_at, "end_at": c.end_at, "reason": c.reason}
+                    for c in item.closed
+                ],
             }
             for item in items
         ],
