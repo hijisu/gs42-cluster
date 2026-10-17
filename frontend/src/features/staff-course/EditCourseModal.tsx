@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { Button, Field, Modal } from '../../components'
 import type { StaffCourse } from './api'
 import { messageFor } from './errors'
@@ -48,11 +48,11 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
   return (
     <div className="stack">
       <Field label="과정명" value={name} onChange={(e) => setName(e.target.value)} error={submitted ? errors.name : undefined} />
-      <div className="g3" style={{ gap: 12 }}>
+      <div className="g2" style={{ gap: 12 }}>
         <Field label="시작일" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={submitted ? errors.start : undefined} />
         <Field label="종료일" type="date" value={end} onChange={(e) => setEnd(e.target.value)} error={submitted ? errors.end : undefined} />
-        <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
       </div>
+      <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
       <Field label="과정 소개" multiline value={intro} onChange={(e) => setIntro(e.target.value)} />
       <Field label="후기 작성 마감(선택)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={submitted ? errors.deadline : undefined} />
       {error && <p role="alert" className="login-error">{error}</p>}
@@ -74,6 +74,7 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
 function Participants({ course }: { course: StaffCourse }) {
   const add = useAddParticipants()
   const remove = useRemoveParticipant()
+  const fileRef = useRef<HTMLInputElement>(null)
   const [input, setInput] = useState('')
   const [confirming, setConfirming] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -91,6 +92,16 @@ function Participants({ course }: { course: StaffCourse }) {
           setInput('')
           setNotice(`${r.added.length}명을 추가했어요.${r.existing.length ? ` 이미 있는 ${r.existing.length}명은 건너뛰었어요.` : ''}`)
         },
+      },
+    )
+  }
+  async function addCsv(file: File | undefined) {
+    if (!file) return
+    setNotice(null)
+    add.mutate(
+      { id: course.id, csv: await file.text() },
+      {
+        onSuccess: (r) => setNotice(`${r.added.length}명을 추가했어요.${r.existing.length ? ` 이미 있는 ${r.existing.length}명은 건너뛰었어요.` : ''}`),
       },
     )
   }
@@ -117,10 +128,16 @@ function Participants({ course }: { course: StaffCourse }) {
     <section className="stack" style={{ gap: 8 }} aria-label="참여 학생">
       <h3 style={{ fontSize: 16 }}>참여 학생 {participants.length}명</h3>
       <div style={{ display: 'flex', gap: 8 }}>
-        <input id="edit-ids" className="input" style={{ flexGrow: 1 }} aria-label="추가할 intra ID" placeholder="intra ID 입력 후 Enter" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} />
+        <input id="edit-ids" className="input" style={{ flexGrow: 1 }} aria-label="추가할 intra ID" placeholder="intra ID 입력 후 Enter 또는 ‘추가’" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} />
         <Button variant="ghost" disabled={add.isPending} onClick={addIds}>
           추가
         </Button>
+      </div>
+      <div>
+        <Button variant="ghost" size="sm" disabled={add.isPending} onClick={() => fileRef.current?.click()}>
+          CSV로 한 번에 추가
+        </Button>
+        <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" tabIndex={-1} aria-label="CSV 파일 선택" onChange={(e) => { void addCsv(e.target.files?.[0]); e.target.value = '' }} />
       </div>
       {notice && <p role="status" className="info">{notice}</p>}
       {error && <p role="alert" className="login-error">{error}</p>}
