@@ -185,3 +185,17 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .meta dd{margin:0}
 .book-desc{max-height:30vh;overflow-y:auto;white-space:pre-line}
 @media (max-width:900px){.book-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.book-title{min-height:44px;display:flex;align-items:center}}
+
+/* 표: 좁은 화면에서는 가로 스크롤(오른쪽 열·버튼이 가려짐) 대신 행을 카드로 쌓고 각 칸에 열 이름을 붙인다 */
+@media (max-width:600px){
+  .table-wrap{overflow-x:visible}
+  .table thead{display:none}
+  .table,.table tbody,.table tr,.table td{display:block;width:100%}
+  .table tr{padding:var(--sp-3) 0;border-bottom:1px solid var(--c-line-soft)}
+  .table tr:last-child{border-bottom:0}
+  .table td{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);padding:6px 0;border:0;text-align:right}
+  .table td::before{content:attr(data-label);flex:0 0 auto;max-width:40%;text-align:left;color:var(--c-muted);font-family:var(--font-mono);font-size:12px}
+  .table td[data-label=""]{justify-content:flex-end}
+  .table td[data-label=""]::before,.table td.table-empty::before{display:none}
+  .table td.table-empty{justify-content:flex-start;text-align:left}
+}

@@ -17,12 +17,12 @@ interface TableProps<T> {
 export function Table<T>({ columns, rows, rowKey, caption, empty = '표시할 내용이 없습니다.' }: TableProps<T>) {
   return (
     <div className="table-wrap">
-      <table className="table">
+      <table className="table" role="table">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
-          <tr>
+          <tr role="row">
             {columns.map((c) => (
-              <th key={c.key} scope="col">
+              <th key={c.key} scope="col" role="columnheader">
                 {c.header}
               </th>
             ))}
@@ -30,16 +30,19 @@ export function Table<T>({ columns, rows, rowKey, caption, empty = '표시할 �
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="muted">
+            <tr role="row">
+              <td colSpan={columns.length} className="muted table-empty" role="cell">
                 {empty}
               </td>
             </tr>
           ) : (
             rows.map((row) => (
-              <tr key={rowKey(row)}>
+              <tr key={rowKey(row)} role="row">
                 {columns.map((c) => (
-                  <td key={c.key}>{c.render(row)}</td>
+                  // 좁은 화면에서는 행이 카드로 바뀌고 열 이름이 data-label로 표시된다(CSS). 표 의미는 role로 유지한다.
+                  <td key={c.key} role="cell" data-label={c.header}>
+                    {c.render(row)}
+                  </td>
                 ))}
               </tr>
             ))
