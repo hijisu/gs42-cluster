@@ -64,7 +64,7 @@ class Review:
             raise NotReviewAuthor("후기는 작성자만 수정할 수 있습니다")
 
     def edit(self, editor_id: int, **changes) -> None:
-        """작성자 본인만 만족도·내용·태그·익명 여부를 고친다(삭제 없음). 검증 실패 시 바뀌지 않는다."""
+        """작성자 본인만 고친다(삭제 없음). 검증에 실패하면 바뀌지 않는다."""
         self.ensure_author(editor_id)
         allowed = {"rating", "good", "bad", "recommend_to", "tags", "anonymous"}
         unknown = set(changes) - allowed
