@@ -131,8 +131,8 @@ class ProposeMeetingUseCase:
         self._clock = clock
 
     def execute(self, cmd: ProposeCommand) -> StaffMeetingView:
-        if not is_aligned(cmd.proposed_at) or cmd.proposed_at <= self._clock():
-            raise InvalidSlot("제안 시간은 미래의 30분 단위여야 합니다")
+        if cmd.proposed_at <= self._clock():
+            raise InvalidSlot("제안 시간은 미래여야 합니다")
         meeting = _load(self._meetings, cmd.meeting_id)
         staff_id = meeting.staff_id or cmd.acting_staff_id
         meeting.propose(staff_id=staff_id, proposed_at=cmd.proposed_at, note=cmd.note)
