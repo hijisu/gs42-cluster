@@ -76,7 +76,7 @@ export function ReviewModal({ course, open, onClose }: { course: Course; open: b
         </label>
         {submitError && <p role="alert" className="login-error">{submitError}</p>}
         <div className="modal-actions">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             취소
           </Button>
           <Button type="submit" disabled={create.isPending}>

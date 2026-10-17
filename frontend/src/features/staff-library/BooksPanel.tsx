@@ -24,8 +24,8 @@ export function BooksPanel() {
       header: '',
       render: (b) => (
         <span style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-          <Button variant="ghost" size="sm" aria-label={`${b.title} 수정`} onClick={() => setEditing(b)}>수정</Button>
-          <Button variant="ghost" size="sm" aria-label={`${b.title} 삭제`} onClick={() => setRemoving(b)}>삭제</Button>
+          <Button variant="secondary" size="sm" aria-label={`${b.title} 수정`} onClick={() => setEditing(b)}>수정</Button>
+          <Button variant="danger" size="sm" aria-label={`${b.title} 삭제`} onClick={() => setRemoving(b)}>삭제</Button>
         </span>
       ),
     },
@@ -48,9 +48,9 @@ export function BooksPanel() {
             총 {data.total}종{data.total > data.results.length ? ` 중 ${data.results.length}종 표시` : ''}
           </p>
           {data.total > 20 && <nav aria-label="도서 페이지" className="row">
-            <Button variant="ghost" disabled={page <= 1 || books.isPlaceholderData} onClick={() => setPage(page - 1)}>이전</Button>
+            <Button variant="secondary" disabled={page <= 1 || books.isPlaceholderData} onClick={() => setPage(page - 1)}>이전</Button>
             <span>{page} / {Math.ceil(data.total / 20)} 페이지</span>
-            <Button variant="ghost" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => setPage(page + 1)}>다음</Button>
+            <Button variant="secondary" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => setPage(page + 1)}>다음</Button>
           </nav>}
           <Table caption="도서 목록" columns={columns} rows={data.results} rowKey={(b) => b.id} empty="조건에 맞는 도서가 없어요." />
         </>
@@ -70,8 +70,8 @@ export function BooksPanel() {
         onClose={() => setRemoving(null)}
         actions={
           <>
-            <Button variant="ghost" onClick={() => setRemoving(null)}>돌아가기</Button>
-            <Button variant="warn" disabled={del.isPending} onClick={() => removing && del.mutate(removing.id, { onSettled: () => setRemoving(null) })}>삭제</Button>
+            <Button variant="secondary" onClick={() => setRemoving(null)}>돌아가기</Button>
+            <Button variant="danger" disabled={del.isPending} onClick={() => removing && del.mutate(removing.id, { onSettled: () => setRemoving(null) })}>삭제</Button>
           </>
         }
       >

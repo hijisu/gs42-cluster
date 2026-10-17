@@ -22,11 +22,11 @@ export function RejectModal({ reservation, onClose }: { reservation: StaffReserv
       onClose={close}
       actions={
         <>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="secondary" onClick={close}>
             돌아가기
           </Button>
           <Button
-            variant="warn"
+            variant="danger"
             disabled={reject.isPending}
             onClick={() => {
               setSubmitted(true)

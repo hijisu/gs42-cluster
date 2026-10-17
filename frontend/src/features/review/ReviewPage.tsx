@@ -90,7 +90,7 @@ export function ReviewPage() {
               <b>{banner.name}</b>에 참여하셨네요. 후기를 남겨 주세요.
             </span>
           </span>
-          <button type="button" className="btn teal" onClick={() => { open(banner.id); setWriting(true) }}>
+          <button type="button" className="btn ondark" onClick={() => { open(banner.id); setWriting(true) }}>
             지금 작성하기
           </button>
         </div>

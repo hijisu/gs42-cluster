@@ -42,10 +42,10 @@ export function WishesPanel() {
               {w.staff_note && <p className="small">메모: {w.staff_note}</p>}
               {open && (
                 <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {w.status === 'requested' && <Button variant="ghost" size="sm" disabled={update.isPending} aria-label={`${w.title} 검토 중으로`} onClick={() => update.mutate({ id: w.id, status: 'approved' })}>검토 중</Button>}
-                  {w.status === 'approved' && <Button variant="teal" size="sm" disabled={update.isPending} aria-label={`${w.title} 구매 확정`} onClick={() => update.mutate({ id: w.id, status: 'purchased' })}>구매 확정</Button>}
-                  <Button variant="ghost" size="sm" disabled={update.isPending} aria-label={`${w.title} 이미 비치됨`} onClick={() => update.mutate({ id: w.id, status: 'rejected', note: ALREADY_OWNED_NOTE })}>이미 비치됨</Button>
-                  <Button variant="ghost" size="sm" aria-label={`${w.title} 반려`} onClick={() => setRejecting(w)}>반려</Button>
+                  {w.status === 'requested' && <Button variant="secondary" size="sm" disabled={update.isPending} aria-label={`${w.title} 검토 중으로`} onClick={() => update.mutate({ id: w.id, status: 'approved' })}>검토 중</Button>}
+                  {w.status === 'approved' && <Button variant="primary" size="sm" disabled={update.isPending} aria-label={`${w.title} 구매 확정`} onClick={() => update.mutate({ id: w.id, status: 'purchased' })}>구매 확정</Button>}
+                  <Button variant="secondary" size="sm" disabled={update.isPending} aria-label={`${w.title} 이미 비치됨`} onClick={() => update.mutate({ id: w.id, status: 'rejected', note: ALREADY_OWNED_NOTE })}>이미 비치됨</Button>
+                  <Button variant="danger" size="sm" aria-label={`${w.title} 반려`} onClick={() => setRejecting(w)}>반려</Button>
                 </span>
               )}
             </li>
@@ -58,9 +58,9 @@ export function WishesPanel() {
         onClose={closeReject}
         actions={
           <>
-            <Button variant="ghost" onClick={closeReject}>돌아가기</Button>
+            <Button variant="secondary" onClick={closeReject}>돌아가기</Button>
             <Button
-              variant="warn"
+              variant="danger"
               disabled={update.isPending}
               onClick={() => {
                 setSubmitted(true)
@@ -101,7 +101,7 @@ export function ReportsPanel() {
             </div>
             <p className="muted small">신고 {r.reporter.intra_id} · {day(r.created_at)}{r.detail ? ` — ${r.detail}` : ''}</p>
             <span>
-              <Button variant="ghost" size="sm" disabled={resolve.isPending} aria-label={`${r.book_title} 처리 완료`} onClick={() => resolve.mutate(r.id)}>처리 완료</Button>
+              <Button variant="secondary" size="sm" disabled={resolve.isPending} aria-label={`${r.book_title} 처리 완료`} onClick={() => resolve.mutate(r.id)}>처리 완료</Button>
             </span>
           </li>
         ))}

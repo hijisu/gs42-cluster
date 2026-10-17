@@ -38,7 +38,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
         onClose={() => setOpen(false)}
         actions={
           <>
-            <Button variant="ghost" disabled={unread === 0 || markAll.isPending} onClick={() => markAll.mutate()}>
+            <Button variant="secondary" disabled={unread === 0 || markAll.isPending} onClick={() => markAll.mutate()}>
               모두 읽음 처리
             </Button>
             <Button onClick={() => setOpen(false)}>닫기</Button>
@@ -85,11 +85,11 @@ export function NotificationBanner() {
       </span>
       <span className="row" style={{ gap: 8 }}>
         {latest.link && (
-          <Button variant="teal" size="sm" onClick={() => openNotification(latest)}>
+          <Button variant="ondark" size="sm" onClick={() => openNotification(latest)}>
             확인하기
           </Button>
         )}
-        <Button variant="ghost" size="sm" disabled={markRead.isPending} onClick={() => markRead.mutate(latest.id)}>
+        <Button variant="secondary" size="sm" disabled={markRead.isPending} onClick={() => markRead.mutate(latest.id)}>
           닫기
         </Button>
       </span>

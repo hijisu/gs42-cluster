@@ -72,7 +72,7 @@ export function PushSettings() {
       <span className="label">푸시 알림</span>
       <span className="small">{state === 'on' ? '이 기기에서 푸시 알림을 받고 있어요.' : '켜면 앱을 열지 않아도 이 기기로 알림을 받아요. 끄면 앱 안 알림만 표시돼요.'}</span>
       <div>
-        <Button size="sm" variant={state === 'on' ? 'ghost' : 'teal'} disabled={busy || state === 'loading'} onClick={toggle}>
+        <Button size="sm" variant={state === 'on' ? 'secondary' : 'primary'} disabled={busy || state === 'loading'} onClick={toggle}>
           {state === 'on' ? '푸시 알림 끄기' : '푸시 알림 켜기'}
         </Button>
       </div>

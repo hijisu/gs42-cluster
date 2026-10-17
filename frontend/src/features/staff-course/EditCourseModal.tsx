@@ -63,7 +63,7 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
       </div>
       <Participants course={course} />
       <div className="modal-actions">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>
       </div>
@@ -127,15 +127,13 @@ function Participants({ course }: { course: StaffCourse }) {
   return (
     <section className="stack" style={{ gap: 8 }} aria-label="참여 학생">
       <h3 style={{ fontSize: 16 }}>참여 학생 {participants.length}명</h3>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <input id="edit-ids" className="input" style={{ flexGrow: 1 }} aria-label="추가할 intra ID" placeholder="intra ID 입력 후 Enter 또는 ‘추가’" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} />
-        <Button variant="ghost" disabled={add.isPending} onClick={addIds}>
+        <Button variant="secondary" disabled={add.isPending} onClick={addIds}>
           추가
         </Button>
-      </div>
-      <div>
-        <Button variant="ghost" size="sm" disabled={add.isPending} onClick={() => fileRef.current?.click()}>
-          CSV로 한 번에 추가
+        <Button variant="secondary" disabled={add.isPending} onClick={() => fileRef.current?.click()}>
+          CSV
         </Button>
         <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" tabIndex={-1} aria-label="CSV 파일 선택" onChange={(e) => { void addCsv(e.target.files?.[0]); e.target.value = '' }} />
       </div>
@@ -151,15 +149,15 @@ function Participants({ course }: { course: StaffCourse }) {
             {confirming === p.intra_id ? (
               <span style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="small">{p.reviewed ? '이미 후기를 썼어요. 빼도 후기는 남고 작성률에서만 빠져요.' : '이 참여자를 뺄까요?'}</span>
-                <Button size="sm" variant="warn" disabled={remove.isPending} onClick={() => doRemove(p.intra_id)}>
+                <Button size="sm" variant="danger" disabled={remove.isPending} onClick={() => doRemove(p.intra_id)}>
                   제거 확인
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setConfirming(null)}>
+                <Button size="sm" variant="secondary" onClick={() => setConfirming(null)}>
                   취소
                 </Button>
               </span>
             ) : (
-              <Button size="sm" variant="ghost" aria-label={`${p.intra_id} 제거`} onClick={() => setConfirming(p.intra_id)}>
+              <Button size="sm" variant="danger" aria-label={`${p.intra_id} 제거`} onClick={() => setConfirming(p.intra_id)}>
                 제거
               </Button>
             )}

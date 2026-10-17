@@ -79,12 +79,12 @@ export function MyReservations() {
                 <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <Pill tone={statusTone[r.status]}>{statusLabel[r.status]}</Pill>
                   {r.status === 'approved' && (
-                    <Button variant={acked.includes(r.id) ? 'ghost' : 'teal'} size="sm" onClick={() => setRulesFor(r)}>
+                    <Button variant={acked.includes(r.id) ? 'secondary' : 'primary'} size="sm" onClick={() => setRulesFor(r)}>
                       {acked.includes(r.id) ? '이용수칙 보기' : '이용수칙 확인'}
                     </Button>
                   )}
                   {cancelable(r.status) && (
-                    <Button variant="ghost" size="sm" aria-label={`${title} 요청 취소`} onClick={() => setTarget(r)}>
+                    <Button variant="danger" size="sm" aria-label={`${title} 요청 취소`} onClick={() => setTarget(r)}>
                       요청 취소
                     </Button>
                   )}
@@ -103,10 +103,10 @@ export function MyReservations() {
         onClose={closeCancel}
         actions={
           <>
-            <Button variant="ghost" onClick={closeCancel}>
+            <Button variant="secondary" onClick={closeCancel}>
               돌아가기
             </Button>
-            <Button variant="warn" disabled={cancel.isPending} onClick={() => target && cancel.mutate(target.id, { onSuccess: closeCancel })}>
+            <Button variant="danger" disabled={cancel.isPending} onClick={() => target && cancel.mutate(target.id, { onSuccess: closeCancel })}>
               요청 취소
             </Button>
           </>

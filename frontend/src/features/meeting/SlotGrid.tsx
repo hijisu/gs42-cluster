@@ -36,11 +36,11 @@ export function SlotGrid({ slots, selected, onSelect }: SlotGridProps) {
   return (
     <div className="slot-wrap">
       <div className="row">
-        <Button variant="ghost" size="sm" disabled={week === 0} onClick={() => setWeek(week - 1)}>
+        <Button variant="secondary" size="sm" disabled={week === 0} onClick={() => setWeek(week - 1)}>
           이전 주
         </Button>
         <b className="mono" aria-live="polite">{formatMonthDay(dates[0])} ~ {formatMonthDay(dates[4])}</b>
-        <Button variant="ghost" size="sm" disabled={week >= SLOT_WEEKS - 1} onClick={() => setWeek(week + 1)}>
+        <Button variant="secondary" size="sm" disabled={week >= SLOT_WEEKS - 1} onClick={() => setWeek(week + 1)}>
           다음 주
         </Button>
       </div>

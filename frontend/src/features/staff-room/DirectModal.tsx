@@ -41,7 +41,7 @@ export function DirectModal({ open, date, rooms, onClose }: { open: boolean; dat
       onClose={close}
       actions={
         <>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="secondary" onClick={close}>
             취소
           </Button>
           <Button

@@ -26,7 +26,7 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
     <Card className="stack" style={{ gap: 12 }} aria-label="예약 차단 기간">
       <div className="row">
         <h2 className="card-title">예약 차단 기간</h2>
-        <Button variant="ghost" size="sm" disabled={rooms.length === 0} onClick={() => setTarget({ mode: 'create' })}>
+        <Button variant="secondary" size="sm" disabled={rooms.length === 0} onClick={() => setTarget({ mode: 'create' })}>
           차단 추가
         </Button>
       </div>
@@ -46,24 +46,24 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
               <span className="mono">{blockTime(b)}</span> · {repeatSummary(b)} · 남은 {b.occurrences.length}회
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button size="sm" variant="ghost" aria-label={`${b.reason} 회차 보기`} aria-expanded={open === b.id} onClick={() => setOpen(open === b.id ? null : b.id)}>
+              <Button size="sm" variant="secondary" aria-label={`${b.reason} 회차 보기`} aria-expanded={open === b.id} onClick={() => setOpen(open === b.id ? null : b.id)}>
                 회차 {open === b.id ? '접기' : '보기'}
               </Button>
-              <Button size="sm" variant="ghost" aria-label={`${b.reason} 전체 수정`} onClick={() => setTarget({ mode: 'series', block: b })}>
+              <Button size="sm" variant="secondary" aria-label={`${b.reason} 전체 수정`} onClick={() => setTarget({ mode: 'series', block: b })}>
                 전체 수정
               </Button>
               {confirming === b.id ? (
                 <>
                   <span className="small">모든 회차가 삭제돼요.</span>
-                  <Button size="sm" variant="warn" disabled={remove.isPending} onClick={() => remove.mutate(b.id, { onSuccess: () => setConfirming(null) })}>
+                  <Button size="sm" variant="danger" disabled={remove.isPending} onClick={() => remove.mutate(b.id, { onSuccess: () => setConfirming(null) })}>
                     삭제 확인
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setConfirming(null)}>
+                  <Button size="sm" variant="secondary" onClick={() => setConfirming(null)}>
                     취소
                   </Button>
                 </>
               ) : (
-                <Button size="sm" variant="warn" aria-label={`${b.reason} 전체 삭제`} onClick={() => setConfirming(b.id)}>
+                <Button size="sm" variant="danger" aria-label={`${b.reason} 전체 삭제`} onClick={() => setConfirming(b.id)}>
                   전체 삭제
                 </Button>
               )}
@@ -76,10 +76,10 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
                       {formatDayLabel(kstDate(o.start_at))} <span className="mono">{blockTime(o)}</span>
                     </span>
                     <span style={{ display: 'flex', gap: 6 }}>
-                      <Button size="sm" variant="ghost" aria-label={`${b.reason} ${o.date} 이 회차 수정`} onClick={() => setTarget({ mode: 'occurrence', block: b, day: o.date })}>
+                      <Button size="sm" variant="secondary" aria-label={`${b.reason} ${o.date} 이 회차 수정`} onClick={() => setTarget({ mode: 'occurrence', block: b, day: o.date })}>
                         수정
                       </Button>
-                      <Button size="sm" variant="warn" aria-label={`${b.reason} ${o.date} 이 회차 삭제`} disabled={removeOne.isPending} onClick={() => removeOne.mutate({ id: b.id, day: o.date })}>
+                      <Button size="sm" variant="danger" aria-label={`${b.reason} ${o.date} 이 회차 삭제`} disabled={removeOne.isPending} onClick={() => removeOne.mutate({ id: b.id, day: o.date })}>
                         삭제
                       </Button>
                     </span>

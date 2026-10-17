@@ -12,7 +12,7 @@ export function BookDetailModal({ book, onClose, onReport }: { book: Book | null
       actions={
         book && (
           <>
-            <Button variant="ghost" onClick={() => onReport(book)}>
+            <Button variant="secondary" onClick={() => onReport(book)}>
               분실·훼손 신고
             </Button>
             <Button onClick={onClose}>닫기</Button>

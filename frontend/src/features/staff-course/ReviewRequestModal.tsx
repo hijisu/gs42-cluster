@@ -50,13 +50,13 @@ function Body({ course, onClose }: { course: StaffCourse; onClose: () => void })
         </p>
       )}
       <div className="modal-actions" style={{ flexWrap: 'wrap' }}>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>
-        <Button variant="ghost" disabled={send.isPending} onClick={() => submit('all')}>
+        <Button variant="secondary" disabled={send.isPending} onClick={() => submit('all')}>
           전체에게 보내기
         </Button>
-        <Button variant="teal" disabled={send.isPending} onClick={() => submit('pending')}>
+        <Button variant="primary" disabled={send.isPending} onClick={() => submit('pending')}>
           미작성자에게 보내기
         </Button>
       </div>

@@ -33,7 +33,7 @@ export function HomePage() {
               <b>{first.name}</b>에 참여하셨네요. 다음 교육생을 위해 후기를 남겨 주세요.
             </span>
           </span>
-          <Link className="btn teal" to={`/reviews?course=${first.id}&write=1`}>
+          <Link className="btn ondark" to={`/reviews?course=${first.id}&write=1`}>
             후기 작성하기
           </Link>
         </div>

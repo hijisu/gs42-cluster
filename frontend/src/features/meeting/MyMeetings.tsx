@@ -25,7 +25,7 @@ export function MyMeetings() {
         cancelable(m.status) ? (
           <>
           {m.status === 'proposed' && m.proposed_at && <Button size="sm" disabled={accept.isPending} onClick={() => accept.mutate(m.id)}>제안 수락(확정하기)</Button>}
-          <Button variant="ghost" size="sm" aria-label={`${formatDateTime(m.slot_at)} ${m.type.name} 취소`} onClick={() => setTarget(m)}>
+          <Button variant="danger" size="sm" aria-label={`${formatDateTime(m.slot_at)} ${m.type.name} 취소`} onClick={() => setTarget(m)}>
             취소
           </Button>
           </>
@@ -55,11 +55,11 @@ export function MyMeetings() {
         onClose={close}
         actions={
           <>
-            <Button variant="ghost" onClick={close}>
+            <Button variant="secondary" onClick={close}>
               돌아가기
             </Button>
             <Button
-              variant="warn"
+              variant="danger"
               disabled={cancel.isPending}
               onClick={() => target && cancel.mutate(target.id, { onSuccess: close })}
             >

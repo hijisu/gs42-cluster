@@ -1,6 +1,14 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-export type ButtonVariant = 'primary' | 'ghost' | 'teal' | 'warn'
+/**
+ * 버튼 규격(역할 3가지 + 어두운 배너용 1가지)
+ * - primary: 기본(검정). 화면·폼·모달의 주 동작
+ * - secondary: 보조(흰색 + 테두리)
+ * - danger: 위험(빨간 테두리). 반려·삭제·취소·신고처럼 되돌리기 어려운 동작
+ * - ondark: 어두운 배너 위에서만 쓰는 강조(티얼)
+ * 크기 2단계: md=36px(페이지·폼·모달 하단), sm=28px(카드·표 안). 모바일(900px 이하)은 둘 다 44px.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ondark'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -9,9 +17,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClass: Record<ButtonVariant, string> = {
   primary: '',
-  ghost: 'ghost',
-  teal: 'teal',
-  warn: 'warn',
+  secondary: 'secondary',
+  danger: 'danger',
+  ondark: 'ondark',
 }
 
 export function Button({ variant = 'primary', size = 'md', className = '', type = 'button', ...rest }: ButtonProps) {

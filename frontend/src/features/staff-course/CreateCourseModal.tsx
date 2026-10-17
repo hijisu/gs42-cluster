@@ -86,15 +86,13 @@ export function CreateCourseModal({ open, onClose, onDone }: { open: boolean; on
       <Field label="후기 작성 마감(선택)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={submitted ? errors.deadline : undefined} />
       <div className="field">
         <label htmlFor="course-ids">참여 학생</label>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input id="course-ids" className="input" style={{ flexGrow: 1 }} placeholder="intra ID 입력 후 Enter 또는 ‘추가’" value={idInput} onChange={(e) => setIdInput(e.target.value)} onKeyDown={onKey} />
-          <Button variant="ghost" onClick={() => addIds(idInput)}>
+          <Button variant="secondary" onClick={() => addIds(idInput)}>
             추가
           </Button>
-        </div>
-        <div>
-          <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
-            CSV로 한 번에 추가
+          <Button variant="secondary" onClick={() => fileRef.current?.click()}>
+            CSV
           </Button>
           <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" tabIndex={-1} aria-label="CSV 파일 선택" onChange={(e) => onFile(e.target.files?.[0])} />
         </div>
@@ -114,7 +112,7 @@ export function CreateCourseModal({ open, onClose, onDone }: { open: boolean; on
       <p className="muted small">등록하면 후기 게시판이 만들어지고, 종료일이 되면 자동으로 후기를 받기 시작해요. 등록한 뒤에도 표에서 수정할 수 있어요.</p>
       {error && <p role="alert" className="login-error">{error}</p>}
       <div className="modal-actions">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           취소
         </Button>
         <Button disabled={create.isPending} onClick={submit}>

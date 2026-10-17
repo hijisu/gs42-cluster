@@ -53,7 +53,7 @@ export function WishModal({ open, onClose, onDone }: { open: boolean; onClose: (
         <Field label="링크(선택)" type="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} />
         {error && <p role="alert" className="login-error">{error}</p>}
         <div className="modal-actions">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             취소
           </Button>
           <Button type="submit" disabled={create.isPending}>

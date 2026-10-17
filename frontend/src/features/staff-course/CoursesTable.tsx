@@ -38,11 +38,11 @@ export function CoursesTable({ courses, onRequest, onEdit }: { courses: StaffCou
       header: '',
       render: (c) => (
         <span style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-          <Button variant="ghost" size="sm" aria-label={`${c.name} 수정`} onClick={() => onEdit(c.id)}>
+          <Button variant="secondary" size="sm" aria-label={`${c.name} 수정`} onClick={() => onEdit(c.id)}>
             수정
           </Button>
           {canRequest(c, today) && (
-            <Button variant="ghost" size="sm" aria-label={`${c.name} 후기 요청`} onClick={() => onRequest(c.id)}>
+            <Button variant="secondary" size="sm" aria-label={`${c.name} 후기 요청`} onClick={() => onRequest(c.id)}>
               후기 요청
             </Button>
           )}
