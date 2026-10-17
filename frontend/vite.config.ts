@@ -21,8 +21,12 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#F2F2EE',
         theme_color: '#00BABC',
+        // 홈 화면 설치(Android Chrome)에는 192/512 PNG 아이콘이 필요하다.
         icons: [
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
     }),

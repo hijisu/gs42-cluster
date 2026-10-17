@@ -68,3 +68,21 @@ describe('인증 가드', () => {
     expect(screen.getByRole('link', { name: '42 intra로 로그인' })).toHaveAttribute('href', '/api/auth/login')
   })
 })
+
+describe('접근성: 레이아웃', () => {
+  it('본문 바로가기 링크가 main으로 연결된다', async () => {
+    mockMe('student')
+    renderAt('/')
+    const skip = await screen.findByRole('link', { name: '본문 바로가기' })
+    expect(skip).toHaveAttribute('href', '#main')
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main')
+  })
+
+  it('현재 메뉴에 aria-current가 표시된다', async () => {
+    mockMe('student')
+    renderAt('/meeting')
+    const nav = await screen.findByRole('navigation', { name: '주요 메뉴' })
+    const current = within(nav).getByRole('link', { current: 'page' })
+    expect(current).toHaveTextContent('면담 신청')
+  })
+})

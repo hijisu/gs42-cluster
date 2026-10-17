@@ -42,7 +42,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .slot-grid{display:grid;gap:var(--sp-2);min-width:420px}
 .slot-head{text-align:center}
 .slot-time{font-size:13px;display:flex;align-items:center}
-.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-brand-dim);display:flex;align-items:center;justify-content:center;font-size:13px}
+.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:13px}
 .chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
 
 /* 알림 배너·평점 점·과정 요약 */

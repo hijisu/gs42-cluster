@@ -47,6 +47,7 @@ export function StaffMeetingPage() {
         </div>
         <div className="col">
           <AvailabilityPanel />
+          {(types.isError || members.isError) && <p role="alert">담당자·유형 정보를 불러오지 못했어요. 새로고침해 주세요.</p>}
           {types.data && <DefaultStaffPanel types={types.data} members={members.data ?? []} />}
           <div className="info">
             <span className="label">비대면 면담</span>
