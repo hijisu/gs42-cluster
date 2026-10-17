@@ -8,7 +8,8 @@ import { ALREADY_OWNED_NOTE, reportKindLabel, wishStatusLabel } from './labels'
 
 const day = (iso: string) => formatMonthDay(kstDate(iso))
 
-export function WishesPanel() {
+/** 희망 도서 목록(탭 카드 안) */
+function WishesList() {
   const wishes = useWishes()
   const update = useUpdateWish()
   const [rejecting, setRejecting] = useState<BookWish | null>(null)
@@ -22,8 +23,7 @@ export function WishesPanel() {
   }
 
   return (
-    <Card className="stack" style={{ gap: 8 }}>
-      <h2 className="card-title">희망 도서 신청 {wishes.data ? wishes.data.filter((w) => w.status === 'requested').length : ''}</h2>
+    <div className="stack" style={{ gap: 8 }}>
       {wishes.isPending && <p className="muted" role="status">불러오는 중…</p>}
       {wishes.isError && <p role="alert">희망 도서를 불러오지 못했어요.</p>}
       {error && <p role="alert" className="login-error">{error}</p>}
@@ -76,18 +76,18 @@ export function WishesPanel() {
         {rejecting && <p className="muted small">{rejecting.requester.intra_id} · {rejecting.title}</p>}
         <Field label="반려 사유" multiline value={reason} onChange={(e) => setReason(e.target.value)} error={submitted && reason.trim() === '' ? '반려 사유를 입력해 주세요.' : undefined} />
       </Modal>
-    </Card>
+    </div>
   )
 }
 
-export function ReportsPanel() {
+/** 분실·훼손 신고 목록(탭 카드 안) */
+function ReportsList() {
   const reports = useReports()
   const resolve = useResolveReport()
   const open = reports.data?.filter((r) => r.status === 'received') ?? []
   const error = messageFor(resolve.error, '처리하지 못했어요. 잠시 후 다시 시도해 주세요.')
   return (
-    <Card className="stack" style={{ gap: 8 }}>
-      <h2 className="card-title">분실 · 훼손 신고 {reports.data ? open.length : ''}</h2>
+    <div className="stack" style={{ gap: 8 }}>
       {reports.isPending && <p className="muted" role="status">불러오는 중…</p>}
       {reports.isError && <p role="alert">신고를 불러오지 못했어요.</p>}
       {error && <p role="alert" className="login-error">{error}</p>}
@@ -106,6 +106,32 @@ export function ReportsPanel() {
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+type Tab = 'wish' | 'report'
+
+/** 도서 목록 옆의 탭 카드: 희망 도서 | 분실·훼손 신고(탭에 처리할 건수). 탭은 가운데 정렬. */
+export function LibraryRequestsCard() {
+  const [tab, setTab] = useState<Tab>('wish')
+  const wishes = useWishes()
+  const reports = useReports()
+  const wishCount = wishes.data?.filter((w) => w.status === 'requested').length
+  const reportCount = reports.data?.filter((r) => r.status === 'received').length
+  return (
+    <Card className="stack" style={{ gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="tabs compact" role="tablist" aria-label="희망 도서·신고">
+          <button type="button" role="tab" aria-selected={tab === 'wish'} className={tab === 'wish' ? 'on' : ''} onClick={() => setTab('wish')}>
+            희망 도서{wishCount !== undefined ? ` ${wishCount}` : ''}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'report'} className={tab === 'report' ? 'on' : ''} onClick={() => setTab('report')}>
+            분실·훼손 신고{reportCount !== undefined ? ` ${reportCount}` : ''}
+          </button>
+        </div>
+      </div>
+      <div role="tabpanel">{tab === 'wish' ? <WishesList /> : <ReportsList />}</div>
     </Card>
   )
 }
