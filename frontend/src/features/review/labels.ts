@@ -16,5 +16,7 @@ export const errorLabel: Record<string, string> = {
   review_closed: '후기를 쓸 수 있는 기간이 아닙니다(종료 전이거나 마감 후).',
   already_reviewed: '이미 후기를 작성한 과정입니다.',
   course_not_found: '과정을 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요.',
+  not_review_author: '내가 쓴 후기만 수정할 수 있어요.',
+  review_not_found: '후기를 찾을 수 없어요. 새로고침 후 다시 시도해 주세요.',
   invalid_review: '입력 내용을 확인해 주세요.',
 }

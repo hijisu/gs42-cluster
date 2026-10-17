@@ -251,3 +251,8 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .av-cell{min-height:14px}
   .av-sep{margin:3px 0}
 }
+
+/* 후기 카드: 좋았던 점 1줄 말줄임, 카드 전체가 눌리는 영역 */
+.clamp1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.review-item{cursor:pointer}
+.review-item:hover{border-color:var(--c-ink)}
