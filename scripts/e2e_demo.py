@@ -184,7 +184,7 @@ def scenario_room(student: Api, staff: Api, r: Report) -> None:
         r.step("알림을 읽음 처리할 수 있다", student.post(f"/api/notifications/{note['id']}/read")["read"] is True)
         r.step("승인 후 이용수칙을 계속 볼 수 있다", bool(student.get("/api/rooms/rules")["usage_rules"]))
     finally:
-        cancelled = student.post(f"/api/reservations/{rid}/cancel")
+        cancelled = staff.post(f"/api/staff/reservations/{rid}/cancel")
     r.step("(정리) 취소하면 canceled다", cancelled["status"] == "canceled")
     again = student.get(f"/api/rooms/availability?date={day.isoformat()}")
     row = next(x for x in again["rooms"] if x["room"]["id"] == room["id"])
@@ -235,7 +235,7 @@ def scenario_meeting(student: Api, staff: Api, r: Report) -> None:
         r.step("확정 알림이 도착한다(링크 /meeting)", note is not None and note["link"] == "/meeting")
         student.post(f"/api/notifications/{note['id']}/read")
     finally:
-        cancelled = student.post(f"/api/meetings/{mid}/cancel")
+        cancelled = staff.post(f"/api/staff/meetings/{mid}/cancel")
     r.step("(정리) 취소하면 canceled다", cancelled["status"] == "canceled")
     restored = student.get(f"/api/meetings/slots?from={first.isoformat()}&to={last.isoformat()}")
     back = next(s for s in restored if s["start_at"] == slot["start_at"])

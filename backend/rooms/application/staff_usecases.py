@@ -17,7 +17,12 @@ from rooms.application.ports import (
 from rooms.application.usecases import Clock, ensure_not_blocked
 from rooms.domain.conflict import ConflictChecker
 from rooms.domain.errors import ReservationNotFound, RoomBlocked, RoomNotFound
-from rooms.domain.events import ReservationApproved, ReservationReassigned, ReservationRejected
+from rooms.domain.events import (
+    ReservationApproved,
+    ReservationCanceled,
+    ReservationReassigned,
+    ReservationRejected,
+)
 from rooms.domain.reservation import ReservationStatus, RoomReservation
 from rooms.domain.room import RoomStatus
 from rooms.domain.rules import KST, RoomRules
@@ -148,6 +153,27 @@ class RejectReservationUseCase(_Staff):
                 room_id=reservation.room_id,
                 reason=reservation.reject_reason,
                 room_name=room.name if room else "",
+            )
+        )
+        return self._one(reservation.id)
+
+
+class StaffCancelReservationUseCase(_Staff):
+    """운영팀 취소. 승인된 예약도 취소할 수 있다(교육생은 승인 전까지만)."""
+
+    def __init__(self, rooms, reservations, read_model, events: EventDispatcher) -> None:
+        super().__init__(rooms, reservations, read_model)
+        self._events = events
+
+    def execute(self, reservation_id: int) -> StaffReservationView:
+        reservation = _load(self._reservations, reservation_id)
+        reservation.cancel_by_staff()
+        self._reservations.save(reservation)
+        self._events.publish(
+            ReservationCanceled(
+                reservation_id=reservation.id,
+                user_id=reservation.user_id,
+                room_id=reservation.room_id,
             )
         )
         return self._one(reservation.id)

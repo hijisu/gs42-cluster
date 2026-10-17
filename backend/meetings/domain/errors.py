@@ -27,3 +27,9 @@ class StaffNotFound(NotFoundError):
 
 class SlotHasMeeting(ConflictError):
     code = "slot_has_meeting"
+
+
+class NotCancelable(InvalidTransition):
+    """교육생이 취소할 수 없는 상태(확정된 면담 등). 운영팀 취소 경로는 따로 있다."""
+
+    code = "not_cancelable"

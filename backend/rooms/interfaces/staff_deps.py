@@ -16,6 +16,7 @@ from rooms.application.staff_usecases import (
     ReassignReservationUseCase,
     RejectReservationUseCase,
     StaffBookUseCase,
+    StaffCancelReservationUseCase,
     UpdateRoomUseCase,
     UpdateRulesUseCase,
 )
@@ -96,3 +97,7 @@ def skip_occurrence() -> SkipOccurrenceUseCase:
 
 def update_occurrence() -> UpdateOccurrenceUseCase:
     return UpdateOccurrenceUseCase(*_block_base())
+
+
+def staff_cancel() -> StaffCancelReservationUseCase:
+    return StaffCancelReservationUseCase(*_base(), event_bus)

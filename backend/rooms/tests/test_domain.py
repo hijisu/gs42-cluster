@@ -9,6 +9,7 @@ from rooms.domain.conflict import ConflictChecker
 from rooms.domain.errors import (
     InvalidRange,
     InvalidTransition,
+    NotCancelable,
     OutsideHours,
     PastTime,
     RoomConflict,
@@ -139,11 +140,33 @@ def test_terminal_states_reject_everything(terminal):
             action(res(status=terminal))
 
 
-@pytest.mark.parametrize("status", [ReservationStatus.PENDING, ReservationStatus.APPROVED])
-def test_owner_can_cancel_active(status):
-    r = res(status=status)
+def test_owner_can_cancel_pending():
+    r = res(status=ReservationStatus.PENDING)
     r.cancel(by_user_id=1)
     assert r.status == ReservationStatus.CANCELED
+
+
+@pytest.mark.parametrize(
+    "status", [ReservationStatus.APPROVED, ReservationStatus.REJECTED, ReservationStatus.CANCELED]
+)
+def test_owner_cannot_cancel_after_approval_or_finish(status):
+    r = res(status=status)
+    with pytest.raises(NotCancelable):
+        r.cancel(by_user_id=1)
+    assert r.status == status
+
+
+@pytest.mark.parametrize("status", [ReservationStatus.PENDING, ReservationStatus.APPROVED])
+def test_staff_can_cancel_active_reservation(status):
+    r = res(status=status)
+    r.cancel_by_staff()
+    assert r.status == ReservationStatus.CANCELED
+
+
+@pytest.mark.parametrize("status", [ReservationStatus.REJECTED, ReservationStatus.CANCELED])
+def test_staff_cannot_cancel_finished_reservation(status):
+    with pytest.raises(InvalidTransition):
+        res(status=status).cancel_by_staff()
 
 
 def test_only_owner_can_cancel():

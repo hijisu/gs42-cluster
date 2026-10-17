@@ -84,6 +84,14 @@ def propose(request, meeting_id: int):
     return Response(staff_meeting_payload(view))
 
 
+@staff_api(["POST"])
+def cancel(request, meeting_id: int):
+    """운영팀 취소. 확정된 면담도 취소할 수 있다(교육생은 확정 전까지만)."""
+    with transaction.atomic():
+        view = deps.staff_cancel_meeting().execute(meeting_id)
+    return Response(staff_meeting_payload(view))
+
+
 @staff_api(["GET", "PUT", "DELETE"])
 def availability(request):
     """내 면담 가능 시간. 직접 저장하지 않은 날은 기본 가능 시간(평일 10~12·13~17시)이다.
