@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { asUser, mockApi, renderAt, type Handler } from '../../test-utils'
 import { kstDateFromToday, kstToIso } from '../../lib/datetime'
 import type { Meeting } from '../meeting/api'
@@ -142,26 +141,8 @@ describe('교육생 홈 대시보드', () => {
     expect(section.getByText('문의는 #pedago')).toBeInTheDocument()
   })
 
-  it('통합 검색: 회의실·교육과정·도서를 찾아 해당 화면으로 연결한다', async () => {
+  it('통합 검색창은 없다', async () => {
     await openHome(data())
-    expect(screen.queryByRole('list', { name: '검색 결과' })).toBeNull()
-    await userEvent.type(screen.getByLabelText('통합 검색'), '데이터')
-    const results = await screen.findByRole('list', { name: '검색 결과' })
-    expect(within(results).getByRole('link', { name: /경북 특화형 데이터센터 기초과정/ })).toHaveAttribute('href', '/reviews')
-    expect(within(results).queryByRole('link', { name: /다목적회의실/ })).toBeNull()
-    expect(within(results).getByRole('link', { name: /'데이터' 도서 검색 결과 보기/ })).toHaveAttribute('href', '/library?q=%EB%8D%B0%EC%9D%B4%ED%84%B0')
-
-    await userEvent.clear(screen.getByLabelText('통합 검색'))
-    await userEvent.type(screen.getByLabelText('통합 검색'), '회의실')
-    expect(await within(await screen.findByRole('list', { name: '검색 결과' })).findByRole('link', { name: /다목적회의실/ })).toHaveAttribute('href', '/room')
-  })
-
-  it('통합 검색의 도서 결과는 도서 화면(검색어 포함)으로 연결한다', async () => {
-    await openHome(data())
-    await userEvent.type(screen.getByLabelText('통합 검색'), '타입')
-    const results = await screen.findByRole('list', { name: '검색 결과' })
-    const hit = await within(results).findByRole('link', { name: /이펙티브 타입스크립트/ })
-    expect(hit).toHaveAttribute('href', `/library?q=${encodeURIComponent('타입')}`)
-    expect(await within(results).findByText(/\(1종\)/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('통합 검색')).toBeNull()
   })
 })
