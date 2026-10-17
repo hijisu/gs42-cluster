@@ -25,6 +25,14 @@ def e2e():
     return module
 
 
+@pytest.fixture(autouse=True)
+def _plain_http_cookies(settings):
+    """CI 는 운영과 같은 DEBUG=false 라 쿠키가 Secure 인데, 임시 서버는 http 라 브라우저·쿠키 저장소가
+    보내지 않는다. 운영 구성의 로컬 http 검증(DJANGO_COOKIE_SECURE=false)과 같은 조건으로 맞춘다."""
+    settings.SESSION_COOKIE_SECURE = False
+    settings.CSRF_COOKIE_SECURE = False
+
+
 @pytest.fixture
 def demo_stack(settings, live_server):
     settings.DEBUG = True
