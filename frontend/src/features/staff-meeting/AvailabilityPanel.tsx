@@ -1,55 +1,47 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Card, Chip } from '../../components'
+import { Button, Card } from '../../components'
 import { ApiError } from '../../lib/api'
 import { formatMonthDay, kstDateFromToday, weekdayKo } from '../../lib/datetime'
-import { MOBILE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
-import { addDays, END_TIMES, isWeekday, sameSet, slotKey, TIMES, timesBetween, toKeys, toSlots, weekStart } from './availabilityGrid'
-import { useMyAvailability, useResetAvailability, useSaveAvailability } from './hooks'
+import { addDays, firstViewWeek, sameSet, slotKey, TIMES, toKeys, toSlots, weekStart } from './availabilityGrid'
+import { useMyAvailability, useSaveAvailability } from './hooks'
 import { errorLabel } from './labels'
 
-type View = 'week' | 'day'
+/** 보고 바꿀 수 있는 범위: 오늘이 속한 주부터 4주(서버 규칙과 같다) */
+const WEEKS = 4
 
-/** 내 면담 가능 시간: 주/일 단위 칸 선택(드래그·탭) 또는 시작~종료 입력으로 설정 */
+/** 내 면담 가능 시간: 평일 5일 × 30분 칸. 칸을 누르거나 끌어서 열고 닫는다. */
 export function AvailabilityPanel() {
-  const mobile = useMediaQuery(MOBILE_QUERY)
-  const [view, setView] = useState<View>(() => (mobile ? 'day' : 'week'))
-  const [anchor, setAnchor] = useState(() => kstDateFromToday(0))
+  const today = kstDateFromToday(0)
+  const firstWeek = firstViewWeek(today)
+  const [from, setFrom] = useState(firstWeek)
   const [dirty, setDirty] = useState(false)
-
-  const from = view === 'week' ? weekStart(anchor) : anchor
-  const to = view === 'week' ? addDays(from, 6) : anchor
-  const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(from, i)) : [anchor]
+  const to = addDays(from, 6)
+  const days = Array.from({ length: 5 }, (_, i) => addDays(from, i))
   const { data, isPending, isError } = useMyAvailability(from, to)
-  const step = view === 'week' ? 7 : 1
-  const title = view === 'week' ? `${formatMonthDay(from)} ~ ${formatMonthDay(to)}` : `${formatMonthDay(anchor)} (${weekdayKo(anchor)})`
+  const atStart = from <= firstWeek
+  const atEnd = from >= addDays(weekStart(today), 7 * (WEEKS - 1))
 
   return (
     <Card className="stack" style={{ gap: 12 }}>
-      <h2 className="card-title">내 면담 가능 시간</h2>
-      <div className="av-toolbar">
-        <div className="chips" role="group" aria-label="보기 단위">
-          <Chip selected={view === 'week'} disabled={dirty} onClick={() => setView('week')}>주</Chip>
-          <Chip selected={view === 'day'} disabled={dirty} onClick={() => setView('day')}>일</Chip>
-        </div>
-        <div className="av-nav">
-          <Button variant="ghost" size="sm" aria-label={view === 'week' ? '이전 주' : '이전 날'} disabled={dirty} onClick={() => setAnchor(addDays(anchor, -step))}>‹</Button>
-          <span className="av-title" aria-live="polite">{title}</span>
-          <Button variant="ghost" size="sm" aria-label={view === 'week' ? '다음 주' : '다음 날'} disabled={dirty} onClick={() => setAnchor(addDays(anchor, step))}>›</Button>
-          <Button variant="ghost" size="sm" disabled={dirty} onClick={() => setAnchor(kstDateFromToday(0))}>오늘</Button>
-        </div>
-      </div>
-      {dirty && <p className="muted small">저장하지 않은 변경이 있어요. 저장하거나 취소하면 다른 날짜로 이동할 수 있어요.</p>}
+      {isPending && <h2 className="card-title">내 면담 가능 시간</h2>}
       {isPending && <p className="muted" role="status">불러오는 중…</p>}
       {isError && <p role="alert">가능 시간을 불러오지 못했어요.</p>}
       {data && (
         <Editor
-          key={`${from}-${to}-${data.slots.join()}-${data.customized_days.join()}`}
+          key={`${from}-${data.slots.join()}`}
           from={from}
-          to={to}
           days={days}
+          today={today}
           slots={data.slots}
-          customized={data.customized_days}
           onDirty={setDirty}
+          nav={
+            <div className="av-nav">
+              <Button variant="ghost" size="sm" aria-label="이전 주" disabled={dirty || atStart} onClick={() => setFrom(addDays(from, -7))}>‹</Button>
+              <span className="av-title" aria-live="polite">{formatMonthDay(days[0])} ~ {formatMonthDay(days[4])}</span>
+              <Button variant="ghost" size="sm" aria-label="다음 주" disabled={dirty || atEnd} onClick={() => setFrom(addDays(from, 7))}>›</Button>
+              <Button variant="ghost" size="sm" disabled={dirty || atStart} onClick={() => setFrom(firstWeek)}>오늘</Button>
+            </div>
+          }
         />
       )}
     </Card>
@@ -58,16 +50,15 @@ export function AvailabilityPanel() {
 
 interface EditorProps {
   from: string
-  to: string
   days: string[]
+  today: string
   slots: string[]
-  customized: string[]
+  nav: React.ReactNode
   onDirty: (dirty: boolean) => void
 }
 
-function Editor({ from, to, days, slots, customized, onDirty }: EditorProps) {
+function Editor({ from, days, today, slots, nav, onDirty }: EditorProps) {
   const save = useSaveAvailability()
-  const reset = useResetAvailability()
   const initial = toKeys(slots)
   const [picked, setPicked] = useState<Set<string>>(initial)
   const dirty = !sameSet(picked, initial)
@@ -76,150 +67,114 @@ function Editor({ from, to, days, slots, customized, onDirty }: EditorProps) {
     return () => onDirty(false)
   }, [dirty, onDirty])
 
-  const paint = (keys: string[], on: boolean) =>
+  const paint = (key: string, on: boolean) =>
     setPicked((prev) => {
+      if (prev.has(key) === on) return prev
       const next = new Set(prev)
-      keys.forEach((k) => (on ? next.add(k) : next.delete(k)))
+      if (on) next.add(key)
+      else next.delete(key)
       return next
     })
 
-  // 마우스 드래그: 누른 칸의 반대 상태로 지나가는 칸을 모두 칠한다. 터치·키보드는 탭(클릭)으로 토글한다.
-  const dragging = useRef<boolean | null>(null)
-  const skipClick = useRef(false)
+  // 끌기(마우스·터치 공통): 누른 칸의 반대 상태로, 포인터가 지나가는 칸을 모두 칠한다.
+  // 터치는 포인터가 처음 누른 칸에 묶이므로 enter 이벤트 대신 좌표로 칸을 찾는다.
+  const painting = useRef<boolean | null>(null)
+  const cellAt = (x: number, y: number) => (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-slot]')
   useEffect(() => {
-    const end = () => {
-      dragging.current = null
+    const move = (e: PointerEvent) => {
+      if (painting.current === null) return
+      const key = cellAt(e.clientX, e.clientY)?.dataset.slot
+      if (key) paint(key, painting.current)
     }
+    const end = () => {
+      painting.current = null
+    }
+    window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', end)
     window.addEventListener('pointercancel', end)
     return () => {
+      window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', end)
       window.removeEventListener('pointercancel', end)
     }
   }, [])
 
-  const [target, setTarget] = useState(days.length === 1 ? days[0] : 'weekdays')
-  const [start, setStart] = useState('10:00')
-  const [end, setEnd] = useState('12:00')
-  const rangeInvalid = end <= start
-  const apply = (on: boolean) => {
-    const dates = target === 'weekdays' ? days.filter(isWeekday) : [target]
-    paint(dates.flatMap((d) => timesBetween(start, end).map((t) => slotKey(d, t))), on)
-  }
-
-  const error = save.error ?? reset.error
-  const message = error instanceof ApiError ? (errorLabel[error.code ?? ''] ?? '처리하지 못했어요. 잠시 후 다시 시도해 주세요.') : error ? '처리하지 못했어요.' : null
-  const busy = save.isPending || reset.isPending
-  const week = days.length > 1
+  // 서버는 지난 날짜 저장을 거절하므로 오늘 이후의 평일만 보낸다
+  const saveFrom = from > today ? from : today
+  const saveTo = days[4]
+  const error = save.error
+  const message = error instanceof ApiError ? (errorLabel[error.code ?? ''] ?? '저장하지 못했어요. 잠시 후 다시 시도해 주세요.') : error ? '저장하지 못했어요.' : null
 
   return (
     <>
-      <div className={`av-grid ${week ? 'week' : 'day'}`} role="group" aria-label="가능 시간 선택">
+      <div className="row">
+        <h2 className="card-title">내 면담 가능 시간</h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="ghost" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
+            변경 취소
+          </Button>
+          <Button disabled={save.isPending || !dirty} onClick={() => save.mutate({ from: saveFrom, to: saveTo, slots: toSlots(picked, saveFrom, saveTo) })}>
+            {save.isPending ? '저장 중…' : '저장'}
+          </Button>
+        </div>
+      </div>
+      <div className="av-toolbar">{nav}</div>
+      {/* 높이를 고정한 줄이라 안내가 나타나도 격자가 움직이지 않는다 */}
+      <p className="av-status" role="status">
+        {message ?? (dirty ? '저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.' : '')}
+      </p>
+      <div className="av-grid" role="group" aria-label="가능 시간 선택">
         <span />
         {days.map((d) => (
-          <span key={d} className="av-head">
-            {formatMonthDay(d)} ({weekdayKo(d)})
-            <small>{customized.includes(d) ? '직접 설정' : '기본'}</small>
+          <span key={d} className={`av-head${d === today ? ' today' : ''}${d < today ? ' pastcol' : ''}`}>
+            <span>{formatMonthDay(d)} ({weekdayKo(d)})</span>
           </span>
         ))}
         {TIMES.map((t) => (
-          <FragmentRow key={t} time={t}>
+          <Row key={t} time={t}>
             {days.map((d) => {
               const key = slotKey(d, t)
+              if (d < today) return <span key={key} className="av-cell past" aria-hidden="true" />
               const on = picked.has(key)
               return (
                 <button
                   key={key}
                   type="button"
                   className={`av-cell${on ? ' on' : ''}`}
+                  data-slot={key}
+                  data-tip={`${weekdayKo(d)} ${t}`}
                   aria-pressed={on}
                   aria-label={`${formatMonthDay(d)} (${weekdayKo(d)}) ${t}`}
                   onPointerDown={(e) => {
-                    if (e.pointerType !== 'mouse' || e.button !== 0) return
+                    if (e.pointerType === 'mouse' && e.button !== 0) return
                     e.preventDefault()
-                    dragging.current = !on
-                    skipClick.current = true
-                    paint([key], !on)
+                    painting.current = !on
+                    paint(key, !on)
                   }}
-                  onPointerEnter={() => dragging.current !== null && paint([key], dragging.current)}
-                  onClick={() => {
-                    if (skipClick.current) {
-                      skipClick.current = false
-                      return
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      paint(key, !on)
                     }
-                    paint([key], !on)
                   }}
-                >
-                  {!week && t}
-                </button>
+                />
               )
             })}
-          </FragmentRow>
+          </Row>
         ))}
       </div>
-
-      <fieldset className="av-range">
-        <legend className="label">시간 범위로 설정</legend>
-        <div className="av-range-row">
-          <div className="field">
-            <label htmlFor="av-target">날짜</label>
-            <select id="av-target" className="input" value={target} onChange={(e) => setTarget(e.target.value)}>
-              {week && <option value="weekdays">평일 전체</option>}
-              {days.map((d) => (
-                <option key={d} value={d}>
-                  {formatMonthDay(d)} ({weekdayKo(d)})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="av-start">시작</label>
-            <select id="av-start" className="input" value={start} onChange={(e) => setStart(e.target.value)}>
-              {TIMES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="av-end">종료</label>
-            <select id="av-end" className="input" value={end} onChange={(e) => setEnd(e.target.value)}>
-              {END_TIMES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {rangeInvalid && <p role="alert" className="error">종료 시간은 시작 시간보다 늦어야 해요.</p>}
-        <div className="av-range-actions">
-          <Button variant="ghost" size="sm" disabled={rangeInvalid} onClick={() => apply(true)}>열기</Button>
-          <Button variant="ghost" size="sm" disabled={rangeInvalid} onClick={() => apply(false)}>닫기</Button>
-        </div>
-      </fieldset>
-
-      <p className="muted small">
-        저장하면 {week ? '이 주의 모든 날이' : '이 날이'} 직접 설정한 날이 돼요. 표시가 &lsquo;기본&rsquo;인 날은 평일 10~12시·13~17시로 열려 있어요.
-      </p>
-      {message && <p role="alert" className="login-error">{message}</p>}
-      <div className="modal-actions">
-        <Button variant="ghost" disabled={busy || !customized.length} onClick={() => reset.mutate({ from, to })}>
-          기본값으로 되돌리기
-        </Button>
-        <Button variant="ghost" disabled={busy || !dirty} onClick={() => setPicked(initial)}>
-          변경 취소
-        </Button>
-        <Button disabled={busy || !dirty} onClick={() => save.mutate({ from, to, slots: toSlots(picked) })}>
-          {save.isPending ? '저장 중…' : '저장'}
-        </Button>
-      </div>
+      <p className="muted small">오늘부터 4주 안에서 설정할 수 있어요. 칸을 누르거나 끌어서 열고 닫아요.</p>
     </>
   )
 }
 
-/** 시간 라벨 + 날짜별 칸 한 줄(그리드의 자식으로 평탄화) */
-function FragmentRow({ time, children }: { time: string; children: React.ReactNode }) {
+/** 1시간(2칸)마다 전체 열에 걸친 구분선을 넣고, 시각 라벨 + 날짜별 칸을 한 줄로 이어 붙인다. */
+function Row({ time, children }: { time: string; children: React.ReactNode }) {
+  const hour = time.endsWith(':00')
   return (
     <>
-      <span className="av-time">{time.endsWith(':00') ? time : ''}</span>
+      {hour && time !== TIMES[0] && <div className="av-sep" aria-hidden="true" />}
+      <span className="av-time">{hour ? time : ''}</span>
       {children}
     </>
   )

@@ -23,14 +23,20 @@ export const isWeekday = (date: string) => ![0, 6].includes(new Date(`${date}T00
 /** 서버가 준 ISO 시각들 → 화면용 키 집합 */
 export const toKeys = (slots: string[]): Set<string> => new Set(slots.map((iso) => slotKey(kstDate(iso), kstTime(iso))))
 
-/** 화면 키 집합 → 서버로 보낼 ISO(정렬) */
-export const toSlots = (keys: Set<string>): string[] =>
-  [...keys].sort().map((k) => {
-    const [date, time] = k.split(' ')
-    return kstToIso(date, time)
-  })
+/** 화면 키 집합 → 서버로 보낼 ISO(정렬). from~to(포함) 날짜의 칸만 보낸다. */
+export const toSlots = (keys: Set<string>, from: string, to: string): string[] =>
+  [...keys]
+    .filter((k) => k.slice(0, 10) >= from && k.slice(0, 10) <= to)
+    .sort()
+    .map((k) => {
+      const [date, time] = k.split(' ')
+      return kstToIso(date, time)
+    })
 
 /** [start, end) 구간에 걸치는 30분 칸 */
 export const timesBetween = (start: string, end: string): string[] => TIMES.filter((t) => t >= start && t < end)
 
 export const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((k) => b.has(k))
+
+/** 처음 보여줄 주의 월요일: 주말에는 이번 주가 모두 지난 뒤라 다음 주를 보여준다 */
+export const firstViewWeek = (today: string): string => (isWeekday(today) ? weekStart(today) : addDays(weekStart(today), 7))
