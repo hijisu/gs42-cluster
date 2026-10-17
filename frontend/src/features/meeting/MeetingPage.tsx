@@ -61,7 +61,7 @@ export function MeetingPage() {
 
       <form className="split" onSubmit={onSubmit} noValidate>
         <div className="col">
-          <Card className="stack">
+          <Card className="row" style={{ justifyContent: 'flex-start', gap: 12 }}>
             <h2 className="card-title">1. 면담 유형</h2>
             {types.isPending && <p className="muted" role="status">불러오는 중…</p>}
             {types.isError && <p role="alert">면담 유형을 불러오지 못했습니다.</p>}
@@ -72,7 +72,7 @@ export function MeetingPage() {
                 </Chip>
               ))}
             </div>
-            <p className="muted small">담당자는 교육운영팀에서 유형에 맞게 배정합니다.</p>
+            <span className="muted small">담당자는 운영팀이 유형에 맞게 배정해요.</span>
           </Card>
 
           <Card className="stack">
@@ -98,6 +98,7 @@ export function MeetingPage() {
             <Field
               label="문의 내용"
               multiline
+              style={{ minHeight: 64 }}
               placeholder="면담에서 이야기하고 싶은 내용을 적어 주세요. 운영팀만 볼 수 있어요."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -118,6 +119,8 @@ export function MeetingPage() {
             </Button>
           </Card>
 
+          <MyMeetings />
+
           <Card className="stack" style={{ background: 'var(--c-bg)' }}>
             <span className="label">#pedago 이용 안내</span>
             <ul className="ol">
@@ -127,8 +130,6 @@ export function MeetingPage() {
           </Card>
         </div>
       </form>
-
-      <MyMeetings />
     </>
   )
 }

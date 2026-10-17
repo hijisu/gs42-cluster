@@ -82,8 +82,8 @@ describe('면담 신청 화면', () => {
     await userEvent.type(screen.getByLabelText('문의 내용'), '문의')
     await userEvent.click(screen.getByRole('button', { name: '면담 신청하기' }))
 
-    const table = await screen.findByRole('table', { name: '내 면담 신청 내역' })
-    expect(await within(table).findByText('배정 중', { selector: '.pill' })).toBeInTheDocument()
+    const list = await screen.findByRole('list', { name: '내 면담 신청 내역' })
+    expect(await within(list).findByText('배정 중', { selector: '.pill' })).toBeInTheDocument()
     const post = calls.find((c) => c.method === 'POST' && c.url.endsWith('/meetings'))!
     expect(post.body).toEqual({ type_id: 1, slot_at: slots[0].start_at, content: '문의', notify_slack: true })
   })
@@ -119,8 +119,8 @@ describe('면담 신청 화면', () => {
 
   it('확정된 면담에는 취소 버튼이 없고 안내가 있다. 조율 중에는 취소할 수 있다', async () => {
     await openPage((req) => (req.url.endsWith('/meetings/me') ? { json: [{ ...created, id: 8, status: 'confirmed' }, { ...created, status: 'proposed', proposed_at: created.slot_at }] } : undefined))
-    const rows = await screen.findAllByRole('row')
-    const confirmed = rows.find((r) => within(r).queryByText('확정', { selector: '.pill' }))!
+    const confirmed = await screen.findByTestId('meeting-8')
+    expect(within(confirmed).getByText('확정', { selector: '.pill' })).toBeInTheDocument()
     expect(within(confirmed).queryByRole('button', { name: /취소/ })).toBeNull()
     expect(screen.getAllByRole('button', { name: /프리즈 취소/ })).toHaveLength(1)
     expect(screen.getByText(/확정된 면담은 취소할 수 없어요/)).toBeInTheDocument()
@@ -144,7 +144,7 @@ it('제안 시간을 표시하고 수락하면 확정으로 갱신한다', async
     (req) => req.url.endsWith('/meetings/me') ? { json: [proposal] } : undefined,
     (req) => req.url.endsWith('/meetings/7/accept') ? { json: { ...proposal, status: 'confirmed', slot_at: proposal.proposed_at } } : undefined,
   )
-  expect(await screen.findByText(/제안:/)).toHaveTextContent('15:07')
+  expect(await screen.findByText(/제안 \d/)).toHaveTextContent('15:07')
   await userEvent.click(await screen.findByRole('button', { name: '제안 수락(확정하기)' }))
   expect(await screen.findByText('확정', { selector: '.pill' })).toBeInTheDocument()
   expect(calls.some(c => c.method === 'POST' && c.url.endsWith('/meetings/7/accept'))).toBe(true)
