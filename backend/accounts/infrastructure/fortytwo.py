@@ -34,16 +34,34 @@ class FortyTwoOAuthClient:
         return f"{AUTHORIZE_URL}?{query}"
 
     def fetch_profile(self, code: str) -> FortyTwoProfile:
-        try:
-            token = self._post_token(code)
-            me = self._get_json(ME_URL, token)
-        except (urllib.error.URLError, ValueError, KeyError, TimeoutError) as exc:
-            raise AuthenticationFailed("42 인증에 실패했습니다") from exc
+        token = self._call("token", self._post_token, code)
+        me = self._call("profile", self._get_json, ME_URL, token)
         login = me.get("login")
         if not login:
-            raise AuthenticationFailed("42 프로필에 login이 없습니다")
+            raise AuthenticationFailed(
+                "42 프로필에 login이 없습니다", stage="profile", reason="missing_login"
+            )
         name = me.get("usual_full_name") or me.get("displayname") or login
         return FortyTwoProfile(intra_id=login, name=name, is_staff=bool(me.get("staff?")))
+
+    @staticmethod
+    def _call(stage: str, func, *args):
+        """단계별 실패를 stage/status/reason으로 구분해 AuthenticationFailed로 바꾼다."""
+        try:
+            return func(*args)
+        except urllib.error.HTTPError as exc:
+            raise AuthenticationFailed(
+                "42 인증에 실패했습니다", stage=stage, status=exc.code, reason="http_error"
+            ) from exc
+        except (TimeoutError, urllib.error.URLError) as exc:
+            reason = "timeout" if isinstance(exc, TimeoutError) else "network_error"
+            raise AuthenticationFailed(
+                "42 인증에 실패했습니다", stage=stage, reason=reason
+            ) from exc
+        except (ValueError, KeyError) as exc:
+            raise AuthenticationFailed(
+                "42 인증에 실패했습니다", stage=stage, reason="invalid_response"
+            ) from exc
 
     def _post_token(self, code: str) -> str:
         data = urllib.parse.urlencode(

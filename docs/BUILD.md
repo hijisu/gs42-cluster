@@ -206,7 +206,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 | 증상 | 원인 |
 | --- | --- |
 | `error=invalid_state` | 로그인 중 세션이 끊김(다른 브라우저로 콜백, 쿠키 차단, 오래 지연) → 처음부터 다시 |
-| `error=auth_failed` | UID/SECRET 오류, redirect URI 불일치, 42 API 오류 → `docker compose logs backend` 확인 |
+| `error=auth_failed` | UID/SECRET 오류, redirect URI 불일치, 42 API 오류 → `docker compose logs backend`의 `42 OAuth 로그인 실패 stage=… status=… reason=…` 줄을 확인. `stage=token status=401`은 UID/SECRET·redirect URI 오류, `status=403`은 요청 거부, `reason=network_error/timeout`은 네트워크 문제, `stage=profile`은 토큰 이후 프로필 조회 실패. 코드·토큰·비밀값은 로그에 남지 않는다 |
 | `/api/auth/login` 이 503 `oauth_not_configured` | `FORTYTWO_UID`가 비어 있음 |
 
 운영(HTTPS·도메인) 배포용 redirect URI는 도메인이 정해진 뒤 별도로 등록합니다. 캠퍼스 제한 여부는 실계정 응답을 확인한 뒤 결정합니다.

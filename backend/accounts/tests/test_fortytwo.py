@@ -1,6 +1,10 @@
 import io
 import json
+import urllib.error
 
+import pytest
+
+from accounts.domain.errors import AuthenticationFailed
 from accounts.infrastructure.fortytwo import ME_URL, TOKEN_URL, FortyTwoOAuthClient
 
 
@@ -28,3 +32,62 @@ def test_oauth_requests_identify_service_to_avoid_upstream_403(monkeypatch):
 
     assert profile.intra_id == "alice"
     assert len(requests) == 2
+
+
+def _failing_client(monkeypatch, exc_for):
+    def urlopen(request, timeout):
+        stage = "token" if request.full_url == TOKEN_URL else "profile"
+        if (outcome := exc_for(stage)) is None:
+            body = {"access_token": "t"} if stage == "token" else {"login": "a"}
+            return io.BytesIO(json.dumps(body).encode())
+        if isinstance(outcome, bytes):
+            return io.BytesIO(outcome)
+        raise outcome
+
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+    return FortyTwoOAuthClient("uid", "super-secret", "http://localhost/cb")
+
+
+def _failure(client):
+    with pytest.raises(AuthenticationFailed) as info:
+        client.fetch_profile("one-time-code")
+    return info.value
+
+
+def _http(status):
+    return urllib.error.HTTPError("https://x", status, "msg", {}, io.BytesIO(b"secret-body"))
+
+
+@pytest.mark.parametrize(
+    ("outcome", "status", "reason"),
+    [
+        (_http(403), 403, "http_error"),
+        (_http(401), 401, "http_error"),
+        (urllib.error.URLError("dns"), None, "network_error"),
+        (TimeoutError(), None, "timeout"),
+        (b"<html>not json</html>", None, "invalid_response"),
+        (b'{"no_token": 1}', None, "invalid_response"),
+    ],
+)
+def test_token_failure_reports_stage_status_and_reason(monkeypatch, outcome, status, reason):
+    error = _failure(_failing_client(monkeypatch, lambda stage: outcome))
+    assert (error.stage, error.status, error.reason) == ("token", status, reason)
+
+
+def test_profile_failure_is_distinguished_from_token_failure(monkeypatch):
+    client = _failing_client(monkeypatch, lambda s: _http(500) if s == "profile" else None)
+    error = _failure(client)
+    assert (error.stage, error.status) == ("profile", 500)
+
+
+def test_profile_without_login_reports_missing_login(monkeypatch):
+    client = _failing_client(monkeypatch, lambda s: b"{}" if s == "profile" else None)
+    error = _failure(client)
+    assert (error.stage, error.reason) == ("profile", "missing_login")
+
+
+def test_failure_details_never_contain_secrets_or_response_body(monkeypatch):
+    error = _failure(_failing_client(monkeypatch, lambda stage: _http(403)))
+    text = f"{error} {error.stage} {error.status} {error.reason}"
+    for secret in ("super-secret", "one-time-code", "secret-body"):
+        assert secret not in text

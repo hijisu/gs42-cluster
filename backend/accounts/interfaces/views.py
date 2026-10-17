@@ -1,3 +1,4 @@
+import logging
 import secrets
 
 from django.conf import settings
@@ -19,6 +20,7 @@ from accounts.interfaces.serializers import MockLoginSerializer, UserSerializer
 
 BACKEND = "django.contrib.auth.backends.ModelBackend"
 STATE_KEY = "oauth_state"
+logger = logging.getLogger(__name__)
 
 
 def _error(code: str, http_status: int) -> Response:
@@ -58,7 +60,14 @@ def callback(request):
         return _frontend_redirect(error="invalid_state")
     try:
         profile = deps.fortytwo_client().fetch_profile(code)
-    except AuthenticationFailed:
+    except AuthenticationFailed as exc:
+        # 코드·토큰·응답 본문은 남기지 않는다. 단계/상태/원인만 기록한다.
+        logger.warning(
+            "42 OAuth 로그인 실패 stage=%s status=%s reason=%s",
+            exc.stage or "-",
+            exc.status if exc.status is not None else "-",
+            exc.reason or "-",
+        )
         return _frontend_redirect(error="auth_failed")
     account = deps.login_with_profile().execute(profile)
     _start_session(request, account)
