@@ -138,12 +138,31 @@ describe('운영 도서 관리 화면', () => {
     expect(calls.filter((c) => c.method === 'PATCH')[1].body).toMatchObject({ status: 'rejected', note: '이미 비치된 도서입니다' })
   })
 
+  it('희망 도서와 분실·훼손 신고는 도서 목록 옆 한 카드의 탭이고, 탭에 처리할 건수가 보인다', async () => {
+    await openPage(
+      search([]),
+      get('/staff/book-reports', [report(), report({ id: 4, status: 'resolved' })]),
+      get('/staff/book-wishes', [wish(), wish({ id: 2, status: 'approved' })]),
+    )
+    const wishTab = await screen.findByRole('tab', { name: '희망 도서 1' })
+    const reportTab = screen.getByRole('tab', { name: '분실·훼손 신고 1' })
+    expect(wishTab).toHaveAttribute('aria-selected', 'true')
+    expect(wishTab.closest('.card')).toBe(reportTab.closest('.card'))
+    expect(wishTab.closest('.card')).not.toBe(screen.getByRole('heading', { name: '도서 목록' }).closest('.card'))
+    expect(screen.queryByRole('listitem', { name: /신고 / })).toBeNull()
+    await userEvent.click(reportTab)
+    expect(reportTab).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByRole('listitem', { name: '신고 컴퓨터 네트워킹' })).toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: /희망 도서 / })).toBeNull()
+  })
+
   it('분실·훼손 신고는 처리 완료 전까지만 보이고 처리 완료를 보낸다', async () => {
     const calls = await openPage(
       search([]),
       get('/staff/book-reports', [report(), report({ id: 4, book_title: '끝난 신고', status: 'resolved' })]),
       (req) => (req.method === 'POST' && req.url.endsWith('/resolve') ? { json: report({ status: 'resolved' }) } : undefined),
     )
+    await userEvent.click(await screen.findByRole('tab', { name: /분실·훼손 신고/ }))
     const item = await screen.findByRole('listitem', { name: '신고 컴퓨터 네트워킹' })
     expect(within(item).getByText('분실')).toBeInTheDocument()
     expect(screen.queryByText('끝난 신고')).not.toBeInTheDocument()
@@ -157,6 +176,7 @@ describe('운영 도서 관리 화면', () => {
       get('/staff/book-reports', [report()]),
       (req) => (req.method === 'POST' ? { status: 409, json: { code: 'invalid_transition' } } : undefined),
     )
+    await userEvent.click(await screen.findByRole('tab', { name: /분실·훼손 신고/ }))
     await userEvent.click(await screen.findByRole('button', { name: '컴퓨터 네트워킹 처리 완료' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('이미 처리된 항목이에요')
   })

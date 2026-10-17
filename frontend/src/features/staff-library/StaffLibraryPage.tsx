@@ -1,5 +1,5 @@
 import { BooksPanel } from './BooksPanel'
-import { ReportsPanel, WishesPanel } from './RequestsPanels'
+import { LibraryRequestsCard } from './RequestsPanels'
 
 export function StaffLibraryPage() {
   return (
@@ -7,14 +7,13 @@ export function StaffLibraryPage() {
       <div className="head">
         <div>
           <p className="label">03 · LIBRARY ADMIN</p>
-          <h1 className="h1" style={{ marginTop: 8 }}>도서 관리</h1>
+          <h1 className="h1" style={{ marginTop: 2 }}>도서 관리</h1>
           <p className="sub">오아시스 비치 도서와 교육생의 희망 도서 · 분실 신고를 관리하세요.</p>
         </div>
       </div>
-      <BooksPanel />
-      <div className="g2" style={{ alignItems: 'start' }}>
-        <WishesPanel />
-        <ReportsPanel />
+      <div className="split staff-library-split">
+        <BooksPanel />
+        <LibraryRequestsCard />
       </div>
     </>
   )
