@@ -1,0 +1,431 @@
+<title>gs42 2차 수정 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 상단 화면 선택 + 변경점 요약 + 실제 앱 토큰을 쓴 목업 프레임. 현재 frontend의 tokens.css/components.css를 그대로 옮김 */
+:root{
+  --c-ink:#121212;--c-ink-hover:#333;--c-teal:#00BABC;--c-teal-dark:#00797B;--c-teal-deeper:#005A5C;--c-teal-soft:#D5F2F2;--c-teal-text:#00585A;
+  --c-bg:#F2F2EE;--c-surface:#fff;--c-line:#DADAD4;--c-line-soft:#EDEDE8;--c-line-input:#C8C8C2;--c-muted:#5C5C58;--c-body-soft:#3F3F3B;--c-disabled:#B5B5AF;
+  --c-warn-bg:#FBE7D7;--c-warn-stripe:#F6D3B8;--c-warn-text:#9A3412;--c-warn-line:#C2410C;--c-scrim:rgba(18,18,18,.55);
+  --font-sans:'IBM Plex Sans KR',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-7:28px;--sp-8:40px;
+  --r-sm:8px;--r-md:10px;--r-lg:16px;--r-xl:18px;--r-pill:999px;--touch:44px;
+  --note-bg:#FFF8E1;--note-line:#E8C766;--note-text:#5C4400;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:#E4E4DE;color:var(--c-ink);font-family:var(--font-sans);font-size:15px;line-height:1.5;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,p{margin:0}
+button{font-family:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 56px;display:flex;flex-direction:column;gap:16px}
+.top h1{font-size:20px}
+.top p{color:var(--c-muted);font-size:13px;margin-top:2px}
+.picker{display:flex;flex-direction:column;gap:8px}
+.picker .grp{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.picker .grp>b{font-family:var(--font-mono);font-size:12px;color:var(--c-muted);min-width:64px}
+.pk{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--c-line-input);background:#fff;font-size:14px;cursor:pointer;color:var(--c-ink)}
+.pk[aria-pressed=true]{background:var(--c-ink);color:#fff;border-color:var(--c-ink)}
+.changes{background:var(--note-bg);border:1px solid var(--note-line);border-radius:12px;padding:12px 16px;color:var(--note-text);font-size:14px}
+.changes b{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;margin-bottom:4px}
+.changes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+.frame{background:var(--c-bg);border-radius:14px;border:1px solid var(--c-line);overflow:hidden}
+.frame-bar{background:#fff;border-bottom:1px solid var(--c-line);padding:8px 16px;font-family:var(--font-mono);font-size:12px;color:var(--c-muted);display:flex;gap:8px;align-items:center}
+.frame-bar i{width:8px;height:8px;border-radius:50%;background:var(--c-line);display:inline-block}
+.main{padding:32px 36px 48px;display:flex;flex-direction:column;gap:var(--sp-7)}
+/* app components */
+.label{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
+.muted{color:var(--c-muted)}.small{font-size:13px}.mono{font-family:var(--font-mono)}
+.h1{font-size:30px;font-weight:700;letter-spacing:-.01em;margin-top:8px}.sub{color:var(--c-muted);margin-top:6px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);flex-wrap:wrap}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:14px}.col{display:flex;flex-direction:column;gap:var(--sp-5);min-width:0}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-5)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-5)}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-4)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:var(--sp-6);align-items:stretch}
+.card{background:#fff;border:1px solid var(--c-line);border-radius:var(--r-lg);padding:var(--sp-6)}
+.card-title{font-size:17px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--touch);padding:0 20px;border-radius:var(--r-md);border:1px solid var(--c-ink);background:var(--c-ink);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--c-ink-hover)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--c-ink)}.btn.ghost:hover{background:var(--c-line-soft)}
+.btn.teal{background:var(--c-teal);border-color:var(--c-teal);color:var(--c-ink)}
+.btn.warn{background:#fff;border-color:var(--c-warn-line);color:var(--c-warn-text)}
+.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.pill{display:inline-flex;align-items:center;padding:3px 12px 3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--c-teal-soft);color:var(--c-teal-text)}.pill.wait{background:var(--c-warn-bg);color:var(--c-warn-text)}.pill.neu{background:var(--c-line-soft);color:var(--c-body-soft)}.pill.done{background:var(--c-ink);color:#fff}
+.chip{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--c-line-input);background:#fff;font:inherit;font-size:14px;cursor:pointer;color:var(--c-ink)}
+.chip[aria-pressed=true]{background:var(--c-ink);border-color:var(--c-ink);color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{font-size:13px;font-weight:600}.field .hint{font-size:12px;color:var(--c-muted)}
+.input{min-height:var(--touch);border:1px solid var(--c-line-input);border-radius:var(--r-md);padding:0 14px;font:inherit;background:#fff;width:100%;color:var(--c-ink);min-width:0}
+textarea.input{padding:12px 14px;min-height:80px;resize:vertical}
+table.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th{text-align:left;font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--c-muted);padding:10px 12px;border-bottom:1px solid var(--c-line)}
+.table td{padding:14px 12px;border-bottom:1px solid var(--c-line-soft)}
+.table tr.click{cursor:pointer}.table tr.click:hover td{background:var(--c-bg)}
+.table td .link{border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--c-teal-dark);cursor:pointer;text-align:left}
+.table td .link:hover{text-decoration:underline}
+.table-wrap{overflow-x:auto}
+.scrim{position:absolute;inset:0;background:var(--c-scrim);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;z-index:10;overflow-y:auto}
+.modal{background:#fff;border-radius:var(--r-xl);width:480px;max-width:100%;padding:var(--sp-7);display:flex;flex-direction:column;gap:var(--sp-4)}
+.modal.wide{width:600px}
+.modal-title{font-size:20px;font-weight:700}.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.info{padding:14px 16px;border-radius:12px;background:var(--c-bg);font-size:14px;display:flex;flex-direction:column;gap:6px}
+.list{display:flex;flex-direction:column}.list>div{padding:14px 0;border-bottom:1px solid var(--c-line-soft)}.list>div:last-child{border-bottom:0}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal span{font-size:12px;color:var(--c-muted);padding:4px 0}
+.cal button{min-height:40px;border-radius:8px;border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:var(--c-ink)}
+.cal button:hover{background:var(--c-line-soft)}.cal button.today{box-shadow:inset 0 0 0 1px var(--c-ink)}.cal button.sel{background:var(--c-ink);color:#fff}
+.tl-row{display:grid;grid-template-columns:150px minmax(0,1fr)}.tl-body{border-top:1px solid var(--c-line-soft)}
+.tl-name{padding:12px 0;display:flex;flex-direction:column}
+.tl-cells{display:grid;grid-template-columns:repeat(13,1fr);padding:10px 0;min-height:44px}
+.tl-cell{border-left:1px dashed var(--c-line)}.tl-cell.approved{background:var(--c-ink)}
+.tl-cell.pending{background:repeating-linear-gradient(135deg,var(--c-warn-bg) 0 6px,var(--c-warn-stripe) 6px 12px)}
+.tl-scroll{overflow-x:auto}.timeline{min-width:680px}
+/* 면담 가능 시간 */
+.av-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.av-nav{display:flex;align-items:center;gap:4px}.av-title{font-weight:700;min-width:120px;text-align:center}
+.av-grid{display:grid;grid-template-columns:44px repeat(5,minmax(0,1fr));gap:2px;row-gap:2px;user-select:none}
+.av-head{font-size:13px;text-align:center;padding:6px 0;display:flex;flex-direction:column;border-radius:8px}
+.av-head.today{color:var(--c-teal-dark);font-weight:700}
+.av-head.today span{display:inline-block;align-self:center;background:var(--c-teal-soft);border-radius:999px;padding:0 10px}
+.av-time{font-family:var(--font-mono);font-size:12px;color:var(--c-muted);text-align:right;padding-right:6px;line-height:1}
+.av-cell{min-height:28px;border:0;border-radius:8px;background:var(--c-line-soft);cursor:pointer}
+.av-cell:hover{background:var(--c-line)}.av-cell.on{background:var(--c-teal)}
+.av-sep{grid-column:1/-1;height:1px;background:var(--c-line-input);margin:6px 0}
+.av-cell{position:relative}
+.av-cell[data-tip]:hover::after,.av-cell[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:var(--c-ink);color:#fff;font-size:12px;line-height:1;padding:6px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5}
+.av-grid .av-cell{touch-action:none}
+.av-cell.past{background:var(--c-line);cursor:not-allowed;display:block}
+.av-head.pastcol{color:var(--c-disabled)}
+.av-status{min-height:22px;font-size:13px;color:var(--c-warn-text)}
+/* 면담 신청 슬롯 */
+.slot-grid{display:grid;gap:8px}
+.slot-head{text-align:center}.slot-time{font-size:13px;display:flex;align-items:center}
+.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-disabled);display:flex;align-items:center;justify-content:center;font-size:13px}
+.chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
+/* 도서 */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px}
+.book-card{padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.book-cover{aspect-ratio:3/4;border-radius:8px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;overflow:hidden}
+.book-title{font-weight:600;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;min-width:0}
+.search-bar{display:flex;gap:10px}.search-bar .input{flex-grow:1}
+.notice{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px 20px;border-radius:14px;background:var(--c-ink);color:var(--c-bg);flex-wrap:wrap}
+.shortcut{display:flex;flex-direction:column;gap:18px;min-height:140px}
+.summary-big{font-size:22px;font-weight:700}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px}
+.legend{display:flex;gap:18px;font-size:13px;flex-wrap:wrap}
+.pill-x{margin-left:6px;border:0;background:none;padding:0;font:inherit;cursor:pointer;color:inherit}
+.review{display:flex;flex-direction:column;gap:10px}
+.dots{display:inline-flex;gap:4px}.dots span{width:8px;height:8px;border-radius:50%;background:var(--c-line)}.dots span.on{background:var(--c-ink)}
+.sortbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sortbar select{min-height:36px;width:auto;padding:0 12px;font-size:14px}
+.crumb{border:0;background:none;padding:0;font:inherit;color:var(--c-teal-dark);cursor:pointer;min-height:36px}
+.crumb:hover{text-decoration:underline}
+.rel{position:relative;min-height:560px}
+.split>.col>.card:last-child{flex:1 1 auto}
+.g2>.card,.g3>.card,.g4>.card,.r21>.card,.r21>section{height:100%}
+@media (max-width:900px){.g2>.card,.r21>.card,.r21>section{height:auto}.pend-wrap{min-height:0}.pend-wrap .pend-scroll{position:static;max-height:340px}}
+.r21{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--sp-5);align-items:stretch}
+.pend-wrap{position:relative;flex:1 1 auto;min-height:260px}
+.pend-wrap .pend-scroll{position:absolute;inset:0;max-height:none}
+.pend-scroll{display:flex;flex-direction:column;max-height:340px;overflow-y:auto;border-top:1px solid var(--c-line-soft);margin:0 -4px;padding:0 4px}
+.pend-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--c-line-soft)}
+.pend-item:last-child{border-bottom:0}
+@media (max-width:900px){
+  .main{padding:20px 16px 40px;gap:20px}.h1{font-size:24px}
+  .split,.g2,.g3,.g4,.r21{grid-template-columns:minmax(0,1fr)}
+  .card{padding:16px}
+}
+@media (max-width:600px){
+  .table thead{display:none}.table,.table tbody,.table tr,.table td{display:block;width:100%}
+  .table tr{padding:12px 0;border-bottom:1px solid var(--c-line-soft)}
+  .table td{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border:0;text-align:right}
+  .table td::before{content:attr(data-label);color:var(--c-muted);font-family:var(--font-mono);font-size:12px;text-align:left}
+  .table td[data-label=""]{justify-content:flex-end}.table td[data-label=""]::before{display:none}
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>gs42 2차 수정 시안</h1>
+    <p>현재 구현된 화면(frontend)을 기준으로 바뀔 부분만 그렸어요. 버튼·탭은 눌러볼 수 있어요. 공통 규칙: 데스크톱에서 한 행에 카드가 여러 개면 높이를 같게 맞춰요(모바일은 1열). 컨펌 후 이슈를 작성합니다.</p>
+  </div>
+  <div class="picker" id="picker"></div>
+  <div class="changes" id="changes"></div>
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><span id="path"></span></div>
+    <div class="rel" id="stage"></div>
+  </div>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const state = {};
+
+/* ---------- 화면 정의 ---------- */
+const SCREENS = {
+  s_meeting: { group: '운영팀', name: '면담 관리', path: '/staff/meetings', render: sMeeting, changes: [
+    '‘일’ 보기 삭제 → 주 단위만(평일 5일). 주말 열 제거',
+    '1시간(블록 2칸)마다 전체 열에 걸친 가는 직선 구분선을 넣고, 선과 블록 사이에 여백을 둠. 칸에 마우스를 올리면 요일·시간 툴팁이 뜸',
+    '지난 날짜는 선택 불가(단색 회색), 오늘 이후만 설정. 조회·설정은 오늘부터 4주까지, 이전 주 버튼은 이번 주에서 비활성 (아래 ‹ › 로 확인)',
+    '드래그: 현재 데스크탑에서 클릭만 동작하는 문제를 수정. 마우스·터치 모두 끌어서 여러 칸을 한 번에 열고 닫기 (모바일 터치 드래그는 구현 후 실기기 검증)',
+    '후속(이번 범위 아님, P3 이후): 공휴일·휴무일은 기본값을 면담 불가로. 한국 공휴일 데이터 관리 방식은 그때 정함',
+    '오늘 날짜 열 제목을 볼드 + 티얼 색(알약 배경)으로 강조',
+    '열 아래 ‘직접 설정’ 글자 삭제 / ‘시간 범위로 설정’ 영역 삭제 / ‘기본값으로 되돌리기’ 삭제',
+    '변경 취소·저장 버튼을 카드 상단(제목 오른쪽)으로 이동',
+    '‘저장하지 않은 변경…’ 안내는 높이를 미리 확보한 고정 영역에 표시해서 격자가 움직이지 않음 (칸을 눌러 확인해 보세요)'] },
+  s_room: { group: '운영팀', name: '회의실 관리', path: '/staff/rooms', render: sRoom, changes: [
+    '데스크톱: 위 줄은 [승인 대기 2/3 | 날짜 선택 캘린더 1/3], 가운데 줄은 [회의실 현황 2/3 | 예약 차단 1/3], 맨 아래 줄은 [장소 목록 | 이용수칙] 2단',
+    '승인 대기는 한 줄에 1건씩, 이 영역 안에서만 스크롤되며 날짜와 상관없이 전체가 쌓임 (오른쪽 버튼으로 승인해 보세요)',
+    '카드의 보조 버튼(운영팀 직접 예약, 수정, 장소 추가, 차단 추가)은 모두 카드 우상단에 통일 (다른 화면도 동일)',
+    '장소 목록의 ‘차단’ 버튼 삭제 (상태 표시만, 장소 추가는 유지). 차단은 ‘예약 차단’에서만 설정',
+    '모바일(900px 이하): 모든 영역이 1열로 쌓임. 순서는 승인 대기 → 날짜 선택 → 회의실 현황 → 예약 차단 → 장소 목록 → 이용수칙 (승인 대기를 먼저 처리할 수 있도록)'] },
+  s_course: { group: '운영팀', name: '교육과정·후기 관리', path: '/staff/courses', render: sCourse, changes: [
+    '‘교육과정 등록’ 버튼을 누르면 팝업으로 등록 (페이지 하단 폼 삭제)',
+    '시작일/종료일은 같은 줄에서 잘리지 않게 2열, 장소는 별도 줄',
+    '참여 학생: 입력칸 + ‘추가’ 버튼 한 줄, CSV 업로드는 아래 줄에 분리',
+    '‘후기 요청’ 버튼을 누르면 팝업으로 요청 보내기 (하단 폼 삭제)'] },
+  t_home: { group: '교육생', name: '홈', path: '/', render: tHome, changes: ['머리말 오른쪽의 통합 검색창(도서·회의실·교육과정) 삭제'] },
+  t_meeting: { group: '교육생', name: '면담 신청', path: '/meetings', render: tMeeting, changes: [
+    '희망 시간 격자를 월~금 평일 5열로 한 번에 표시 (금요일이 잘리지 않음), 이전/다음 주 이동',
+    '운영 시간 전체를 보여주고 가능 시간은 선택 가능, 불가능한 시간은 ‘불가’로 표시하고 비활성',
+    '‘내 면담 신청’: 운영팀이 확정한 뒤에는 취소 버튼이 없음 (확정 전에만 취소 가능)'] },
+  t_room: { group: '교육생', name: '회의실 예약', path: '/rooms', render: tRoom, changes: ['‘내 예약’: 운영팀이 승인한 뒤에는 취소 버튼이 없음 (승인 대기일 때만 취소 가능)'] },
+  t_library: { group: '교육생', name: '오아시스 도서', path: '/library', render: tLibrary, changes: [
+    '책 제목은 1줄만 보이고 길면 …으로 생략 (전체 제목은 마우스를 올리거나 상세에서 확인)',
+    '희망 도서 신청은 ‘희망 도서 신청’ 버튼 → 팝업에서 입력'] },
+  t_review: { group: '교육생', name: '교육과정 후기', path: '/reviews', render: tReview, changes: [
+    '게시판 형태: ① 교육과정 목록(과정명·교육기간·교육장소·후기 수) → 과정명 클릭 → ② 그 과정의 후기 글 목록',
+    '교육과정별로 게시판이 따로라서 후기 제목 입력/표시가 필요 없어짐',
+    '정렬: 등록순, 과정 이름순, 최신순/과거순, 후기 많은 순/적은 순'] },
+};
+
+/* ---------- 공통 조각 ---------- */
+const head = (label, title, sub, right = '') => `<div class="head"><div><p class="label">${label}</p><h1 class="h1">${title}</h1><p class="sub">${sub}</p></div>${right}</div>`;
+const modal = (title, body, actions, wide) => `<div class="scrim" data-close><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-label="${esc(title)}" onclick="event.stopPropagation()"><h2 class="modal-title">${title}</h2>${body}<div class="modal-actions">${actions}</div></div></div>`;
+const field = (label, ph = '', type = 'text', val = '') => `<div class="field"><label>${label}</label><input class="input" type="${type}" placeholder="${ph}" value="${val}"></div>`;
+const calendar = (sel = 17) => {
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const pad = 4; // 2026-10-01은 목요일
+  return `<div class="cal"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>${'<i></i>'.repeat(pad)}${days.map((d) => `<button class="${d === 17 ? 'today' : ''} ${d === sel ? 'sel' : ''}" data-day="${d}">${d}</button>`).join('')}</div>`;
+};
+
+/* ---------- 운영 면담 관리 ---------- */
+const AV_TODAY = new Date(2026, 9, 14); // 시안용 오늘: 10/14 (수). 실제 화면은 접속한 날짜 기준
+const AV_MAXWK = 3; // 이번 주 포함 4주
+const avDate = (wk, di) => { const d = new Date(2026, 9, 12 + wk * 7 + di); return d; };
+const fmt = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+function sMeeting() {
+  state.wk ??= 0;
+  const wk = state.wk;
+  const dn = ['월', '화', '수', '목', '금'];
+  const times = []; for (let h = 9; h < 18; h++) { times.push(`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`); }
+  const base = (t) => { const h = +t.slice(0, 2) + (t.endsWith('30') ? .5 : 0); return (h >= 10 && h < 12) || (h >= 13 && h < 17); };
+  if (!state.av) { state.av = new Set(); for (let w = 0; w <= AV_MAXWK; w++) for (let di = 0; di < 5; di++) for (const t of times) if (base(t)) state.av.add(`${w}|${di}|${t}`); state.avInit = new Set(state.av); }
+  const dirty = state.av.size !== state.avInit.size || [...state.av].some((k) => !state.avInit.has(k));
+  const past = (di) => avDate(wk, di) < AV_TODAY;
+  const isToday = (di) => avDate(wk, di).getTime() === AV_TODAY.getTime();
+  const cells = times.map((t) => `${t.endsWith(':00') && t !== '09:00' ? '<div class="av-sep" aria-hidden="true"></div>' : ''}<span class="av-time">${t.endsWith(':00') ? t : ''}</span>${dn.map((_, di) => {
+    const k = `${wk}|${di}|${t}`;
+    return past(di) ? '<span class="av-cell past" aria-hidden="true"></span>' : `<button class="av-cell ${state.av.has(k) ? 'on' : ''}" data-avk="${k}" aria-pressed="${state.av.has(k)}" aria-label="${fmt(avDate(wk, di))} (${dn[di]}) ${t}" data-tip="${dn[di]} ${t}"></button>`;
+  }).join('')}`).join('');
+  return `<div class="main">
+    ${head('01 · MEETING ADMIN', '면담 관리', '교육생의 면담 요청을 확인하고 담당자와 시간을 배정하세요.')}
+    <div class="card stack" style="gap:12px">
+      <div class="row"><h2 class="card-title">내 면담 가능 시간</h2>
+        <div style="display:flex;gap:8px"><button class="btn ghost" data-av-cancel ${dirty ? '' : 'disabled'}>변경 취소</button><button class="btn" data-av-save ${dirty ? '' : 'disabled'}>저장</button></div></div>
+      <div class="av-toolbar"><div class="av-nav"><button class="btn ghost sm" data-wk="-1" ${dirty || wk === 0 ? 'disabled' : ''} aria-label="이전 주">‹</button><span class="av-title">${fmt(avDate(wk, 0))} ~ ${fmt(avDate(wk, 4))}</span><button class="btn ghost sm" data-wk="1" ${dirty || wk === AV_MAXWK ? 'disabled' : ''} aria-label="다음 주">›</button><button class="btn ghost sm" data-wk="0" ${dirty || wk === 0 ? 'disabled' : ''}>오늘</button></div>
+        <span class="av-status" role="status">${dirty ? '저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.' : ''}</span></div>
+      <div class="av-grid" role="group" aria-label="가능 시간 선택"><span></span>${dn.map((n, i) => `<span class="av-head ${isToday(i) ? 'today' : ''} ${past(i) ? 'pastcol' : ''}"><span>${fmt(avDate(wk, i))} (${n})</span></span>`).join('')}${cells}</div>
+      <p class="muted small">오늘부터 4주 안에서 설정할 수 있어요. 칸을 누르거나 끌어서 열고 닫아요.</p>
+    </div></div>`;
+}
+
+/* ---------- 운영 회의실 관리 ---------- */
+const PEND0 = [['10/17 (오늘)', '14:00–16:00', '이서준', '유니버스룸(대)', '스터디 6명'], ['10/20 (화)', '10:00–11:00', '박하은', '미팅룸 A', '프로젝트 회의'], ['10/21 (수)', '15:00–17:00', '최유진', '유니버스룸(소)', '발표 연습'], ['10/22 (목)', '13:00–14:00', '정민규', '미팅룸 B', '멘토링'], ['10/24 (토)', '10:00–12:00', '한보선', '유니버스룸(대)', '수학 스터디'], ['10/27 (화)', '18:00–20:00', '윤사랑', '미팅룸 A', '영어 회화']];
+function sRoom() {
+  state.pend ??= [...PEND0];
+  const pend = state.pend;
+  const rooms = [['유니버스룸(대)', '예약 받는 중', 'ok'], ['유니버스룸(소)', '예약 받는 중', 'ok'], ['미팅룸 A', '예약 받는 중', 'ok'], ['미팅룸 B', '교육 기간 차단', 'neu']];
+  const hours = ['09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
+  const tl = (cls) => `<div class="tl-cells">${hours.map((h, i) => `<div class="tl-cell ${cls[i] || ''}"></div>`).join('')}</div>`;
+  const blocks = [['유니버스룸(대)', '매주 토 10:00–12:00', '수학 교육'], ['전체 회의실', '평일 18:00–21:00', '영어 교육'], ['미팅룸 B', '10/14–10/23 매일 09:00–18:00', '데이터센터 과정']];
+  return `<div class="main">
+    ${head('02 · ROOM ADMIN', '회의실 관리', '교육생의 예약 요청을 확인하고 승인하세요. 승인하면 교육생 화면에 이용수칙이 함께 표시됩니다.')}
+    <div class="r21">
+      <section class="card stack" style="gap:12px" aria-label="승인 대기"><h2 class="card-title">승인 대기 ${pend.length}</h2>
+        <div class="pend-wrap"><div class="pend-scroll" tabindex="0" aria-label="승인 대기 목록">${pend.length === 0 ? '<p class="muted">승인 대기 중인 요청이 없어요.</p>' : pend.map((r, i) => `<div class="pend-item"><div class="stack" style="gap:2px;min-width:0"><div class="row" style="justify-content:flex-start;gap:8px"><b>${r[3]}</b><span class="pill wait">승인 대기</span></div><div class="mono small">${r[0]} · ${r[1]}</div><div class="small muted">${r[2]} · ${r[4]}</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn sm" data-approve="${i}">승인</button><button class="btn ghost sm">반려</button></div></div>`).join('')}</div></div></section>
+      <div class="card stack" style="gap:16px"><div class="row"><h2 class="card-title">날짜 선택</h2><button class="btn ghost sm">운영팀 직접 예약</button></div>${calendar(state.day ?? 17)}</div>
+    </div>
+    <div class="r21">
+      <div class="card stack"><h2 class="card-title">회의실 현황 · 10/${state.day ?? 17}</h2>
+        <div class="tl-scroll"><div class="timeline"><div class="tl-row"><span></span><div class="tl-cells" style="min-height:0;padding:0 0 6px">${hours.map((h) => `<span class="mono muted" style="font-size:11px">${h}</span>`).join('')}</div></div>
+          ${['유니버스룸(대)|,,,,,approved,approved', '유니버스룸(소)|', '미팅룸 A|,,pending', '미팅룸 B|blocked'].map((x) => { const [n, c] = x.split('|'); return `<div class="tl-row tl-body"><div class="tl-name"><b>${n}</b></div>${tl(c.split(','))}</div>`; }).join('')}</div></div>
+        <div class="legend"><span><i class="sw" style="background:var(--c-ink)"></i> 승인</span><span><i class="sw" style="background:repeating-linear-gradient(135deg,var(--c-warn-bg) 0 6px,var(--c-warn-stripe) 6px 12px)"></i> 승인 대기</span><span><i class="sw" style="background:var(--c-line-soft)"></i> 차단</span><span><i class="sw" style="border:1px dashed var(--c-disabled)"></i> 가능</span></div></div>
+      <div class="card stack" style="gap:8px"><div class="row"><h2 class="card-title">예약 차단</h2><button class="btn ghost sm">차단 추가</button></div>
+        <div class="list">${blocks.map((b) => `<div class="stack" style="gap:2px"><b>${b[0]}</b><span class="mono small">${b[1]}</span><span class="small muted">${b[2]}</span></div>`).join('')}</div></div>
+    </div>
+    <div class="g2">
+      <div class="card stack" style="gap:8px"><div class="row"><h2 class="card-title">장소 목록</h2><button class="btn ghost sm">장소 추가</button></div>
+        <div class="list">${rooms.map((r) => `<div class="row"><span>${r[0]}</span><span class="pill ${r[2]}">${r[1]}</span></div>`).join('')}</div>
+        <p class="muted" style="font-size:12px">차단은 ‘예약 차단’에서 설정해요. 승인된 예약은 차단해도 유지돼요.</p></div>
+      <div class="card stack" style="gap:8px"><div class="row"><h2 class="card-title">이용수칙</h2><button class="btn ghost sm">수정</button></div><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>사용 후 정리하고 퇴실해 주세요.</li><li>음식물은 반입할 수 없어요.</li><li>예약 시간을 지켜 주세요.</li></ol></div>
+    </div>
+  </div>`;
+}
+
+/* ---------- 운영 교육과정 ---------- */
+function sCourse() {
+  const cs = [['서울대학교 파이썬 AI 교육', '08/18–08/27', 24, 62, '종료', 'neu'], ['경북 특화형 데이터센터 기초과정', '10/14–10/23', 18, 0, '진행 중', 'ok'], ['글로벌 기업가 정신 및 AI 몰입 프로그램', '07/19–07/28', 30, 91, '후기 수집 중', 'wait']];
+  const ids = state.ids ?? ['kimsh', 'leejw'];
+  const create = `${field('과정명', '예: 2026 경북 특화형 데이터센터 기초과정 심화기수')}
+    <div class="g2" style="gap:12px">${field('시작일', '', 'date', '2026-10-14')}${field('종료일', '', 'date', '2026-10-23')}</div>
+    ${field('장소', '예: 유니버스룸(대)')}
+    <div class="field"><label>과정 소개</label><textarea class="input" placeholder="게시판 상단에 보일 소개 문구"></textarea></div>
+    ${field('후기 작성 마감(선택)', '', 'date')}
+    <div class="field"><label>참여 학생</label><div style="display:flex;gap:8px"><input class="input" placeholder="intra ID 입력 후 Enter 또는 ‘추가’" id="idin" style="flex:1"><button class="btn ghost" data-addid>추가</button></div>
+      <div><button class="btn ghost sm">CSV로 한 번에 추가</button></div>
+      <div class="chips">${ids.map((i) => `<span class="pill neu">${i}<button class="pill-x" data-rmid="${i}" aria-label="${i} 삭제">×</button></span>`).join('')}</div>
+      <span class="hint">쉼표·공백·줄바꿈으로 여러 명을 한 번에 넣을 수 있어요.</span></div>`;
+  const req = `<div class="field"><label>교육과정</label><input class="input" value="경북 특화형 데이터센터 기초과정" readonly></div>
+    <div class="g2" style="gap:12px">${field('후기 작성 마감', '', 'date', '2026-10-30')}<div class="field"><label>대상</label><input class="input" value="참여 18명" readonly></div></div>
+    <div class="field"><label>안내 문구(선택)</label><textarea class="input" placeholder="학생에게 보낼 안내"></textarea></div>
+    <p class="muted small">보내면 참여 학생에게 앱 안 알림이 가요.</p>`;
+  const m = state.m === 'create' ? modal('새 교육과정 등록', create, '<button class="btn ghost" data-close>취소</button><button class="btn" data-close>과정 등록</button>', true)
+    : state.m === 'req' ? modal('후기 요청 보내기', req, '<button class="btn ghost" data-close>취소</button><button class="btn" data-close>요청 보내기</button>') : '';
+  return `<div class="main">
+    ${head('04 · COURSE ADMIN', '교육과정 · 후기 관리', '교육과정을 등록하고 참여 학생을 추가하면 후기 게시판이 열려요.', '<button class="btn" data-open="create">+ 교육과정 등록</button>')}
+    <div class="card stack" style="gap:8px"><h2 class="card-title">교육과정</h2><div class="table-wrap"><table class="table"><thead><tr><th>과정명</th><th>기간</th><th>참여</th><th>후기 작성률</th><th>상태</th><th></th></tr></thead><tbody>
+      ${cs.map((c) => `<tr><td data-label="과정명"><b>${c[0]}</b></td><td data-label="기간" class="mono">${c[1]}</td><td data-label="참여" class="mono">${c[2]}명</td><td data-label="후기 작성률"><span class="mono small">${c[3]}%</span></td><td data-label="상태"><span class="pill ${c[5]}">${c[4]}</span></td><td data-label="" style="white-space:nowrap;text-align:right"><button class="btn ghost sm">수정</button> <button class="btn ghost sm" data-open="req">후기 요청</button></td></tr>`).join('')}</tbody></table></div></div>
+    ${m}</div>`;
+}
+
+/* ---------- 교육생 홈 ---------- */
+function tHome() {
+  return `<div class="main">
+    ${head('00 · HOME', '안녕하세요, jisu님', '오늘 필요한 일을 한눈에 확인하세요.')}
+    <div class="notice"><span><span class="label" style="color:#A3A39E">후기 요청 · 마감 10/30</span><br>경북 특화형 데이터센터 기초과정에 참여하셨네요. 후기를 남겨 주세요.</span><a class="btn teal" href="#">지금 작성하기</a></div>
+    <div class="g4">${[['다음 면담', '10/20 (화) 14:00'], ['다음 회의실', '10/21 (수) 10:00'], ['희망 도서', '신청 1건'], ['후기', '1건 작성 가능']].map((c) => `<div class="card stack" style="gap:8px"><span class="label">${c[0]}</span><span class="summary-big">${c[1]}</span></div>`).join('')}</div>
+    <div class="g4">${[['01', '면담 신청'], ['02', '회의실 예약'], ['03', '오아시스 도서'], ['04', '교육과정 후기']].map((c) => `<div class="card shortcut"><span class="mono" style="font-size:13px;color:var(--c-teal-dark)">${c[0]}</span><b style="font-size:18px">${c[1]}</b></div>`).join('')}</div>
+  </div>`;
+}
+
+/* ---------- 교육생 면담 신청 ---------- */
+function tMeeting() {
+  const days = ['10/19 월', '10/20 화', '10/21 수', '10/22 목', '10/23 금'];
+  const times = []; for (let h = 10; h < 17; h++) { times.push(`${h}:00`, `${h}:30`); }
+  const open = (di, t) => { const h = parseFloat(t) + (t.endsWith('30') ? .5 : 0); if (h >= 12 && h < 13) return false; if (di === 1 && h >= 14 && h < 15.5) return false; if (di === 3 && h < 11) return false; if (di === 0 && h >= 15) return false; return true; };
+  const taken = (di, t) => (di === 2 && ['10:00', '10:30', '11:00'].includes(t));
+  const sel = state.slot;
+  const grid = times.map((t) => `<div class="mono muted slot-time">${t}</div>${days.map((d, di) => {
+    const k = di + '|' + t;
+    if (taken(di, t)) return '<div class="slot-off">마감</div>';
+    if (!open(di, t)) return '<div class="slot-off">불가</div>';
+    return `<button class="chip slot-btn" aria-pressed="${sel === k}" data-slot="${k}">${sel === k ? '선택됨' : '가능'}</button>`;
+  }).join('')}`).join('');
+  const mine = [['10/20 (화) 14:00', '진로 상담', '확정', 'ok', false], ['10/23 (금) 11:00', '학습 상담', '배정 중', 'wait', true]];
+  return `<div class="main">
+    ${head('01 · MEETING', '면담 신청', '대면 면담 일정을 신청하세요. 비대면 면담은 Slack #pedago 채널에서 신청하면 DM으로 진행됩니다.')}
+    <div class="split"><div class="col">
+      <div class="card stack"><h2 class="card-title">1. 면담 유형</h2><div class="chips"><button class="chip" aria-pressed="true">진로 상담</button><button class="chip" aria-pressed="false">학습 상담</button><button class="chip" aria-pressed="false">생활 상담</button></div></div>
+      <div class="card stack"><div class="row"><h2 class="card-title">2. 희망 시간</h2><span class="muted small">운영팀 확인 후 확정 · 변경될 수 있어요</span></div>
+        <div class="row"><button class="btn ghost sm">이전 주</button><b class="mono">10/19 ~ 10/23</b><button class="btn ghost sm">다음 주</button></div>
+        <div style="overflow-x:auto"><div class="slot-grid" style="grid-template-columns:48px repeat(5,minmax(52px,1fr));min-width:380px"><div></div>${days.map((d) => `<div class="slot-head"><span class="mono" style="font-weight:700">${d.split(' ')[0]}</span> <span class="muted small">${d.split(' ')[1]}</span></div>`).join('')}${grid}</div></div>
+        <div class="legend"><span><i class="sw" style="border:1px solid var(--c-line-input)"></i> 가능</span><span><i class="sw" style="background:var(--c-line-soft)"></i> 불가·마감</span></div></div>
+    </div><div class="col">
+      <div class="card stack"><h2 class="card-title">3. 신청 내용</h2><div class="info"><span class="label">선택한 일정</span><b>${sel ? days[+sel.split('|')[0]] + ' ' + sel.split('|')[1] : '아직 선택하지 않았어요'}</b></div><div class="field"><label>문의 내용</label><textarea class="input" placeholder="면담에서 이야기하고 싶은 내용을 적어 주세요."></textarea></div><button class="btn">면담 신청하기</button></div>
+    </div></div>
+    <div class="card stack" style="gap:8px"><h2 class="card-title">내 면담 신청</h2><div class="list">${mine.map((m) => `<div class="row"><span><b>${m[0]}</b> <span class="muted small">· ${m[1]}</span></span><span style="display:flex;gap:8px;align-items:center"><span class="pill ${m[3]}">${m[2]}</span>${m[4] ? '<button class="btn warn sm">신청 취소</button>' : ''}</span></div>`).join('')}</div>
+      <p class="muted small">확정된 면담은 취소할 수 없어요. 변경이 필요하면 Slack #pedago로 문의해 주세요.</p></div>
+  </div>`;
+}
+
+/* ---------- 교육생 회의실 ---------- */
+function tRoom() {
+  const mine = [['유니버스룸(대)', '10/20 (화) 14:00–16:00', '승인', 'ok', false], ['미팅룸 A', '10/22 (목) 10:00–11:00', '승인 대기', 'wait', true]];
+  return `<div class="main">
+    ${head('02 · ROOM', '회의실 예약', '날짜를 고르면 회의실 현황이 바로 보여요.')}
+    <div class="g2" style="grid-template-columns:380px minmax(0,1fr)"><div class="card stack" style="gap:16px"><h2 class="card-title">날짜 선택</h2>${calendar(20)}</div><div class="card"><h2 class="card-title">회의실 현황</h2><p class="muted small" style="margin-top:8px">(현재와 동일)</p></div></div>
+    <div class="card stack" style="gap:8px"><h2 class="card-title">내 예약</h2><div class="list">${mine.map((m) => `<div class="row"><span><b>${m[0]}</b> <span class="muted small">· ${m[1]}</span></span><span style="display:flex;gap:8px;align-items:center"><span class="pill ${m[3]}">${m[2]}</span>${m[4] ? '<button class="btn warn sm">예약 취소</button>' : ''}</span></div>`).join('')}</div>
+      <p class="muted small">승인된 예약은 취소할 수 없어요. 변경이 필요하면 운영팀에 문의해 주세요.</p></div>
+  </div>`;
+}
+
+/* ---------- 교육생 도서 ---------- */
+function tLibrary() {
+  const books = [['클린 코드', '로버트 C. 마틴', '#1F3B4D', 3], ['Effective Python: 파이썬 코딩의 기술 개정2판 — 더 나은 파이썬 프로그래머가 되는 90가지 방법', '브렛 슬라킨', '#7A2E1F', 1], ['컴퓨터 시스템의 구조와 원리를 밑바닥부터 이해하기 위한 입문서', '김지훈', '#2D4A2B', 2], ['데이터 중심 애플리케이션 설계', '마틴 클레프만', '#4A3A6B', 0], ['Do it! 알고리즘 코딩 테스트', '김종관', '#8A5A12', 4]];
+  const m = state.m === 'wish' ? modal('희망 도서 신청', `${field('도서 제목', '예: 리팩터링 2판')}${field('저자(선택)', '')}<div class="field"><label>신청 사유</label><textarea class="input" placeholder="이 책이 필요한 이유를 적어 주세요."></textarea></div><p class="muted small">운영팀이 검토 후 구매 여부를 알려드려요.</p>`, '<button class="btn ghost" data-close>취소</button><button class="btn" data-close>신청하기</button>') : '';
+  return `<div class="main">
+    ${head('03 · LIBRARY', '오아시스 도서', '오아시스에 비치된 도서를 검색하고, 필요한 책은 희망 도서로 신청하세요.', '<button class="btn" data-open="wish">희망 도서 신청</button>')}
+    <div class="search-bar"><input class="input" placeholder="제목·저자로 검색"><button class="btn">검색</button></div>
+    <div class="book-grid">${books.map((b) => `<div class="card book-card"><div class="book-cover" style="background:${b[2]}"><b style="font-size:14px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical">${b[0]}</b><span style="font-size:12px;opacity:.85">${b[1]}</span></div><button class="book-title" style="border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--c-ink)" title="${esc(b[0])}">${b[0]}</button><div class="row"><span class="small muted">${b[1]}</span><span class="pill ${b[3] ? 'ok' : 'neu'}">${b[3] ? b[3] + '권 비치' : '대출 중'}</span></div></div>`).join('')}</div>
+    ${m}</div>`;
+}
+
+/* ---------- 교육생 후기 게시판 ---------- */
+const COURSES = [
+  { id: 1, name: '서울대학교 파이썬 AI 교육', s: '2026-08-18', e: '2026-08-27', loc: '서울대학교 기업교육센터', n: 0, reg: 1 },
+  { id: 2, name: '경북 특화형 데이터센터 기초과정', s: '2026-10-14', e: '2026-10-23', loc: '유니버스룸(대)', n: 5, reg: 3 },
+  { id: 3, name: '글로벌 기업가 정신 및 AI 몰입 프로그램', s: '2026-07-19', e: '2026-07-28', loc: '미국 시애틀', n: 2, reg: 2 },
+];
+const REVIEWS = { 2: [['kimsh', 5, '실습 위주라 바로 적용할 수 있었어요', '강의 속도가 적당했고 서버 실습이 특히 좋았어요.', '2026-10-24'], ['leejw', 4, '네트워크 파트가 더 길었으면', '전체적으로 만족하지만 네트워크 시간이 짧았어요.', '2026-10-24'], ['parkhe', 5, '추천합니다', '데이터센터 현장 이야기를 들을 수 있어 좋았어요.', '2026-10-25'], ['choiyj', 4, '', '운영팀 지원이 빨랐어요.', '2026-10-25'], ['jungmk', 3, '', '장비 대기 시간이 길었어요.', '2026-10-26']], 3: [['hanbs', 5, '', '시애틀 현지 기업 방문이 가장 인상 깊었어요.', '2026-07-30'], ['yoonsa', 4, '', '영어 발표 기회가 많아서 좋았어요.', '2026-07-31']] };
+const SORTS = { reg: ['등록순', (a, b) => a.reg - b.reg], name: ['과정 이름순', (a, b) => a.name.localeCompare(b.name, 'ko')], new: ['최신순', (a, b) => b.s.localeCompare(a.s)], old: ['과거순', (a, b) => a.s.localeCompare(b.s)], most: ['후기 많은 순', (a, b) => b.n - a.n], least: ['후기 적은 순', (a, b) => a.n - b.n] };
+const md = (d) => d.slice(5).replace('-', '.');
+function tReview() {
+  if (state.course) {
+    const c = COURSES.find((x) => x.id === state.course); const rs = REVIEWS[c.id] ?? [];
+    return `<div class="main">
+      <div><button class="crumb" data-back>← 교육과정 목록</button>${head('04 · COURSE REVIEWS', c.name, `${md(c.s)}–${md(c.e)} · ${c.loc} · 후기 ${c.n}개`, '<button class="btn">후기 작성</button>')}</div>
+      ${rs.length === 0 ? '<div class="card"><p class="muted">아직 등록된 후기가 없어요. 첫 후기를 남겨 보세요.</p></div>' : `<div class="g2">${rs.map((r) => `<div class="card review"><div class="row"><b class="mono">${r[0]}</b><span class="dots" aria-label="만족도 ${r[1]}점">${[1, 2, 3, 4, 5].map((i) => `<span class="${i <= r[1] ? 'on' : ''}"></span>`).join('')}</span></div><p class="small">${r[3]}</p><span class="muted small mono">${r[4]}</span></div>`).join('')}</div>`}
+    </div>`;
+  }
+  const sort = state.sort ?? 'reg'; const rows = [...COURSES].sort(SORTS[sort][1]);
+  return `<div class="main">
+    ${head('04 · COURSE REVIEWS', '교육과정 후기', '교육과정을 선택하면 그 과정의 후기 게시판으로 이동해요.')}
+    <div class="card stack" style="gap:12px"><div class="row"><h2 class="card-title">교육과정 ${COURSES.length}</h2><div class="sortbar"><label class="small muted" for="sort">정렬</label><select id="sort" class="input">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === sort ? 'selected' : ''}>${v[0]}</option>`).join('')}</select></div></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>교육과정명</th><th>교육기간</th><th>교육장소</th><th style="text-align:right">후기 수</th></tr></thead><tbody>
+      ${rows.map((c) => `<tr class="click" data-course="${c.id}"><td data-label="교육과정명"><button class="link">${c.name}</button></td><td data-label="교육기간" class="mono">${md(c.s)}–${md(c.e)}</td><td data-label="교육장소">${c.loc}</td><td data-label="후기 수" class="mono" style="text-align:right">${c.n}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>`;
+}
+
+/* ---------- 렌더링·이벤트 ---------- */
+let cur = (() => { try { const h = location.hash.slice(1); return SCREENS[h] ? h : 's_meeting'; } catch { return 's_meeting'; } })();
+function draw() {
+  const sc = SCREENS[cur];
+  $('#picker').innerHTML = ['운영팀', '교육생'].map((g) => `<div class="grp"><b>${g}</b>${Object.entries(SCREENS).filter(([, v]) => v.group === g).map(([k, v]) => `<button class="pk" aria-pressed="${k === cur}" data-go="${k}">${v.name}</button>`).join('')}</div>`).join('');
+  $('#changes').innerHTML = `<b>이 화면의 변경점</b><ul>${sc.changes.map((c) => `<li>${c}</li>`).join('')}</ul>`;
+  $('#path').textContent = sc.path;
+  $('#stage').innerHTML = sc.render();
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-go],[data-slot],[data-wk],[data-av-cancel],[data-av-save],[data-open],[data-close],[data-day],[data-course],[data-back],[data-approve],[data-addid],[data-rmid]');
+  if (!t) return;
+  const d = t.dataset;
+  if ('go' in d) { cur = d.go; state.m = null; state.course = null; try { history.replaceState(null, '', '#' + cur); } catch {} }
+  else if ('slot' in d) state.slot = state.slot === d.slot ? null : d.slot;
+  else if ('wk' in d) state.wk = d.wk === '0' ? 0 : Math.min(3, Math.max(0, state.wk + +d.wk));
+  else if ('avCancel' in d) state.av = new Set(state.avInit);
+  else if ('avSave' in d) state.avInit = new Set(state.av);
+  else if ('open' in d) state.m = d.open;
+  else if ('close' in d) { if (e.target.closest('.modal') && !t.matches('button')) return; state.m = null; }
+  else if ('day' in d) state.day = +d.day;
+  else if ('course' in d) state.course = +d.course;
+  else if ('back' in d) state.course = null;
+  else if ('approve' in d) state.pend.splice(+d.approve, 1);
+  else if ('addid' in d) { const v = ($('#idin')?.value || '').trim(); if (v) state.ids = [...new Set([...(state.ids ?? ['kimsh', 'leejw']), v])]; }
+  else if ('rmid' in d) state.ids = (state.ids ?? ['kimsh', 'leejw']).filter((x) => x !== d.rmid);
+  draw();
+});
+/* 칸 드래그(마우스·터치): 누른 칸의 반대 상태로 지나가는 칸을 칠한다. 칠하는 동안은 다시 그리지 않고 클래스만 바꾼다 */
+let paint = null;
+const avCell = (el) => el && el.closest && el.closest('[data-avk]');
+const avSet = (el, on) => { const k = el.dataset.avk; on ? state.av.add(k) : state.av.delete(k); el.classList.toggle('on', on); el.setAttribute('aria-pressed', on); };
+document.addEventListener('pointerdown', (e) => { const c = avCell(e.target); if (!c || (e.pointerType === 'mouse' && e.button !== 0)) return; e.preventDefault(); paint = !state.av.has(c.dataset.avk); avSet(c, paint); });
+document.addEventListener('pointermove', (e) => { if (paint === null) return; const c = avCell(document.elementFromPoint(e.clientX, e.clientY)); if (c && state.av.has(c.dataset.avk) !== paint) avSet(c, paint); });
+const avEnd = () => { if (paint !== null) { paint = null; draw(); } };
+document.addEventListener('pointerup', avEnd); document.addEventListener('pointercancel', avEnd);
+document.addEventListener('change', (e) => { if (e.target.id === 'sort') { state.sort = e.target.value; draw(); } });
+draw();
+</script>
