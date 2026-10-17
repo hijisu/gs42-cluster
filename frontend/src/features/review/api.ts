@@ -23,7 +23,6 @@ export interface Review {
   id: number
   course_id: number
   rating: number
-  title: string
   good: string
   bad: string
   recommend_to: string
@@ -37,7 +36,6 @@ export interface Review {
 export interface CreateReviewInput {
   course_id: number
   rating: number
-  title: string
   good: string
   bad: string
   recommend_to: string

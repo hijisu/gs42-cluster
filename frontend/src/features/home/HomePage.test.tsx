@@ -96,7 +96,7 @@ describe('교육생 홈 대시보드', () => {
     await openHome(data())
     const banner = (await screen.findByText(/후기 요청 · 마감/)).closest('.notice') as HTMLElement
     expect(banner).toHaveTextContent('경북 특화형 데이터센터 기초과정')
-    expect(within(banner).getByRole('link', { name: '후기 작성하기' })).toHaveAttribute('href', '/reviews#write')
+    expect(within(banner).getByRole('link', { name: '후기 작성하기' })).toHaveAttribute('href', expect.stringMatching(/^\/reviews\?course=\d+&write=1$/))
   })
 
   it('데이터가 없으면 빈 상태 문구를 보여주고 배너는 없다', async () => {

@@ -1,5 +1,5 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createReview, fetchCourseReviews, fetchCourses, type Course, type Review } from './api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createReview, fetchCourseReviews, fetchCourses } from './api'
 
 const keys = {
   courses: ['courses', 'list'] as const,
@@ -8,18 +8,15 @@ const keys = {
 
 export const useCourses = () => useQuery({ queryKey: keys.courses, queryFn: fetchCourses })
 
-/** 선택한 과정(없으면 전체 과정)의 후기를 최신순으로 합쳐 돌려준다. */
-export function useReviews(courses: Course[] | undefined, courseId: number | null) {
-  const targets = (courses ?? []).filter((c) => courseId === null || c.id === courseId)
-  const results = useQueries({
-    queries: targets.map((c) => ({ queryKey: keys.reviews(c.id), queryFn: () => fetchCourseReviews(c.id) })),
+/** 한 과정의 후기를 최신순으로 돌려준다(과정 게시판). */
+export function useReviews(courseId: number | null) {
+  const q = useQuery({
+    queryKey: keys.reviews(courseId ?? 0),
+    queryFn: () => fetchCourseReviews(courseId as number),
+    enabled: courseId !== null,
+    select: (list) => [...list].sort((a, b) => b.created_at.localeCompare(a.created_at)),
   })
-  const reviews: Review[] = results.flatMap((r) => r.data ?? []).sort((a, b) => b.created_at.localeCompare(a.created_at))
-  return {
-    reviews,
-    isPending: courses === undefined || results.some((r) => r.isPending),
-    isError: results.some((r) => r.isError),
-  }
+  return { reviews: q.data ?? [], isPending: q.isPending, isError: q.isError }
 }
 
 export function useCreateReview() {
