@@ -222,3 +222,11 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .av-cell{min-height:44px}
   .av-status{height:44px;line-height:22px}
 }
+
+/* 후기 게시판: 목록의 과정명 링크, 목록으로 돌아가기, 정렬 */
+.table td .link{border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--c-teal-dark);cursor:pointer;text-align:left;min-height:var(--touch)}
+.table td .link:hover{text-decoration:underline}
+.crumb{border:0;background:none;padding:0;font:inherit;color:var(--c-teal-dark);cursor:pointer;min-height:var(--touch);text-align:left;align-self:flex-start}
+.crumb:hover{text-decoration:underline}
+.sortbar{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
+.sortbar select{width:auto;min-height:var(--touch);padding:0 var(--sp-3)}
