@@ -11,5 +11,8 @@ export const errorLabel: Record<string, string> = {
   outside_hours: '운영 시간 밖이거나 하루를 넘기는 시간이에요.',
   invalid_range: '종료 시간은 시작 시간보다 늦어야 하고 30분 단위여야 해요.',
   invalid_rules: '운영 시간(시작 < 종료)과 이용수칙을 1줄 이상 입력해 주세요.',
+  room_block_conflict: '운영팀이 차단한 시간이라 예약할 수 없어요.',
+  invalid_block: '차단 정보를 확인해 주세요(사유, 시간, 반복 종료일, 매주 반복은 요일 1개 이상).',
+  block_not_found: '차단 일정을 찾을 수 없어요. 목록을 새로 불러왔어요.',
   room_code_taken: '이미 사용 중인 장소 코드예요.',
 }

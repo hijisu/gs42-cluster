@@ -31,6 +31,7 @@ export const errorLabel: Record<string, string> = {
   invalid_range: '종료 시간은 시작 시간보다 늦어야 하고 30분 단위여야 합니다.',
   room_not_found: '장소를 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요.',
   room_blocked: '현재 예약을 받지 않는 장소입니다.',
+  room_block_conflict: '운영팀이 차단한 시간이라 예약할 수 없습니다.',
   invalid_transition: '이미 취소되었거나 처리된 예약입니다.',
   forbidden: '권한이 없습니다.',
 }
