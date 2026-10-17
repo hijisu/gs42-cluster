@@ -17,6 +17,7 @@ class BookRow(models.Model):
     cover_url = models.URLField(max_length=500, blank=True)
     link_url = models.URLField(max_length=500, blank=True)
     pub_date = models.CharField(max_length=20, blank=True)
+    location = models.CharField(max_length=40, blank=True)
 
     class Meta:
         app_label = "library"

@@ -23,12 +23,22 @@ def create_book(request):
     return Response(book_payload(book), status=status.HTTP_201_CREATED)
 
 
-@staff_api(["PATCH"])
-def update_book(request, book_id: int):
+def _update_book(request, book_id: int):
     body = BookWriteSerializer(data=request.data, partial=True)
     body.is_valid(raise_exception=True)
     changes = {k: v for k, v in body.validated_data.items() if k != "code"}
     return Response(book_payload(deps.update_book().execute(book_id, changes)))
+
+
+def _delete_book(request, book_id: int):
+    deps.delete_book().execute(book_id)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@staff_api(["PATCH", "DELETE"])
+def book_detail(request, book_id: int):
+    handler = _delete_book if request.method == "DELETE" else _update_book
+    return handler(request, book_id)
 
 
 @staff_api(["GET"])

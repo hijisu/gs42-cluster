@@ -176,6 +176,13 @@ def test_staff_creates_and_updates_books():
     )
     assert staff.patch("/api/staff/books/999999", {"quantity": 1}, format="json").status_code == 404
 
+    located = staff.patch(f"/api/staff/books/{book_id}", {"location": "A-2"}, format="json")
+    assert located.json()["location"] == "A-2"
+    assert staff.delete(f"/api/staff/books/{book_id}").status_code == 204
+    assert not BookRow.objects.filter(pk=book_id).exists()
+    assert staff.delete(f"/api/staff/books/{book_id}").status_code == 404
+    assert login().delete(f"/api/staff/books/{book_id}").status_code == 403
+
 
 def test_import_books_is_idempotent_and_keeps_requests(tmp_path):
     out = StringIO()

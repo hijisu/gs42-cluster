@@ -16,6 +16,7 @@ class Book:
     cover_url: str = ""
     link_url: str = ""
     pub_date: str = ""
+    location: str = ""
     id: int | None = None
 
     def __post_init__(self) -> None:
