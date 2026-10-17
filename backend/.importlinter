@@ -1,0 +1,122 @@
+# DDD 계층 의존 방향 검사 (AGENTS.md):  interfaces -> application -> domain <- infrastructure
+# 실행: cd backend && lint-imports
+[importlinter]
+root_packages =
+    accounts
+    meetings
+    rooms
+    reviews
+    notifications
+    common
+    config
+include_external_packages = True
+
+[importlinter:contract:domain-is-framework-free]
+name = domain은 Django/DRF를 import하지 않는다
+type = forbidden
+source_modules =
+    accounts.domain
+    meetings.domain
+    rooms.domain
+    reviews.domain
+    notifications.domain
+    common.domain
+forbidden_modules =
+    django
+    rest_framework
+
+[importlinter:contract:application-is-framework-free]
+name = application은 Django/DRF를 import하지 않는다
+type = forbidden
+source_modules =
+    accounts.application
+    meetings.application
+    rooms.application
+    reviews.application
+    notifications.application
+forbidden_modules =
+    django
+    rest_framework
+
+[importlinter:contract:domain-is-innermost]
+name = domain은 바깥 계층(application·infrastructure·interfaces)을 import하지 않는다
+type = forbidden
+source_modules =
+    accounts.domain
+    meetings.domain
+    rooms.domain
+    reviews.domain
+    notifications.domain
+forbidden_modules =
+    accounts.application
+    accounts.infrastructure
+    accounts.interfaces
+    meetings.application
+    meetings.infrastructure
+    meetings.interfaces
+    rooms.application
+    rooms.infrastructure
+    rooms.interfaces
+    reviews.application
+    reviews.infrastructure
+    reviews.interfaces
+    notifications.application
+    notifications.infrastructure
+    notifications.interfaces
+
+[importlinter:contract:application-does-not-reach-outward]
+name = application은 infrastructure·interfaces를 import하지 않는다
+type = forbidden
+source_modules =
+    accounts.application
+    meetings.application
+    rooms.application
+    reviews.application
+    notifications.application
+forbidden_modules =
+    accounts.infrastructure
+    accounts.interfaces
+    meetings.infrastructure
+    meetings.interfaces
+    rooms.infrastructure
+    rooms.interfaces
+    reviews.infrastructure
+    reviews.interfaces
+    notifications.infrastructure
+    notifications.interfaces
+
+[importlinter:contract:infrastructure-does-not-reach-interfaces]
+name = infrastructure는 interfaces를 import하지 않는다
+type = forbidden
+source_modules =
+    accounts.infrastructure
+    meetings.infrastructure
+    rooms.infrastructure
+    reviews.infrastructure
+    notifications.infrastructure
+forbidden_modules =
+    accounts.interfaces
+    meetings.interfaces
+    rooms.interfaces
+    reviews.interfaces
+    notifications.interfaces
+
+[importlinter:contract:contexts-are-decoupled-from-notifications]
+name = accounts·meetings·rooms·reviews는 notifications를 import하지 않는다 (이벤트로만 연동)
+type = forbidden
+source_modules =
+    accounts
+    meetings
+    rooms
+    reviews
+    common
+forbidden_modules =
+    notifications
+
+[importlinter:contract:business-contexts-are-independent]
+name = meetings·rooms·reviews는 서로를 import하지 않는다
+type = independence
+modules =
+    meetings
+    rooms
+    reviews
