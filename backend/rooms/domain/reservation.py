@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from common.domain.errors import ForbiddenError
-from rooms.domain.errors import InvalidTransition, ReasonRequired
+from rooms.domain.errors import InvalidTransition, NotCancelable, ReasonRequired
 from rooms.domain.time_range import TimeRange
 
 
@@ -63,8 +63,14 @@ class RoomReservation:
         self.room_id = room_id
 
     def cancel(self, by_user_id: int) -> None:
-        """신청한 본인만 취소할 수 있다. pending/approved에서 가능."""
+        """신청한 본인만, 승인 전(pending)에만 취소할 수 있다. 승인된 예약은 운영팀이 취소한다."""
         if by_user_id != self.user_id:
             raise ForbiddenError("본인의 예약만 취소할 수 있습니다")
+        if self.status != ReservationStatus.PENDING:
+            raise NotCancelable("승인된 예약은 직접 취소할 수 없습니다. 운영팀에 문의해 주세요")
+        self.status = ReservationStatus.CANCELED
+
+    def cancel_by_staff(self) -> None:
+        """운영팀 취소: 승인된 예약도 취소할 수 있다(pending/approved)."""
         self._require(set(ACTIVE), "cancel")
         self.status = ReservationStatus.CANCELED

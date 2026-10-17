@@ -9,6 +9,7 @@ staff_urlpatterns = [
         "reservations/<int:reservation_id>/approve", views.approve, name="staff-reservation-approve"
     ),
     path("reservations/<int:reservation_id>/reject", views.reject, name="staff-reservation-reject"),
+    path("reservations/<int:reservation_id>/cancel", views.cancel, name="staff-reservation-cancel"),
     path(
         "reservations/<int:reservation_id>/reassign",
         views.reassign,

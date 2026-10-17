@@ -22,7 +22,7 @@ from meetings.domain.errors import (
     SlotUnavailable,
     StaffNotFound,
 )
-from meetings.domain.events import MeetingConfirmed, MeetingProposed
+from meetings.domain.events import MeetingCanceled, MeetingConfirmed, MeetingProposed
 from meetings.domain.meeting import MeetingRequest
 from meetings.domain.slots import is_aligned
 
@@ -45,6 +45,31 @@ class ListStaffMeetingsUseCase:
 
     def execute(self, status: str | None) -> list[StaffMeetingView]:
         return self._read.list_meetings(status)
+
+
+class StaffCancelMeetingUseCase:
+    """운영팀 취소. 확정된 면담도 취소할 수 있다(교육생은 확정 전까지만 직접 취소)."""
+
+    def __init__(
+        self,
+        meetings: MeetingRepository,
+        read_model: StaffMeetingReadModel,
+        events: EventDispatcher,
+    ) -> None:
+        self._meetings = meetings
+        self._read = read_model
+        self._events = events
+
+    def execute(self, meeting_id: int) -> StaffMeetingView:
+        meeting = _load(self._meetings, meeting_id)
+        meeting.cancel_by_staff()
+        self._meetings.save(meeting)
+        self._events.publish(
+            MeetingCanceled(
+                meeting_id=meeting.id, student_id=meeting.student_id, staff_id=meeting.staff_id
+            )
+        )
+        return self._read.get(meeting.id)
 
 
 class AssignMeetingUseCase:
