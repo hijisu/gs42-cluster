@@ -1,12 +1,12 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
-import { Button, Card, Field, Pill } from '../../components'
+import { Button, Field, Modal, Pill } from '../../components'
 import { messageFor } from './errors'
 import { useCreateCourse } from './hooks'
 
 const splitIds = (raw: string) => raw.split(/[\s,]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
 
-/** STEP 1: 새 교육과정 등록 */
-export function CreateCourseForm() {
+/** 새 교육과정 등록(팝업). 등록되면 닫고 onDone으로 결과 문구를 알린다. */
+export function CreateCourseModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: (message: string) => void }) {
   const create = useCreateCourse()
   const fileRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('')
@@ -20,7 +20,6 @@ export function CreateCourseForm() {
   const [csv, setCsv] = useState('')
   const [csvName, setCsvName] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [done, setDone] = useState<string | null>(null)
 
   const errors = {
     name: name.trim() === '' ? '과정명을 입력해 주세요.' : undefined,
@@ -50,7 +49,6 @@ export function CreateCourseForm() {
 
   function submit() {
     setSubmitted(true)
-    setDone(null)
     if (hasError) return
     // 입력 중인 ID도 포함한다.
     const all = [...new Set([...ids, ...splitIds(idInput)])]
@@ -58,7 +56,7 @@ export function CreateCourseForm() {
       { name: name.trim(), start_date: start, end_date: end, location: location.trim(), intro: intro.trim(), review_deadline: deadline || null, intra_ids: all, csv },
       {
         onSuccess: (c) => {
-          setDone(`'${c.name}' 과정을 등록했어요. 참여 ${c.participant_count}명 · 후기 게시판이 만들어졌어요.`)
+          onDone(`'${c.name}' 과정을 등록했어요. 참여 ${c.participant_count}명 · 후기 게시판이 만들어졌어요.`)
           setName('')
           setStart('')
           setEnd('')
@@ -76,25 +74,27 @@ export function CreateCourseForm() {
   }
 
   return (
-    <Card className="stack">
-      <div className="row">
-        <h2 className="card-title">새 교육과정 등록</h2>
-        <span className="label">STEP 1 · 2</span>
-      </div>
+    <Modal open={open} title="새 교육과정 등록" onClose={onClose}>
+    <div className="stack">
       <Field label="과정명" placeholder="예: 2026 경북 특화형 데이터센터 기초과정 심화기수" value={name} onChange={(e) => setName(e.target.value)} error={submitted ? errors.name : undefined} />
-      <div className="g3" style={{ gap: 12 }}>
+      <div className="g2" style={{ gap: 12 }}>
         <Field label="시작일" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={submitted ? errors.start : undefined} />
         <Field label="종료일" type="date" value={end} onChange={(e) => setEnd(e.target.value)} error={submitted ? errors.end : undefined} />
-        <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
       </div>
+      <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
       <Field label="과정 소개" multiline placeholder="게시판 상단에 보일 소개 문구" value={intro} onChange={(e) => setIntro(e.target.value)} />
       <Field label="후기 작성 마감(선택)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={submitted ? errors.deadline : undefined} />
       <div className="field">
         <label htmlFor="course-ids">참여 학생</label>
         <div style={{ display: 'flex', gap: 8 }}>
-          <input id="course-ids" className="input" style={{ flexGrow: 1 }} placeholder="intra ID 입력 후 Enter" value={idInput} onChange={(e) => setIdInput(e.target.value)} onKeyDown={onKey} />
-          <Button variant="ghost" onClick={() => fileRef.current?.click()}>
-            CSV
+          <input id="course-ids" className="input" style={{ flexGrow: 1 }} placeholder="intra ID 입력 후 Enter 또는 ‘추가’" value={idInput} onChange={(e) => setIdInput(e.target.value)} onKeyDown={onKey} />
+          <Button variant="ghost" onClick={() => addIds(idInput)}>
+            추가
+          </Button>
+        </div>
+        <div>
+          <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
+            CSV로 한 번에 추가
           </Button>
           <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" tabIndex={-1} aria-label="CSV 파일 선택" onChange={(e) => onFile(e.target.files?.[0])} />
         </div>
@@ -113,10 +113,15 @@ export function CreateCourseForm() {
       </div>
       <p className="muted small">등록하면 후기 게시판이 만들어지고, 종료일이 되면 자동으로 후기를 받기 시작해요. 등록한 뒤에도 표에서 수정할 수 있어요.</p>
       {error && <p role="alert" className="login-error">{error}</p>}
-      {done && <p role="status" className="info">{done}</p>}
-      <Button disabled={create.isPending} onClick={submit}>
-        {create.isPending ? '등록 중…' : '과정 등록'}
-      </Button>
-    </Card>
+      <div className="modal-actions">
+        <Button variant="ghost" onClick={onClose}>
+          취소
+        </Button>
+        <Button disabled={create.isPending} onClick={submit}>
+          {create.isPending ? '등록 중…' : '과정 등록'}
+        </Button>
+      </div>
+    </div>
+    </Modal>
   )
 }
