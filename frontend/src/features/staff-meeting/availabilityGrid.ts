@@ -1,24 +1,11 @@
-import { kstDate, kstTime, kstToIso } from '../../lib/datetime'
+import { addDays, firstViewWeek, isWeekday, kstDate, kstTime, kstToIso, weekStart } from '../../lib/datetime'
 
 /** 30분 단위 시작 시각 09:00 ~ 18:30 */
 export const TIMES = Array.from({ length: 20 }, (_, i) => `${String(9 + Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
 /** 종료 선택지: 첫 시작 + 30분 ~ 19:00 */
 export const END_TIMES = [...TIMES.slice(1), '19:00']
 
-export const addDays = (date: string, days: number): string => {
-  const d = new Date(`${date}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
-}
-
-/** 그 날짜가 속한 주의 월요일 */
-export const weekStart = (date: string): string => {
-  const dow = new Date(`${date}T00:00:00Z`).getUTCDay()
-  return addDays(date, dow === 0 ? -6 : 1 - dow)
-}
-
 export const slotKey = (date: string, time: string) => `${date} ${time}`
-export const isWeekday = (date: string) => ![0, 6].includes(new Date(`${date}T00:00:00Z`).getUTCDay())
 
 /** 서버가 준 ISO 시각들 → 화면용 키 집합 */
 export const toKeys = (slots: string[]): Set<string> => new Set(slots.map((iso) => slotKey(kstDate(iso), kstTime(iso))))
@@ -38,5 +25,4 @@ export const timesBetween = (start: string, end: string): string[] => TIMES.filt
 
 export const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((k) => b.has(k))
 
-/** 처음 보여줄 주의 월요일: 주말에는 이번 주가 모두 지난 뒤라 다음 주를 보여준다 */
-export const firstViewWeek = (today: string): string => (isWeekday(today) ? weekStart(today) : addDays(weekStart(today), 7))
+export { addDays, firstViewWeek, isWeekday, weekStart }
