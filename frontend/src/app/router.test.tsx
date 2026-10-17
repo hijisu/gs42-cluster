@@ -86,3 +86,32 @@ describe('접근성: 레이아웃', () => {
     expect(current).toHaveTextContent('면담 신청')
   })
 })
+
+describe('도서 외부 링크(#100)', () => {
+  it('메뉴의 도서 항목은 새 탭 외부 링크이고 안전한 rel을 가진다', async () => {
+    mockMe('student')
+    renderAt('/')
+    const nav = await screen.findByRole('navigation', { name: '주요 메뉴' })
+    const link = within(nav).getByRole('link', { name: /오아시스 도서/ })
+    expect(link).toHaveAttribute('href', 'https://42gslib.pages.dev/')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link.getAttribute('rel')).toMatch(/noopener/)
+    expect(link.getAttribute('rel')).toMatch(/noreferrer/)
+    expect(link).toHaveTextContent('(새 창)')
+  })
+
+  it('홈 바로가기에도 도서 외부 링크가 있다', async () => {
+    mockMe('student')
+    renderAt('/')
+    const main = within(await screen.findByRole('main'))
+    const link = main.getByRole('link', { name: /오아시스 도서/ })
+    expect(link).toHaveAttribute('href', 'https://42gslib.pages.dev/')
+    expect(link).toHaveAttribute('target', '_blank')
+  })
+
+  it('내부 /library 라우트는 그대로 열린다(도서 화면 #28 전까지)', async () => {
+    mockMe('student')
+    renderAt('/library')
+    expect(await screen.findByRole('heading', { level: 1, name: '오아시스 도서' })).toBeInTheDocument()
+  })
+})
