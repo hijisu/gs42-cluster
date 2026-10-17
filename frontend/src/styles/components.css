@@ -238,3 +238,12 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .my-meeting{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2);padding:8px 0;border-bottom:1px solid var(--c-line-soft);flex-wrap:wrap}
 .my-meeting:last-child{border-bottom:0}
 .my-meeting-end{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* 설정 카드 안 탭(운영 면담 관리) */
+.tabs.compact{padding:2px}
+.tabs.compact button{min-height:28px;padding:0 12px;font-size:13px}
+@media (min-width:901px){
+  /* 면담 가능 시간 격자는 한 화면에 들어가도록 칸을 낮춘다(데스크톱) */
+  .av-cell{min-height:14px}
+  .av-sep{margin:3px 0}
+}
