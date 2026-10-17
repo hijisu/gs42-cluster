@@ -16,7 +16,8 @@ htmlcov/
 # Node / Vite
 node_modules/
 dist/
-dev-dist/   # vite-plugin-pwa 개발 서버(devOptions)가 만드는 서비스워커 산출물
+# vite-plugin-pwa 개발 서버(devOptions)가 만드는 서비스워커 산출물
+dev-dist/
 coverage/
 *.tsbuildinfo
 npm-debug.log*
