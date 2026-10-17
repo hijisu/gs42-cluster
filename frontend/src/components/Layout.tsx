@@ -17,6 +17,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
   const navigate = useNavigate()
   return (
     <div className="app">
+      <a className="skip" href="#main">본문 바로가기</a>
       <aside className={`side ${variant}`}>
         <NavLink className="brand" to={variant === 'staff' ? '/staff' : '/'}>
           <b>42</b>gs<span>-cluster</span>
@@ -64,7 +65,7 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
           로그아웃
         </button>
       </aside>
-      <main className="main">
+      <main id="main" className="main" tabIndex={-1}>
         {me && <NotificationBanner />}
         <Outlet />
       </main>

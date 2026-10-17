@@ -42,7 +42,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .slot-grid{display:grid;gap:var(--sp-2);min-width:420px}
 .slot-head{text-align:center}
 .slot-time{font-size:13px;display:flex;align-items:center}
-.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-brand-dim);display:flex;align-items:center;justify-content:center;font-size:13px}
+.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:13px}
 .chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
 
 /* 알림 배너·평점 점·과정 요약 */
@@ -106,3 +106,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .tabs button{min-height:40px;padding:0 var(--sp-4);border-radius:var(--r-sm);border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:var(--c-body-soft)}
 .tabs button.on{background:var(--c-ink);color:var(--c-surface);font-weight:600}
 .field-label{font-size:13px;font-weight:600}
+
+.pill-x{margin-left:6px;border:0;background:none;padding:0;font:inherit;cursor:pointer;color:inherit}
+.bar{height:8px;border-radius:var(--r-pill);background:var(--c-line-soft);overflow:hidden}
+.bar>div{height:100%;background:var(--c-teal);border-radius:var(--r-pill)}

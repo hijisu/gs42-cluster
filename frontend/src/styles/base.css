@@ -31,22 +31,24 @@ h1,h2,h3,p{margin:0}
 .switch{display:flex;align-items:center;justify-content:center;min-height:var(--touch);border-radius:var(--r-md);border:1px dashed var(--c-muted);color:var(--c-side-text);text-decoration:none;font-size:13px}
 .switch{background:none;font:inherit;cursor:pointer}
 .switch:hover{color:var(--c-surface);border-color:var(--c-side-text)}
-.main{padding:var(--sp-8) 48px 72px;display:flex;flex-direction:column;gap:var(--sp-7);max-width:1200px;width:100%}
+.main{min-width:0;padding:var(--sp-8) 48px 72px;display:flex;flex-direction:column;gap:var(--sp-7);max-width:1200px;width:100%}
 .head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);flex-wrap:wrap}
 .h1{font-size:30px;font-weight:700;letter-spacing:-0.01em}
 .sub{color:var(--c-muted);margin-top:6px}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-5)}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-5)}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-4)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-4)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2) var(--sp-4);flex-wrap:wrap}
 
 @media (max-width:900px){
   .app{grid-template-columns:minmax(0,1fr)}
   .side{padding:var(--sp-4);gap:14px}
   .nav{flex-direction:row;overflow-x:auto}
-  .me{display:none}
+  .me{margin:0;padding:0;border:0}
+  .me-role{display:none}
   .role{margin:0}
   .main{padding:var(--sp-6) var(--sp-4) 48px}
+  .h1{font-size:24px}
   .g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
 }
 .me-text{display:flex;flex-direction:column;min-width:0}
@@ -80,3 +82,9 @@ h1,h2,h3,p{margin:0}
 
 .room-split{grid-template-columns:380px minmax(0,1fr)}
 @media (max-width:900px){.room-split{grid-template-columns:minmax(0,1fr)}}
+
+/* 본문 바로가기: 키보드 사용자가 사이드바를 건너뛴다 */
+.skip{position:absolute;left:var(--sp-2);top:-48px;z-index:20;padding:var(--sp-2) var(--sp-4);background:var(--c-teal);color:var(--c-ink);border-radius:var(--r-md);font-weight:600;text-decoration:none}
+.skip:focus{top:var(--sp-2)}
+.main:focus{outline:none}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
