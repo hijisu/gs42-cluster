@@ -42,11 +42,11 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 
 /* 시간 격자 (면담·회의실 공용) */
 .slot-wrap{display:flex;flex-direction:column;gap:var(--sp-3);overflow-x:auto}
-.slot-grid{display:grid;grid-template-columns:48px repeat(5,minmax(52px,1fr));gap:var(--sp-2);min-width:420px}
+.slot-grid{display:grid;grid-template-columns:44px repeat(5,72px);justify-content:center;gap:4px;min-width:0}
 .slot-head{text-align:center}
 .slot-time{font-size:13px;display:flex;align-items:center}
-.slot-off{min-height:var(--touch);border-radius:var(--r-md);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:13px}
-.chip.slot-btn{justify-content:center;border-radius:var(--r-md);min-height:var(--touch)}
+.slot-off{min-height:28px;border-radius:var(--r-sm);background:var(--c-line-soft);color:var(--c-muted);display:flex;align-items:center;justify-content:center;font-size:12px}
+.chip.slot-btn{justify-content:center;border-radius:var(--r-sm);min-height:28px;padding:0;font-size:12px}
 
 /* 알림 배너·평점 점·과정 요약 */
 .notice{display:flex;gap:var(--sp-4);align-items:center;justify-content:space-between;padding:var(--sp-3) var(--sp-4);border-radius:14px;background:var(--c-ink);color:var(--c-bg);flex-wrap:wrap}
@@ -152,8 +152,8 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .tl-name{flex-direction:row;align-items:baseline;gap:var(--sp-2);padding:var(--sp-3) 0 0}
   .tl-cells{padding:6px 0 10px;min-height:0}
   .tl-cell{min-height:28px}
-  .slot-grid{min-width:0;grid-template-columns:36px repeat(5,minmax(0,1fr));gap:4px}
-  .slot-btn,.slot-off{padding:0;font-size:12px}
+  .slot-grid{grid-template-columns:36px repeat(5,minmax(0,1fr));justify-content:stretch;gap:4px}
+  .chip.slot-btn,.slot-off{padding:0;font-size:12px;min-height:44px}
 }
 
 /* 홈 대시보드 */
@@ -233,3 +233,8 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .crumb:hover{text-decoration:underline}
 .sortbar{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
 .sortbar select{width:auto;min-height:var(--touch);padding:0 var(--sp-3)}
+
+/* 내 면담 신청 목록(오른쪽 열) */
+.my-meeting{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2);padding:8px 0;border-bottom:1px solid var(--c-line-soft);flex-wrap:wrap}
+.my-meeting:last-child{border-bottom:0}
+.my-meeting-end{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
