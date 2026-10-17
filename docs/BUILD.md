@@ -26,7 +26,7 @@ cp .env.example .env
 | `DJANGO_ALLOWED_HOSTS` | 허용 호스트(쉼표 구분) | O |
 | `TIME_ZONE` | 표시 시간대 (`Asia/Seoul`) | O |
 | `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트. compose에서는 `POSTGRES_HOST=db`로 자동 덮어씀 | O |
-| `COMPOSE_PROJECT_NAME` | compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경 | - |
+| `COMPOSE_PROJECT_NAME` | **개발용** compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경. 운영 구성은 `-p <이름>-prod`로 따로 지정 | - |
 | `DB_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT` | compose가 호스트에 여는 포트(기본 5432 / 8000 / 5173). 컨테이너 안 포트는 고정 | - |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
@@ -158,11 +158,13 @@ cp .env.example .env     # 이미 있으면 생략
 # .env 의 DJANGO_SECRET_KEY 를 실제 값으로 바꾼다 (예시 값 change-me 로는 기동하지 않는다)
 python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -p gs42-prod -f docker-compose.prod.yml up -d --build
 open http://localhost        # PROD_HTTP_PORT 를 바꿨다면 http://localhost:<포트>
-docker compose -f docker-compose.prod.yml logs -f backend
-docker compose -f docker-compose.prod.yml down          # 데이터 유지 / -v 는 DB 볼륨까지 삭제
+docker compose -p gs42-prod -f docker-compose.prod.yml logs -f backend
+docker compose -p gs42-prod -f docker-compose.prod.yml down          # 데이터 유지 / -v 는 DB 볼륨까지 삭제
 ```
+
+**모든 운영 구성 명령에 `-p <이름>-prod`를 붙입니다.** `.env`의 `COMPOSE_PROJECT_NAME`(개발용 프로젝트 이름)이 compose 파일의 `name:`보다 우선하므로, `-p` 없이 실행하면 개발용 스택과 같은 프로젝트로 묶여 `db`·`backend` 서비스가 서로를 덮어씁니다. 한 PC에서 클론을 여러 개 쓰면 클론마다 `-p gs42-b-prod`처럼 다른 이름을 씁니다.
 
 | 서비스 | 역할 | 외부 노출 |
 | --- | --- | --- |
@@ -175,6 +177,6 @@ docker compose -f docker-compose.prod.yml down          # 데이터 유지 / -v 
 - `docker-compose.prod.yml`은 로컬 http 검증을 위해 backend에 `DJANGO_COOKIE_SECURE=false`를 지정합니다. HTTPS로 실제 배포할 때는 이 줄을 지워 Secure 쿠키(기본값)를 사용해야 합니다.
 - Django는 정적 파일을 서빙하지 않습니다(JSON API만 제공). 정적 파일은 모두 `web`이 서빙합니다.
 - `.env`(비밀값)는 이미지에 포함되지 않고 compose의 `env_file`로만 주입됩니다. 이미지 빌드 제외 목록은 루트 `.dockerignore`와 `backend/.dockerignore`.
-- 개발용(`docker-compose.yml`)과 운영 구성은 동시에 띄울 수 있습니다(프로젝트 이름이 `gs42`, `gs42-prod`로 다르고 운영 구성은 `PROD_HTTP_PORT`만 호스트에 엽니다).
+- 개발용(`docker-compose.yml`, 프로젝트 `gs42`)과 운영 구성(프로젝트 `gs42-prod`)은 컨테이너·네트워크·DB 볼륨이 서로 달라 동시에 띄울 수 있습니다. 운영 구성이 호스트에 여는 포트는 `PROD_HTTP_PORT`뿐이고, 어느 한쪽을 `down`해도 다른 쪽은 영향을 받지 않습니다.
 - 이 구성은 HTTPS 없이 Secure 쿠키를 끄므로 **루프백(`127.0.0.1`)에만 포트를 엽니다**. 다른 PC에서는 접속할 수 없습니다.
 - 외부 접속용 배포(AWS, 도메인, HTTPS 인증서)는 이 범위에 포함되지 않으며 필요해지면 별도 이슈로 진행합니다.
