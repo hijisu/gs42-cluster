@@ -6,10 +6,10 @@
 
 | 도구 | 버전 | 비고 |
 | --- | --- | --- |
-| Python | TBD | Django REST 백엔드 |
-| Node.js | TBD | React + Vite 프론트엔드 |
-| PostgreSQL | TBD | docker compose로 실행 |
-| Docker / Docker Compose | TBD | 로컬 통합 실행 |
+| Python | 3.12+ (3.13에서 확인) | Django REST 백엔드. compose 이미지는 `python:3.13-slim` |
+| Node.js | 22 (LTS) | React + Vite 프론트엔드. compose 이미지는 `node:22-slim` |
+| PostgreSQL | 16 | docker compose로 실행. `btree_gist` 확장 필요(아래 백엔드 절) |
+| Docker / Docker Compose | Compose v2 이상 | 로컬 통합 실행(`docker compose`) |
 
 ## 환경변수
 
@@ -25,16 +25,43 @@ cp .env.example .env
 | `DJANGO_DEBUG` | 디버그 모드. `true`일 때만 모의 로그인 허용 | O |
 | `DJANGO_ALLOWED_HOSTS` | 허용 호스트(쉼표 구분) | O |
 | `TIME_ZONE` | 표시 시간대 (`Asia/Seoul`) | O |
-| `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트 | O |
+| `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트. compose에서는 `POSTGRES_HOST=db`로 자동 덮어씀 | O |
+| `COMPOSE_PROJECT_NAME` | compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경 | - |
+| `DB_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT` | compose가 호스트에 여는 포트(기본 5432 / 8000 / 5173). 컨테이너 안 포트는 고정 | - |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
-| `FRONTEND_ORIGIN` / `VITE_API_BASE_URL` | 프론트엔드 주소·API 경로 | O |
+| `FRONTEND_ORIGIN` / `VITE_API_BASE_URL` | 프론트엔드 주소·API 경로. compose에서는 `FRONTEND_ORIGIN`이 `FRONTEND_HOST_PORT`로 자동 계산됨 | O |
+| `API_PROXY_TARGET` | (선택) 호스트에서 `npm run dev`할 때 `/api` 프록시 대상. 기본 `http://localhost:8000`, compose는 `http://backend:8000` 고정 | - |
 | `VAPID_*` | Web Push 키 (Phase 2) | - |
 | `SLACK_BOT_TOKEN` | Slack 알림 (Phase 3) | - |
 
 ## 로컬 실행
 
-TBD (docker compose 구성 후 작성)
+`docker compose up` 한 번으로 DB·백엔드·프론트를 함께 띄웁니다.
+
+```bash
+cp .env.example .env            # 처음 한 번 (비밀값은 .env에만 두고 커밋하지 않음)
+docker compose up --build       # 첫 실행은 이미지 빌드와 npm ci 때문에 몇 분 걸립니다
+```
+
+| 서비스 | 주소 | 설명 |
+| --- | --- | --- |
+| frontend | http://localhost:5173 | Vite 개발 서버. `/api`는 backend로 프록시(같은 origin이라 세션 쿠키·CSRF가 그대로 동작) |
+| backend | http://localhost:8000 | Django. 시작할 때 `migrate`를 자동 실행. 소스는 볼륨 마운트라 수정이 바로 반영됨 |
+| db | localhost:5432 | PostgreSQL 16. 데이터는 `db-data` 볼륨에 보존 |
+
+```bash
+docker compose exec backend pytest -q      # 컨테이너 안에서 백엔드 테스트
+docker compose exec frontend npm test      # 프론트 테스트
+docker compose exec backend python manage.py seed_meeting_demo   # 개발용 시드 (아래 백엔드 절 참고)
+docker compose down                         # 중지(데이터 유지) / down -v 는 DB·node_modules 볼륨까지 삭제
+```
+
+- 한 PC에서 클론/에이전트를 여러 개 돌릴 때는 `.env`의 `COMPOSE_PROJECT_NAME`과 `*_HOST_PORT`를 서로 다르게 지정합니다(예: `gs42-b`, 8100/5532/5273).
+  - `FRONTEND_HOST_PORT`를 바꾸면 compose가 백엔드의 `FRONTEND_ORIGIN`(CSRF 신뢰 origin·CORS)을 `http://localhost:<FRONTEND_HOST_PORT>`로 자동 설정합니다. `.env`의 `FRONTEND_ORIGIN`은 호스트에서 직접 실행할 때만 쓰입니다.
+  - `BACKEND_HOST_PORT`를 바꾸면 42 로그인용 `FORTYTWO_REDIRECT_URI`와 intra 앱에 등록한 redirect URI도 같은 포트로 맞춰야 합니다(모의 로그인만 쓰면 무관).
+- 프론트 컨테이너는 `node_modules`를 컨테이너 전용 볼륨에 두므로 호스트의 `node_modules`와 섞이지 않습니다. 의존성을 바꾼 뒤에는 `docker compose restart frontend`(시작 시 `npm ci`)를 실행합니다.
+- 컨테이너 없이 호스트에서 직접 실행하는 방법은 아래 "백엔드"·"프론트엔드" 절을 참고합니다.
 
 ## 백엔드
 
@@ -45,11 +72,10 @@ cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-# 로컬 DB (docker compose 구성 전 임시)
-docker run -d --name gs42-db -e POSTGRES_DB=gs42 -e POSTGRES_USER=gs42 \
-  -e POSTGRES_PASSWORD=<비밀번호> -p 5432:5432 postgres:16
+# 로컬 DB: compose의 db 서비스만 띄운다 (.env의 POSTGRES_* 값 사용)
+docker compose up -d db
 
-export POSTGRES_HOST=localhost POSTGRES_PASSWORD=<비밀번호>
+export POSTGRES_HOST=localhost POSTGRES_PASSWORD=<.env의 비밀번호>   # DB_HOST_PORT를 바꿨다면 POSTGRES_PORT도 같은 값으로
 python manage.py migrate
 python manage.py runserver 8000     # GET http://localhost:8000/api/health
 
