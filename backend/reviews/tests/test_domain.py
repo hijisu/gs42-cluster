@@ -34,7 +34,7 @@ def course(
 
 
 def review(**kw):
-    base = dict(course_id=1, author_id=1, author_intra_id="alice", rating=4, title="좋아요")
+    base = dict(course_id=1, author_id=1, author_intra_id="alice", rating=4)
     return Review(**{**base, **kw})
 
 
@@ -82,11 +82,6 @@ def test_participant_check_comes_before_closed_check():
 def test_rating_must_be_1_to_5(rating):
     with pytest.raises(InvalidReview):
         review(rating=rating)
-
-
-def test_title_required():
-    with pytest.raises(InvalidReview):
-        review(title="   ")
 
 
 def test_tags_are_normalized_and_limited():

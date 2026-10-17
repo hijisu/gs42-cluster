@@ -36,7 +36,6 @@ class CreateReviewCommand:
     viewer: Viewer
     course_id: int
     rating: int
-    title: str
     good: str = ""
     bad: str = ""
     recommend_to: str = ""
@@ -110,7 +109,6 @@ class CreateReviewUseCase:
             author_id=cmd.viewer.user_id,
             author_intra_id=cmd.viewer.intra_id,
             rating=cmd.rating,
-            title=cmd.title,
             good=cmd.good,
             bad=cmd.bad,
             recommend_to=cmd.recommend_to,

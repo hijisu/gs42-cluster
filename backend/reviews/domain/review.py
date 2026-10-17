@@ -26,7 +26,6 @@ class PublicReview:
     id: int
     course_id: int
     rating: int
-    title: str
     good: str
     bad: str
     recommend_to: str
@@ -42,7 +41,6 @@ class Review:
     author_id: int
     author_intra_id: str
     rating: int
-    title: str
     good: str = ""
     bad: str = ""
     recommend_to: str = ""
@@ -52,12 +50,9 @@ class Review:
     id: int | None = None
 
     def __post_init__(self) -> None:
-        self.title = self.title.strip()
         self.tags = normalize_tags(self.tags)
         if not 1 <= self.rating <= 5:
             raise InvalidReview("만족도는 1~5 사이여야 합니다")
-        if not self.title:
-            raise InvalidReview("제목을 입력해 주세요")
         if len(self.tags) > MAX_TAGS or any(len(t) > MAX_TAG_LENGTH for t in self.tags):
             raise InvalidReview(f"태그는 {MAX_TAGS}개 이하, 각 {MAX_TAG_LENGTH}자 이하여야 합니다")
 
@@ -66,7 +61,6 @@ class Review:
             id=self.id,
             course_id=self.course_id,
             rating=self.rating,
-            title=self.title,
             good=self.good,
             bad=self.bad,
             recommend_to=self.recommend_to,

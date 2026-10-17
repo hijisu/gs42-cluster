@@ -39,7 +39,7 @@ def make_course(name="과정", status="completed", participants=("student",), de
 
 
 def payload(course, **kw):
-    return {"course_id": course.pk, "rating": 5, "title": "한 줄 요약", "good": "좋았음", **kw}
+    return {"course_id": course.pk, "rating": 5, "good": "좋았음", **kw}
 
 
 def test_endpoints_require_login():
@@ -104,15 +104,13 @@ def test_duplicate_review_409():
 
 def test_unknown_course_404():
     assert (
-        login()
-        .post("/api/reviews", {"course_id": 999, "rating": 3, "title": "x"}, format="json")
-        .status_code
+        login().post("/api/reviews", {"course_id": 999, "rating": 3}, format="json").status_code
         == 404
     )
 
 
 @pytest.mark.parametrize(
-    "bad", [{"rating": 0}, {"rating": 6}, {"title": ""}, {"tags": [f"t{i}" for i in range(6)]}]
+    "bad", [{"rating": 0}, {"rating": 6}, {"tags": [f"t{i}" for i in range(6)]}]
 )
 def test_validation_400(bad):
     course = make_course()
@@ -123,19 +121,19 @@ def test_validation_400(bad):
 def test_db_constraints_back_up_the_rules():
     course = make_course()
     student = User.objects.create_user("db_user", name="x", role=Role.STUDENT.value)
-    ReviewRow.objects.create(course=course, author=student, rating=3, title="a")
+    ReviewRow.objects.create(course=course, author=student, rating=3)
     from django.db import IntegrityError, transaction
 
     with pytest.raises(IntegrityError), transaction.atomic():
-        ReviewRow.objects.create(course=course, author=student, rating=4, title="b")
+        ReviewRow.objects.create(course=course, author=student, rating=4)
     other = User.objects.create_user("db_user2", name="y", role=Role.STUDENT.value)
     with pytest.raises(IntegrityError), transaction.atomic():
-        ReviewRow.objects.create(course=course, author=other, rating=9, title="c")
+        ReviewRow.objects.create(course=course, author=other, rating=9)
 
 
 def test_anonymous_review_never_exposes_author_anywhere():
     course = make_course(participants=("student", "peer"))
-    login().post("/api/reviews", payload(course, anonymous=True, title="익명 후기"), format="json")
+    login().post("/api/reviews", payload(course, anonymous=True), format="json")
     for viewer in ("student", "staff"):
         response = login(viewer).get(f"/api/courses/{course.pk}/reviews")
         (review,) = response.json()
@@ -158,9 +156,9 @@ def test_reviews_of_unknown_course_404_and_newest_first():
     assert client.get("/api/courses/999/reviews").status_code == 404
     course = make_course(participants=("student", "peer"))
     peer = User.objects.create_user("peer", name="peer", role=Role.STUDENT.value)
-    ReviewRow.objects.create(course=course, author=peer, rating=3, title="먼저")
-    client.post("/api/reviews", payload(course, title="나중"), format="json")
-    assert [r["title"] for r in client.get(f"/api/courses/{course.pk}/reviews").json()] == [
+    ReviewRow.objects.create(course=course, author=peer, rating=3, good="먼저")
+    client.post("/api/reviews", payload(course, good="나중"), format="json")
+    assert [r["good"] for r in client.get(f"/api/courses/{course.pk}/reviews").json()] == [
         "나중",
         "먼저",
     ]
@@ -171,7 +169,7 @@ def test_course_list_has_average_count_and_my_flags():
     ongoing = make_course("진행 과정", status="ongoing")
     other = make_course("남의 과정", participants=("someone",))
     peer = User.objects.create_user("peer", name="peer", role=Role.STUDENT.value)
-    ReviewRow.objects.create(course=done, author=peer, rating=3, title="a")
+    ReviewRow.objects.create(course=done, author=peer, rating=3)
     client = login()
     client.post("/api/reviews", payload(done, rating=4), format="json")
     by_name = {c["name"]: c for c in client.get("/api/courses").json()}
@@ -215,3 +213,17 @@ def test_todo_lists_only_pending_reviewable_courses_with_deadline():
     assert [c["name"] for c in todo] == ["작성 대기"]
     assert todo[0]["review_deadline"] == (timezone.localdate() + timedelta(days=5)).isoformat()
     assert pending.pk == todo[0]["id"]
+
+
+def test_review_has_no_title_and_course_list_has_board_fields():
+    course = make_course("게시판 과정", participants=("student",))
+    client = login()
+    # 예전 클라이언트가 title을 보내도 무시된다(필수 아님, 응답에 없음)
+    created = client.post("/api/reviews", {**payload(course), "title": "무시됨"}, format="json")
+    assert created.status_code == 201 and "title" not in created.json()
+    review = client.get(f"/api/courses/{course.pk}/reviews").json()[0]
+    assert "title" not in review and review["good"] == "좋았음"
+
+    item = next(c for c in client.get("/api/courses").json() if c["id"] == course.pk)
+    assert {"name", "start_date", "end_date", "location", "review_count"} <= set(item)
+    assert item["location"] == "유니버스룸" and item["review_count"] == 1

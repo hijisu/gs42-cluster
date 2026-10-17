@@ -53,7 +53,6 @@ class Command(BaseCommand):
                         defaults={
                             "anonymous": i == 0,
                             "rating": 5 - i,
-                            "title": f"{name} 후기 {i + 1}",
                             "good": "실습 위주라 좋았어요.",
                             "bad": "복습 시간이 더 있었으면 좋겠어요.",
                             "recommend_to": "입문자",

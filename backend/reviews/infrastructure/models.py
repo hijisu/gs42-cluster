@@ -35,7 +35,6 @@ class ReviewRow(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     anonymous = models.BooleanField(default=False)
     rating = models.PositiveSmallIntegerField()
-    title = models.CharField(max_length=200)
     good = models.TextField(blank=True)
     bad = models.TextField(blank=True)
     recommend_to = models.TextField(blank=True)
