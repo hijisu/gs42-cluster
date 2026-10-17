@@ -28,8 +28,14 @@ export const confirmMeeting = (id: number, body: { location: string; staff_id?: 
   api<StaffMeeting>(`/staff/meetings/${id}/confirm`, { method: 'POST', body })
 export const proposeMeeting = (id: number, body: { proposed_at: string; note?: string; location?: string }) =>
   api<StaffMeeting>(`/staff/meetings/${id}/propose`, { method: 'POST', body })
-export const fetchMyAvailability = (from: string, to: string) => api<{ slots: string[] }>(`/staff/availability?from=${from}&to=${to}`)
-export const saveMyAvailability = (body: { from: string; to: string; slots: string[] }) => api<{ slots: string[] }>('/staff/availability', { method: 'PUT', body })
+/** slots: 열어 둔 30분 시작 시각(ISO), customized_days: 직접 저장한 날(나머지는 평일 10~12·13~17시 기본값) */
+export interface MyAvailability {
+  slots: string[]
+  customized_days: string[]
+}
+export const fetchMyAvailability = (from: string, to: string) => api<MyAvailability>(`/staff/availability?from=${from}&to=${to}`)
+export const saveMyAvailability = (body: { from: string; to: string; slots: string[] }) => api<MyAvailability>('/staff/availability', { method: 'PUT', body })
+export const resetMyAvailability = (from: string, to: string) => api<MyAvailability>(`/staff/availability?from=${from}&to=${to}`, { method: 'DELETE' })
 export const fetchStaffMeetingTypes = () => api<StaffMeetingType[]>('/staff/meeting-types')
 export const saveStaffMeetingTypes = (body: { id: number; default_staff_id: number | null }[]) =>
   api<StaffMeetingType[]>('/staff/meeting-types', { method: 'PUT', body })

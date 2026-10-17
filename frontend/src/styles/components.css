@@ -199,3 +199,23 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .table td[data-label=""]::before,.table td.table-empty::before{display:none}
   .table td.table-empty{justify-content:flex-start;text-align:left}
 }
+
+/* 면담 가능 시간 설정 그리드(staff-meeting) */
+.av-toolbar{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap}
+.av-nav{display:flex;align-items:center;gap:var(--sp-1)}
+.av-title{font-weight:700;min-width:104px;text-align:center}
+.av-grid{display:grid;grid-template-columns:44px repeat(7,minmax(0,1fr));gap:2px;user-select:none}
+.av-head{font-size:12px;text-align:center;padding:4px 0;display:flex;flex-direction:column}
+.av-head small{color:var(--c-muted);font-size:12px}
+.av-time{font-family:var(--font-mono);font-size:12px;color:var(--c-muted);text-align:right;padding-right:6px;line-height:1}
+.av-cell{min-height:28px;border:0;border-radius:var(--r-sm);background:var(--c-line-soft);font:inherit;font-size:13px;color:var(--c-muted);cursor:pointer;touch-action:manipulation}
+.av-cell:hover{background:var(--c-line)}
+.av-cell.on{background:var(--c-teal);color:var(--c-ink);font-weight:600}
+.av-grid.day{grid-template-columns:52px minmax(0,1fr)}
+.av-range{border:1px solid var(--c-line);border-radius:var(--r-md);padding:var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-2);margin:0;min-width:0}
+.av-range-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2)}
+.av-range-actions{display:flex;gap:var(--sp-2)}
+@media (max-width:900px){
+  .av-cell{min-height:44px}
+  .av-range-row{grid-template-columns:minmax(0,1fr)}
+}

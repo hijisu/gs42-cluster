@@ -6,6 +6,7 @@ import {
   fetchStaffMeetingTypes,
   fetchStaffMeetings,
   proposeMeeting,
+  resetMyAvailability,
   saveMyAvailability,
   saveStaffMeetingTypes,
   type StaffMeetingStatus,
@@ -57,6 +58,13 @@ export function usePropose() {
   })
 }
 
+export function useResetAvailability() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ from, to }: { from: string; to: string }) => resetMyAvailability(from, to),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['staff', 'availability'] }),
+  })
+}
 export function useSaveAvailability() {
   const qc = useQueryClient()
   return useMutation({ mutationFn: saveMyAvailability, onSuccess: () => qc.invalidateQueries({ queryKey: ['staff', 'availability'] }) })
