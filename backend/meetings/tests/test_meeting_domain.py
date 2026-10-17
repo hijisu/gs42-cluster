@@ -120,3 +120,22 @@ def test_assign_in_pending_and_proposed_only():
     m.confirm(6, "x")
     with pytest.raises(InvalidTransition):
         m.assign(7)
+
+
+def test_accept_proposal_confirms_proposed_time_and_preserves_note():
+    m = new_meeting()
+    m.propose(9, T + timedelta(minutes=7), "사무실에서 만나요")
+    m.accept_proposal(1, NOW)
+    assert m.status == MeetingStatus.CONFIRMED
+    assert m.slot_at == T + timedelta(minutes=7)
+    assert m.staff_note == "사무실에서 만나요"
+
+
+def test_accept_proposal_requires_owner_and_active_future_proposal():
+    m = new_meeting()
+    m.propose(9, T)
+    with pytest.raises(ForbiddenError):
+        m.accept_proposal(2, NOW)
+    with pytest.raises(InvalidTransition):
+        m.accept_proposal(1, T)
+    assert m.status == MeetingStatus.PROPOSED
