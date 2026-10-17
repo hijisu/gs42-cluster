@@ -100,3 +100,9 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .list{display:flex;flex-direction:column}
 .list>div{padding:14px 0;border-bottom:1px solid var(--c-line-soft)}
 .list>div:last-child{border-bottom:0}
+
+/* 탭 */
+.tabs{display:flex;gap:var(--sp-1);background:var(--c-surface);border:1px solid var(--c-line);border-radius:12px;padding:var(--sp-1);align-self:flex-start;flex-wrap:wrap}
+.tabs button{min-height:40px;padding:0 var(--sp-4);border-radius:var(--r-sm);border:0;background:transparent;font:inherit;font-size:14px;cursor:pointer;color:var(--c-body-soft)}
+.tabs button.on{background:var(--c-ink);color:var(--c-surface);font-weight:600}
+.field-label{font-size:13px;font-weight:600}

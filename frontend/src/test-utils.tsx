@@ -21,6 +21,7 @@ export function mockApi(...handlers: Handler[]) {
       if (url.includes('/notifications')) return new Response(JSON.stringify({ unread_count: 0, items: [] }), { status: 200 })
       if (url.includes('/rooms/availability')) return new Response(JSON.stringify({ date: '', rooms: [] }), { status: 200 })
       if (url.endsWith('/rooms/rules')) return new Response(JSON.stringify({ open_hour: 9, close_hour: 22, step_minutes: 30, usage_rules: [] }), { status: 200 })
+      if (url.includes('/staff/availability')) return new Response(JSON.stringify({ slots: [] }), { status: 200 })
       return new Response('[]', { status: 200 })
     }),
   )
