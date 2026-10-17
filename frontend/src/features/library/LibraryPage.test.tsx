@@ -17,10 +17,9 @@ const book = (over: Partial<Book> = {}): Book => ({
   cover_url: '',
   link_url: 'https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1',
   pub_date: '2013-12-24',
-  location: 'A-2',
   ...over,
 })
-const books = [book(), book({ id: 2, code: 'GSIA-HU-002', title: '사피엔스', author: '유발 하라리', category: '인문', quantity: 1, location: '', cover_url: 'https://image.example/c.jpg', isbn: '', link_url: '' })]
+const books = [book(), book({ id: 2, code: 'GSIA-HU-002', title: '사피엔스', author: '유발 하라리', category: '인문', quantity: 1, cover_url: 'https://image.example/c.jpg', isbn: '', link_url: '' })]
 const wish = (over: Partial<BookWish> = {}): BookWish => ({ id: 1, title: '이것이 리눅스다', author: '우재남', reason: '', link_url: '', status: 'requested', staff_note: '', created_at: '2026-10-17T00:00:00Z', ...over })
 const report = (over: Partial<BookReport> = {}): BookReport => ({ id: 1, book_id: 1, book_code: 'GSIA-IT-001', book_title: '클린 코드 Clean Code', kind: 'lost', detail: '', status: 'received', created_at: '2026-10-17T00:00:00Z', ...over })
 
@@ -38,12 +37,12 @@ async function openPage(path = '/library', ...handlers: Handler[]) {
 const urls = (calls: { url: string }[]) => calls.map((c) => decodeURIComponent(c.url))
 
 describe('오아시스 도서 화면', () => {
-  it('도서 카드(제목·저자·비치 수·서가)와 분류 chip, 총 건수를 보여준다', async () => {
+  it('도서 카드(제목·저자·비치 수)와 분류 chip, 총 건수를 보여준다', async () => {
     await openPage('/library', search())
     const card = (await screen.findByRole('button', { name: '클린 코드 Clean Code' })).closest('article') as HTMLElement
     expect(within(card).getAllByText('로버트 C. 마틴').length).toBeGreaterThanOrEqual(1) // 표지 대체 문구 + 본문
     expect(within(card).getByText('2권 비치')).toBeInTheDocument()
-    expect(within(card).getByText('서가 A-2')).toBeInTheDocument()
+    expect(within(card).queryByText(/서가/)).toBeNull()
     expect(screen.getByRole('button', { name: '인문' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '전체', pressed: true })).toBeInTheDocument()
     expect(await screen.findByText('2종')).toBeInTheDocument()

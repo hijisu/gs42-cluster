@@ -17,7 +17,6 @@ export function BooksPanel() {
     { key: 'title', header: '제목', render: (b) => <span style={{ fontWeight: 600 }}>{b.title}</span> },
     { key: 'author', header: '저자', render: (b) => b.author || '-' },
     { key: 'category', header: '분류', render: (b) => b.category },
-    { key: 'location', header: '서가', render: (b) => <span className="mono">{b.location || '-'}</span> },
     { key: 'quantity', header: '수량', render: (b) => <span className="mono">{b.quantity}권</span> },
     {
       key: 'act',
