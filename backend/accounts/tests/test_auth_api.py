@@ -67,7 +67,7 @@ class FakeFortyTwo:
 
     def fetch_profile(self, code):
         if self.error:
-            raise AuthenticationFailed("boom")
+            raise AuthenticationFailed("boom", stage="token", status=403, reason="http_error")
         return self.profile
 
 
@@ -116,3 +116,20 @@ def test_callback_rejects_state_mismatch(settings, monkeypatch):
 def test_callback_handles_42_failure(settings, monkeypatch):
     _, response = _login_flow(settings, monkeypatch, FakeFortyTwo(error=True))
     assert response["Location"].endswith("/login?error=auth_failed")
+
+
+def test_callback_logs_failure_diagnosis_without_secrets(settings, monkeypatch, caplog):
+    settings.FORTYTWO_UID = "uid"
+    settings.FORTYTWO_SECRET = "super-secret"
+    with caplog.at_level("WARNING", logger="accounts.interfaces.views"):
+        _login_flow(settings, monkeypatch, FakeFortyTwo(error=True))
+    [record] = [r for r in caplog.records if r.name == "accounts.interfaces.views"]
+    message = record.getMessage()
+    assert "stage=token" in message and "status=403" in message and "reason=http_error" in message
+    assert "super-secret" not in message and "code=c" not in message
+
+
+def test_state_mismatch_does_not_log_oauth_failure(settings, monkeypatch, caplog):
+    with caplog.at_level("WARNING", logger="accounts.interfaces.views"):
+        _login_flow(settings, monkeypatch, FakeFortyTwo(), state_ok=False)
+    assert not [r for r in caplog.records if r.name == "accounts.interfaces.views"]
