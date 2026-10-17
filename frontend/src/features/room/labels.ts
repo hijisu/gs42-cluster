@@ -23,7 +23,8 @@ export const hourStateLabel: Record<HourState, string> = {
   blocked: '이용 불가',
 }
 
-export const cancelable = (s: ReservationStatus) => s === 'pending' || s === 'approved'
+/** 교육생이 취소할 수 있는 상태: 승인 전(승인 대기)만 */
+export const cancelable = (s: ReservationStatus) => s === 'pending'
 
 export const errorLabel: Record<string, string> = {
   past_time: '지난 시간은 예약할 수 없습니다.',
@@ -32,6 +33,7 @@ export const errorLabel: Record<string, string> = {
   room_not_found: '장소를 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요.',
   room_blocked: '현재 예약을 받지 않는 장소입니다.',
   room_block_conflict: '운영팀이 차단한 시간이라 예약할 수 없습니다.',
+  not_cancelable: '승인된 예약은 취소할 수 없어요. 운영팀에 문의해 주세요.',
   invalid_transition: '이미 취소되었거나 처리된 예약입니다.',
   forbidden: '권한이 없습니다.',
 }

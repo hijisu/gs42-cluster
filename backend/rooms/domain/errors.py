@@ -17,6 +17,12 @@ class InvalidTransition(ConflictError):
     code = "invalid_transition"
 
 
+class NotCancelable(InvalidTransition):
+    """교육생이 취소할 수 없는 상태(승인된 예약 등). 운영팀 취소 경로는 따로 있다."""
+
+    code = "not_cancelable"
+
+
 class RoomConflict(ConflictError):
     code = "room_conflict"
 

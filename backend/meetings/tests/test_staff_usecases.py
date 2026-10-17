@@ -179,7 +179,7 @@ def test_assign_requires_staff_account(env):
 
 def test_set_availability_validates_and_protects_confirmed(env):
     mem, *_ = env
-    uc = SetAvailabilityUseCase(mem, mem)
+    uc = SetAvailabilityUseCase(mem, mem, lambda: NOW)
     start, end = T - timedelta(hours=1), T + timedelta(hours=3)
     with pytest.raises(InvalidSlot):
         uc.execute(9, start, end, [T + timedelta(minutes=10)])

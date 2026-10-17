@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from common.domain.errors import ForbiddenError
-from meetings.domain.errors import InvalidTransition
+from meetings.domain.errors import InvalidTransition, NotCancelable
 
 
 class MeetingStatus(StrEnum):
@@ -16,7 +16,9 @@ class MeetingStatus(StrEnum):
     CANCELED = "canceled"
 
 
-_CANCELABLE = {MeetingStatus.PENDING, MeetingStatus.PROPOSED, MeetingStatus.CONFIRMED}
+# 교육생은 확정 전에만 취소할 수 있다. 확정된 면담의 취소·변경은 운영팀이 한다.
+_STUDENT_CANCELABLE = {MeetingStatus.PENDING, MeetingStatus.PROPOSED}
+_STAFF_CANCELABLE = _STUDENT_CANCELABLE | {MeetingStatus.CONFIRMED}
 
 
 @dataclass
@@ -80,5 +82,11 @@ class MeetingRequest:
         """신청한 본인만 취소할 수 있다."""
         if by_student_id != self.student_id:
             raise ForbiddenError("본인의 면담만 취소할 수 있습니다")
-        self._require(_CANCELABLE, "cancel")
+        if self.status not in _STUDENT_CANCELABLE:
+            raise NotCancelable("확정된 면담은 직접 취소할 수 없습니다. 운영팀에 문의해 주세요")
+        self.status = MeetingStatus.CANCELED
+
+    def cancel_by_staff(self) -> None:
+        """운영팀 취소: 확정된 면담도 취소할 수 있다."""
+        self._require(_STAFF_CANCELABLE, "cancel")
         self.status = MeetingStatus.CANCELED

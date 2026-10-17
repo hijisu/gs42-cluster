@@ -89,6 +89,25 @@ describe('면담 신청 화면', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(await screen.findByText('취소됨', { selector: '.pill' })).toBeInTheDocument()
   })
+
+  it('확정된 면담에는 취소 버튼이 없고 안내가 있다. 조율 중에는 취소할 수 있다', async () => {
+    await openPage((req) => (req.url.endsWith('/meetings/me') ? { json: [{ ...created, id: 8, status: 'confirmed' }, { ...created, status: 'proposed', proposed_at: created.slot_at }] } : undefined))
+    const rows = await screen.findAllByRole('row')
+    const confirmed = rows.find((r) => within(r).queryByText('확정', { selector: '.pill' }))!
+    expect(within(confirmed).queryByRole('button', { name: /취소/ })).toBeNull()
+    expect(screen.getAllByRole('button', { name: /프리즈 취소/ })).toHaveLength(1)
+    expect(screen.getByText(/확정된 면담은 취소할 수 없어요/)).toBeInTheDocument()
+  })
+
+  it('취소가 not_cancelable로 거절되면 안내 문구를 보여준다', async () => {
+    await openPage(
+      (req) => (req.url.endsWith('/meetings/me') ? { json: [created] } : undefined),
+      (req) => (req.url.endsWith('/meetings/7/cancel') ? { status: 409, json: { code: 'not_cancelable' } } : undefined),
+    )
+    await userEvent.click(await screen.findByRole('button', { name: /프리즈 취소/ }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: '면담을 취소할까요?' })).getByRole('button', { name: '면담 취소' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Slack #pedago로 문의해 주세요')
+  })
 })
 
 
@@ -102,4 +121,5 @@ it('제안 시간을 표시하고 수락하면 확정으로 갱신한다', async
   await userEvent.click(await screen.findByRole('button', { name: '제안 수락(확정하기)' }))
   expect(await screen.findByText('확정', { selector: '.pill' })).toBeInTheDocument()
   expect(calls.some(c => c.method === 'POST' && c.url.endsWith('/meetings/7/accept'))).toBe(true)
+
 })
