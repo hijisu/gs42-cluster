@@ -27,7 +27,7 @@ export function useUpdateCourse() {
 
 export function useAddParticipants() {
   const refresh = useRefresh()
-  return useMutation({ mutationFn: ({ id, intraIds }: { id: number; intraIds: string[] }) => addParticipants(id, { intra_ids: intraIds }), onSuccess: refresh })
+  return useMutation({ mutationFn: ({ id, intraIds, csv }: { id: number; intraIds?: string[]; csv?: string }) => addParticipants(id, { intra_ids: intraIds ?? [], csv }), onSuccess: refresh })
 }
 
 export function useRemoveParticipant() {
