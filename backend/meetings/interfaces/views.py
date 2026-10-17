@@ -36,7 +36,12 @@ def slots(request):
     result = deps.get_slots().execute(start, end - timedelta(microseconds=1))
     return Response(
         [
-            {"start_at": s.start_at, "available": s.available, "remaining": s.remaining}
+            {
+                "start_at": s.start_at,
+                "state": s.state,
+                "available": s.available,
+                "remaining": s.remaining,
+            }
             for s in result
         ]
     )

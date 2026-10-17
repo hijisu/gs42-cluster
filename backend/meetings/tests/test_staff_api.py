@@ -118,7 +118,8 @@ def test_confirm_then_student_sees_location_and_slot_closes(
     assert mine["status"] == "confirmed" and "staff_note" not in mine
     day = slot_at.date().isoformat()
     slots = student_client.get(f"/api/meetings/slots?from={day}&to={day}").json()
-    assert slots[0]["available"] is False
+    taken = [s for s in slots if datetime.fromisoformat(s["start_at"]) == slot_at]
+    assert taken and taken[0]["available"] is False
 
 
 def test_confirm_requires_location(staff_client, meeting):

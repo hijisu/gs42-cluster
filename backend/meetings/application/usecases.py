@@ -11,6 +11,7 @@ from meetings.application.ports import (
     MeetingTypeRepository,
     MeetingView,
 )
+from meetings.domain.defaults import default_slots
 from meetings.domain.errors import (
     InvalidSlot,
     MeetingNotFound,
@@ -42,9 +43,16 @@ class GetSlotsUseCase:
         self._clock = clock
 
     def execute(self, start: datetime, end: datetime) -> list[SlotAvailability]:
+        """평일 운영 시간 전체(+운영 시간 밖에 누가 연 시간)를 시간순으로 돌려준다.
+
+        각 칸의 state: open(신청 가능) / full(마감) / unavailable(불가: 연 담당자 없음).
+        """
         offered = self._availability.offered_between(start, end)
         confirmed = self._meetings.confirmed_between(start, end)
-        return compute_slots(offered, confirmed, now=self._clock())
+        grid = {s.start_at: s for s in compute_slots(offered, confirmed, now=self._clock())}
+        for at in default_slots(start, end):
+            grid.setdefault(at, SlotAvailability(start_at=at, remaining=0, offered=0))
+        return [grid[key] for key in sorted(grid)]
 
 
 class RequestMeetingUseCase:

@@ -12,10 +12,18 @@ SLOT_MINUTES = 30
 class SlotAvailability:
     start_at: datetime
     remaining: int
+    offered: int = 0  # 이 시간에 가능 시간을 연 담당자 수
 
     @property
     def available(self) -> bool:
         return self.remaining > 0
+
+    @property
+    def state(self) -> str:
+        """open=신청 가능 / full=마감(자리 없음·지난 시간) / unavailable=불가(연 담당자 없음)."""
+        if self.remaining > 0:
+            return "open"
+        return "full" if self.offered > 0 else "unavailable"
 
 
 def is_aligned(start_at: datetime) -> bool:
@@ -51,5 +59,9 @@ def compute_slots(
     for start_at in sorted(staff_by_time):
         free = len(staff_by_time[start_at] - busy_staff[start_at]) - unassigned[start_at]
         remaining = max(free, 0) if start_at > now else 0
-        result.append(SlotAvailability(start_at=start_at, remaining=remaining))
+        result.append(
+            SlotAvailability(
+                start_at=start_at, remaining=remaining, offered=len(staff_by_time[start_at])
+            )
+        )
     return result
