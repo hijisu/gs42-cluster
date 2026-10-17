@@ -2,12 +2,11 @@ import { Link } from 'react-router-dom'
 import { formatMonthDay, kstTodayLabel } from '../../lib/datetime'
 import { useMe } from '../auth/hooks'
 import { useCourses } from '../review/hooks'
-import { HomeSearch } from './HomeSearch'
 import { Shortcuts } from './Shortcuts'
 import { SummaryCards } from './SummaryCards'
 import { reviewTodo } from './summary'
 
-/** 교육생 홈 대시보드(#30): 인사말·통합 검색, 후기 요청 배너, 내 현황 4칸, 바로가기 */
+/** 교육생 홈 대시보드(#30): 인사말, 후기 요청 배너, 내 현황 4칸, 바로가기 */
 export function HomePage() {
   const { data: me } = useMe()
   const courses = useCourses()
@@ -22,7 +21,6 @@ export function HomePage() {
           <h1 className="h1" style={{ marginTop: 8 }}>안녕하세요, {me?.intra_id ?? ''}님</h1>
           <p className="sub">클러스터에서 필요한 일을 한 곳에서 처리하세요.</p>
         </div>
-        <HomeSearch />
       </div>
 
       {first && (
