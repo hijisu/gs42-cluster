@@ -84,19 +84,13 @@ def propose(request, meeting_id: int):
     return Response(staff_meeting_payload(view))
 
 
-@staff_api(["GET", "PUT"])
+@staff_api(["GET", "PUT", "DELETE"])
 def availability(request):
-    if request.method == "GET":
-        query = DateRangeSerializer(
-            data={
-                "from_date": request.query_params.get("from"),
-                "to_date": request.query_params.get("to"),
-            }
-        )
-        query.is_valid(raise_exception=True)
-        start, end = _range(query.validated_data["from_date"], query.validated_data["to_date"])
-        slots = deps.get_availability().execute(request.user.pk, start, end)
-    else:
+    """내 면담 가능 시간. 직접 저장하지 않은 날은 기본 가능 시간(평일 10~12·13~17시)이다.
+
+    DELETE는 from~to 범위를 기본 가능 시간으로 되돌린다.
+    """
+    if request.method == "PUT":
         body = AvailabilityPutSerializer(
             data={
                 "from_date": request.data.get("from"),
@@ -107,10 +101,25 @@ def availability(request):
         body.is_valid(raise_exception=True)
         start, end = _range(body.validated_data["from_date"], body.validated_data["to_date"])
         with transaction.atomic():
-            slots = deps.set_availability().execute(
+            deps.set_availability().execute(
                 request.user.pk, start, end, body.validated_data["slots"]
             )
-    return Response({"slots": slots})
+            result = deps.get_availability().execute(request.user.pk, start, end)
+    else:
+        query = DateRangeSerializer(
+            data={
+                "from_date": request.query_params.get("from"),
+                "to_date": request.query_params.get("to"),
+            }
+        )
+        query.is_valid(raise_exception=True)
+        start, end = _range(query.validated_data["from_date"], query.validated_data["to_date"])
+        if request.method == "DELETE":
+            with transaction.atomic():
+                result = deps.reset_availability().execute(request.user.pk, start, end)
+        else:
+            result = deps.get_availability().execute(request.user.pk, start, end)
+    return Response({"slots": result.slots, "customized_days": result.customized_days})
 
 
 @staff_api(["GET", "PUT"])

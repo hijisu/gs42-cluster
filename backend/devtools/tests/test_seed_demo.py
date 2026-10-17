@@ -34,7 +34,7 @@ def test_refuses_outside_debug(settings):
 
 def test_seeds_everything_needed_for_the_demo():
     seed()
-    assert AvailabilitySlot.objects.exists() and CourseRow.objects.count() == 3
+    assert CourseRow.objects.count() == 3
     assert MeetingType.objects.filter(default_staff__isnull=False).count() == 6
     statuses = sorted(RoomReservationRow.objects.values_list("status", flat=True))
     assert statuses == ["approved", "pending", "pending"]

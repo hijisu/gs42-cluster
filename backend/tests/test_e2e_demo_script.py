@@ -63,9 +63,13 @@ def test_both_scenarios_pass_twice_in_a_row_and_leave_no_residue(e2e, demo_stack
     )
 
 
-def test_script_reports_failure_and_exit_code_when_demo_data_is_missing(e2e, settings, live_server):
+def test_script_reports_failure_and_exit_code_when_demo_data_is_missing(
+    e2e, settings, live_server, monkeypatch
+):
     settings.DEBUG = True
-    settings.MOCK_LOGIN_ENABLED = True  # 시드를 돌리지 않아 면담 가능 시간이 없다
+    settings.MOCK_LOGIN_ENABLED = True
+    # 시드를 돌리지 않았고 기본 가능 시간도 없는 상황: 면담 가능 시간이 없다
+    monkeypatch.setattr("meetings.infrastructure.repositories.default_slots", lambda start, end: [])
     code = e2e.main(["--base", live_server.url, "--skip-spa"])
     assert code == 1
 

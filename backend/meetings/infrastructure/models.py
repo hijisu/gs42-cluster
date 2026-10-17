@@ -29,6 +29,19 @@ class AvailabilitySlot(models.Model):
         indexes = [models.Index(fields=["start_at"])]
 
 
+class AvailabilityCustomDay(models.Model):
+    """스태프가 직접 가능 시간을 저장한 날(KST). 이 날은 저장한 슬롯만, 그 외 날은 기본값을 쓴다."""
+
+    staff = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    day = models.DateField()
+
+    class Meta:
+        app_label = "meetings"
+        constraints = [
+            models.UniqueConstraint(fields=["staff", "day"], name="uniq_staff_custom_day")
+        ]
+
+
 class MeetingRequestRow(models.Model):
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
