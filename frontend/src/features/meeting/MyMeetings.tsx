@@ -47,6 +47,7 @@ export function MyMeetings() {
       {isPending && <p className="muted" role="status">불러오는 중…</p>}
       {isError && <p role="alert">신청 내역을 불러오지 못했습니다.</p>}
       {data && <Table caption="내 면담 신청 내역" columns={columns} rows={data} rowKey={(m) => m.id} empty="신청한 면담이 없습니다." />}
+      <p className="muted small">확정된 면담은 취소할 수 없어요. 변경이 필요하면 Slack #pedago로 문의해 주세요.</p>
       {accept.isError && <p role="alert">제안을 수락하지 못했습니다. 시간 충돌 또는 만료 여부를 확인해 주세요.</p>}
       <Modal
         open={target !== null}

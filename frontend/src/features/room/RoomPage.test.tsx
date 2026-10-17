@@ -140,4 +140,11 @@ describe('kstToIso', () => {
   it('KST 날짜·시각을 UTC ISO로 바꾼다', () => {
     expect(kstToIso('2026-10-20', '14:00')).toBe('2026-10-20T05:00:00.000Z')
   })
+
+  it('승인된 예약에는 취소 버튼이 없고 안내가 있다', async () => {
+    await openPage((req) => (req.url.endsWith('/reservations/me') ? { json: [reservation({ status: 'approved' })] } : undefined))
+    const item = await screen.findByTestId('reservation-7')
+    expect(within(item).queryByRole('button', { name: /취소/ })).toBeNull()
+    expect(screen.getByText(/승인된 예약은 취소할 수 없어요/)).toBeInTheDocument()
+  })
 })
