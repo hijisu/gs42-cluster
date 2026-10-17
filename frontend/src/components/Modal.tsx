@@ -7,6 +7,8 @@ interface ModalProps {
   children: ReactNode
   /** 하단 버튼 영역 */
   actions?: ReactNode
+  /** 'left'면 좌측 드로어(모바일 메뉴) */
+  placement?: 'center' | 'left'
 }
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
@@ -30,7 +32,7 @@ function trapTab(e: KeyboardEvent, root: HTMLElement) {
   }
 }
 
-export function Modal({ open, title, onClose, children, actions }: ModalProps) {
+export function Modal({ open, title, onClose, children, actions, placement = 'center' }: ModalProps) {
   const titleId = useId()
   const ref = useRef<HTMLDivElement>(null)
 
@@ -57,8 +59,8 @@ export function Modal({ open, title, onClose, children, actions }: ModalProps) {
 
   if (!open) return null
   return (
-    <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+    <div className={`scrim${placement === 'left' ? ' left' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} className={`modal${placement === 'left' ? ' drawer' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <h2 id={titleId} className="modal-title">
           {title}
         </h2>

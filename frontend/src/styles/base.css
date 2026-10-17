@@ -16,7 +16,7 @@ h1,h2,h3,p{margin:0}
 .brand:hover{color:var(--c-surface)}
 .brand b{color:var(--c-teal)}
 .brand span{color:var(--c-brand-dim)}
-.role{align-self:flex-start;margin:-22px 10px 0;padding:3px 10px;border-radius:var(--r-pill);background:var(--c-accent-peach);color:var(--c-ink);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.04em}
+.role{align-self:flex-start;margin:-22px 10px 0;padding:3px 10px;border-radius:var(--r-pill);background:var(--c-accent-peach);color:var(--c-ink);font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.04em}
 .nav{display:flex;flex-direction:column;gap:var(--sp-1)}
 .nav a{display:flex;gap:var(--sp-3);align-items:center;min-height:var(--touch);padding:0 var(--sp-3);border-radius:var(--r-md);color:var(--c-side-text);text-decoration:none;white-space:nowrap}
 .nav a:hover{background:var(--c-side-hover);color:var(--c-surface)}
@@ -39,18 +39,6 @@ h1,h2,h3,p{margin:0}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-5)}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-4)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2) var(--sp-4);flex-wrap:wrap}
-
-@media (max-width:900px){
-  .app{grid-template-columns:minmax(0,1fr)}
-  .side{padding:var(--sp-4);gap:14px}
-  .nav{flex-direction:row;overflow-x:auto}
-  .me{margin:0;padding:0;border:0}
-  .me-role{display:none}
-  .role{margin:0}
-  .main{padding:var(--sp-6) var(--sp-4) 48px}
-  .h1{font-size:24px}
-  .g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
-}
 .me-text{display:flex;flex-direction:column;min-width:0}
 .me-name{font-weight:600;font-size:14px}
 .me-role{font-size:12px;color:var(--c-side-sub)}
@@ -89,18 +77,24 @@ h1,h2,h3,p{margin:0}
 .main:focus{outline:none}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
-/* 모바일(≤900px): 2단 레이아웃 변형을 모두 1열로. 변형 클래스가 뒤에 정의되어도 이기도록 마지막에 둔다. */
+/* ===== 모바일(≤900px) =====
+   사이드바는 렌더링되지 않고(Layout) 56px 상단 바 + 좌측 드로어로 대체된다.
+   2단 레이아웃 변형은 모두 1열로(변형 클래스가 앞에 정의되어도 이기도록 마지막에 둔다). */
 @media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .main{padding:var(--sp-5) var(--sp-4) 48px;gap:var(--sp-5)}
+  .h1{font-size:24px}
   .split,.room-split,.review-split{grid-template-columns:minmax(0,1fr)}
-  .app{grid-template-rows:auto minmax(0,1fr)}
-  .side{align-self:start}
-  /* 상단 바: 브랜드·계정·알림·전환·로그아웃을 한두 줄로 압축하고 메뉴는 아래 한 줄(가로 스크롤) */
-  .side{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px var(--sp-4)}
-  .brand{padding:0}
-  .role{margin:0}
-  .me{margin-left:auto}
-  .bell,.switch{min-height:36px;padding:0 var(--sp-3);font-size:13px;width:auto}
-  .bell .badge{margin-left:var(--sp-1)}
-  .nav{order:9;flex:0 0 100%;min-width:0}
-  .nav a{min-height:40px}
+  .g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
 }
+
+/* 모바일 상단 바 (높이 56px) */
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:var(--sp-1);height:56px;padding:0 var(--sp-2) 0 var(--sp-1);background:var(--c-ink);color:var(--c-bg)}
+.topbar.staff{background:var(--c-staff-bg)}
+.topbar .brand{padding:0 var(--sp-1);font-size:17px;min-height:44px;align-items:center}
+.topbar .role{margin:0;align-self:center}
+.topbar-end{margin-left:auto;display:flex;align-items:center;gap:var(--sp-1)}
+.topbar .av{width:32px;height:32px;font-size:12px}
+.icon-btn{flex:0 0 44px;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--r-md);background:none;color:inherit;cursor:pointer;position:relative}
+.icon-btn:hover{background:var(--c-side-hover)}
+@media (max-width:340px){.topbar .role{display:none}}

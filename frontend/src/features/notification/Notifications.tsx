@@ -18,7 +18,7 @@ function useOpenNotification() {
 }
 
 /** 사이드바 벨 + 안 읽은 수 + 알림 목록(모달) */
-export function NotificationBell() {
+export function NotificationBell({ compact = false }: { compact?: boolean }) {
   const { data, isError } = useNotifications()
   const [open, setOpen] = useState(false)
   const markAll = useMarkAllRead()
@@ -27,9 +27,9 @@ export function NotificationBell() {
   const unread = data?.unread_count ?? 0
   return (
     <>
-      <button type="button" className="bell" onClick={() => setOpen(true)} aria-label={unread > 0 ? `알림 ${unread}개 안 읽음` : '알림'}>
+      <button type="button" className={`bell${compact ? ' compact' : ''}`} onClick={() => setOpen(true)} aria-label={unread > 0 ? `알림 ${unread}개 안 읽음` : '알림'}>
         <span aria-hidden="true">🔔</span>
-        <span>알림</span>
+        {!compact && <span>알림</span>}
         {unread > 0 && <span className="badge">{unread > 99 ? '99+' : unread}</span>}
       </button>
       <Modal
