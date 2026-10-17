@@ -321,7 +321,7 @@ def test_db_exclusion_constraint_rejects_overlapping_approved_rows(day):
     )
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_concurrent_approvals_of_overlapping_requests_only_one_wins(day):
     first = request_as("student", day, start=14, end=16)
     second = request_as("staff", day, start=15, end=17)

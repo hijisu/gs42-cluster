@@ -9,6 +9,7 @@ root_packages =
     notifications
     common
     config
+    devtools
 include_external_packages = True
 
 [importlinter:contract:domain-is-framework-free]
