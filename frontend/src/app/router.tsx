@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { Layout } from '../components/Layout'
-import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
 import { StyleGuidePage } from '../features/home/StyleGuidePage'
 import { ReviewPage } from '../features/review/ReviewPage'
@@ -9,12 +8,12 @@ import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
 import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
 import { StaffCoursePage } from '../features/staff-course/StaffCoursePage'
 import { LibraryPage } from '../features/library/LibraryPage'
+import { StaffHomePage } from '../features/staff-home/StaffHomePage'
+import { StaffLibraryPage } from '../features/staff-library/StaffLibraryPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
 import { staffNav, studentNav } from './routes'
-
-const page = (title: string) => <PlaceholderPage title={title} />
 
 export const routes = [
   { path: '/login', element: <LoginPage /> },
@@ -54,10 +53,10 @@ export const routes = [
       />
     ),
     children: [
-      { index: true, element: page('운영 홈') },
+      { index: true, element: <StaffHomePage /> },
       { path: 'meeting', element: <StaffMeetingPage /> },
       { path: 'room', element: <StaffRoomPage /> },
-      { path: 'library', element: page('도서 관리') },
+      { path: 'library', element: <StaffLibraryPage /> },
       { path: 'courses', element: <StaffCoursePage /> },
     ],
   },
