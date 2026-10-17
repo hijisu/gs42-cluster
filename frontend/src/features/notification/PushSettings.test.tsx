@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { urlBase64ToUint8Array } from '../../lib/push'
 import { mockApi } from '../../test-utils'
@@ -80,5 +80,48 @@ describe('푸시 알림 설정', () => {
     render(<PushSettings />)
     await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('바꾸지 못했어요')
+  })
+
+  describe('서비스워커가 준비되지 않을 때 (개발 서버·설치 실패)', () => {
+    function stubNeverReady() {
+      const requestPermission = vi.fn(async () => 'granted' as const)
+      Object.defineProperty(navigator, 'serviceWorker', { value: { ready: new Promise(() => {}) }, configurable: true })
+      vi.stubGlobal('PushManager', class {})
+      vi.stubGlobal('Notification', { requestPermission })
+      return { requestPermission }
+    }
+
+    afterEach(() => vi.useRealTimers())
+
+    it('버튼이 영구 비활성으로 남지 않고 새로고침 안내를 보여 준다', async () => {
+      vi.useFakeTimers()
+      stubNeverReady()
+      mockApi()
+      render(<PushSettings />)
+      expect(screen.getByRole('button', { name: '푸시 알림 켜기' })).toBeDisabled() // 확인 중
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      expect(screen.getByRole('button', { name: '푸시 알림 켜기' })).toBeEnabled()
+      expect(screen.getByRole('alert')).toHaveTextContent('서비스워커가 아직 준비되지 않았어요')
+    })
+
+    it('눌러도 권한 팝업을 띄우지 않고 같은 안내를 보여 준다', async () => {
+      vi.useFakeTimers()
+      const { requestPermission } = stubNeverReady()
+      const calls = mockApi()
+      render(<PushSettings />)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      fireEvent.click(screen.getByRole('button', { name: '푸시 알림 켜기' }))
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      expect(screen.getByRole('alert')).toHaveTextContent('서비스워커가 아직 준비되지 않았어요')
+      expect(requestPermission).not.toHaveBeenCalled()
+      expect(calls).toHaveLength(0)
+      expect(screen.getByRole('button', { name: '푸시 알림 켜기' })).toBeEnabled() // 다시 시도할 수 있다
+    })
   })
 })

@@ -28,7 +28,8 @@ const sw = self as unknown as WorkerScope
 
 cleanupOutdatedCaches()
 // workbox가 빌드 때 문자열 self.__WB_MANIFEST를 찾아 목록을 주입하므로 별칭(sw)을 쓰지 않는다.
-precacheAndRoute((self as unknown as WorkerScope).__WB_MANIFEST)
+// 개발 서버(devOptions)에서는 빌드 때 주입되는 목록이 없어 undefined 이므로 빈 목록으로 폴백한다.
+precacheAndRoute((self as unknown as WorkerScope).__WB_MANIFEST ?? [])
 
 sw.addEventListener('install', () => sw.skipWaiting())
 

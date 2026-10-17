@@ -156,7 +156,7 @@ docker compose up -d                            # .env 변경 적용 (restart �
 - 알림은 면담 확정·시간 제안, 회의실 승인·반려·대체, 후기 요청 때 만들어지며, 구독한 기기마다 `{title, body, link, type}`이 암호화(aes128gcm)되어 전송됩니다. 구독이 없는 사용자는 앱 안 알림만 받고, 푸시 서비스가 만료(404/410)로 응답한 구독은 자동으로 삭제됩니다.
 - 구독 API: `GET /api/push/public-key`, `POST /api/push/subscriptions`(브라우저의 `PushSubscription.toJSON()`), `DELETE /api/push/subscriptions`(body `{endpoint}`).
 - 서버가 구독 endpoint로 직접 요청을 보내므로(SSRF 방지) **https이고 알려진 푸시 서비스 호스트만 허용**합니다: `fcm.googleapis.com`(Chrome·Edge·Samsung), `*.push.services.mozilla.com`(Firefox), `*.push.apple.com`(Safari/iOS), `*.notify.windows.com`. 공백·제어문자·비ASCII가 있거나 형식이 잘못된 주소를 포함해 그 밖의 주소는 400(`invalid_subscription`)입니다. 서버에서 이 호스트들로 나가는 HTTPS 연결이 필요합니다.
-- 브라우저 요건: `localhost`는 보안 컨텍스트라 HTTPS 없이 확인할 수 있고, 그 외 주소는 HTTPS가 필요합니다. **iOS(16.4+)는 홈 화면에 설치한 PWA에서만** 푸시가 동작합니다.
+- 브라우저 요건: `localhost`는 보안 컨텍스트라 HTTPS 없이 확인할 수 있고, 그 외 주소는 HTTPS가 필요합니다. 개발 서버(`npm run dev`/compose)도 서비스워커를 등록하므로(`vite.config.ts`의 `devOptions`) 푸시를 바로 확인할 수 있습니다. 개발 서버의 서비스워커는 **모듈 서비스워커라 Chrome 계열에서만** 동작하고 Firefox는 지원하지 않습니다(운영 빌드는 모든 브라우저에서 동작). '푸시 알림 켜기'가 계속 비활성이거나 '서비스워커가 아직 준비되지 않았어요'라고 나오면 강력 새로고침 후, 개발자 도구 → Application → Service Workers에 `dev-sw.js`가 *activated*인지 확인하세요. **iOS(16.4+)는 홈 화면에 설치한 PWA에서만** 푸시가 동작합니다.
 - 확인 방법: 앱에서 알림(벨) → '푸시 알림 켜기' → 권한 허용 → 다른 계정으로 면담 확정 또는 회의실 승인 → 푸시 수신. 이 마지막 단계(실제 브라우저·푸시 서비스 수신)는 자동 테스트가 아니라 사람이 확인합니다.
 
 ## 프론트엔드

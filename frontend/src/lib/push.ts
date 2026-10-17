@@ -26,17 +26,45 @@ export const fetchPublicKey = () => api<{ public_key: string }>('/push/public-ke
 export const registerSubscription = (subscription: unknown) => api<void>('/push/subscriptions', { method: 'POST', body: subscription })
 export const removeSubscription = (endpoint: string) => api<void>('/push/subscriptions', { method: 'DELETE', body: { endpoint } })
 
+/** 서비스워커가 준비되지 않아 푸시를 쓸 수 없을 때(미등록·설치 실패 등). */
+export class ServiceWorkerNotReady extends Error {
+  constructor() {
+    super('service worker not ready')
+  }
+}
+
+/**
+ * 서비스워커 등록이 준비되면 돌려준다. `navigator.serviceWorker.ready`는 서비스워커가 하나도 등록되지 않으면
+ * 영원히 끝나지 않으므로(예: 개발 서버, 설치 실패) 제한 시간 안에 오지 않으면 ServiceWorkerNotReady 로 실패시킨다.
+ */
+export function readyRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegistration> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new ServiceWorkerNotReady()), timeoutMs)
+    navigator.serviceWorker.ready.then(
+      (reg) => {
+        clearTimeout(timer)
+        resolve(reg)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      },
+    )
+  })
+}
+
 export async function currentSubscription(): Promise<PushSubscription | null> {
-  const reg = await navigator.serviceWorker.ready
+  const reg = await readyRegistration()
   return reg.pushManager.getSubscription()
 }
 
 /** 권한 요청 → 브라우저 구독 → 서버 등록. 권한이 거부되면 'denied'. */
 export async function enablePush(): Promise<'enabled' | 'denied'> {
+  // 권한 팝업을 띄우기 전에 서비스워커부터 확인한다(준비 안 됐는데 권한만 묻지 않도록).
+  const reg = await readyRegistration()
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return 'denied'
   const { public_key } = await fetchPublicKey()
-  const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(public_key) })
   await registerSubscription(sub.toJSON())
   return 'enabled'
