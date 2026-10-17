@@ -4,7 +4,7 @@ body{margin:0;background:var(--c-bg);color:var(--c-ink);font-family:var(--font-s
 a{color:var(--c-teal-dark)}a:hover{color:var(--c-teal-deeper)}
 h1,h2,h3,p{margin:0}
 :focus-visible{outline:2px solid var(--c-teal);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.sr-only{position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .mono{font-family:var(--font-mono)}
 .label{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
 .muted{color:var(--c-muted)}
@@ -81,10 +81,26 @@ h1,h2,h3,p{margin:0}
 
 
 .room-split{grid-template-columns:380px minmax(0,1fr)}
-@media (max-width:900px){.room-split{grid-template-columns:minmax(0,1fr)}}
+
 
 /* 본문 바로가기: 키보드 사용자가 사이드바를 건너뛴다 */
 .skip{position:absolute;left:var(--sp-2);top:-48px;z-index:20;padding:var(--sp-2) var(--sp-4);background:var(--c-teal);color:var(--c-ink);border-radius:var(--r-md);font-weight:600;text-decoration:none}
 .skip:focus{top:var(--sp-2)}
 .main:focus{outline:none}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* 모바일(≤900px): 2단 레이아웃 변형을 모두 1열로. 변형 클래스가 뒤에 정의되어도 이기도록 마지막에 둔다. */
+@media (max-width:900px){
+  .split,.room-split,.review-split{grid-template-columns:minmax(0,1fr)}
+  .app{grid-template-rows:auto minmax(0,1fr)}
+  .side{align-self:start}
+  /* 상단 바: 브랜드·계정·알림·전환·로그아웃을 한두 줄로 압축하고 메뉴는 아래 한 줄(가로 스크롤) */
+  .side{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px var(--sp-4)}
+  .brand{padding:0}
+  .role{margin:0}
+  .me{margin-left:auto}
+  .bell,.switch{min-height:36px;padding:0 var(--sp-3);font-size:13px;width:auto}
+  .bell .badge{margin-left:var(--sp-1)}
+  .nav{order:9;flex:0 0 100%;min-width:0}
+  .nav a{min-height:40px}
+}
