@@ -148,7 +148,7 @@ def test_confirm_twice_invalid_transition(env):
 def test_propose_sets_time_and_emits_event(env):
     mem, read, bus, events = env
     m = mem.add()
-    later = T + timedelta(hours=1)
+    later = T + timedelta(hours=1, minutes=7)
     ProposeMeetingUseCase(mem, read, bus, clock=lambda: NOW).execute(
         ProposeCommand(m.id, 9, later, "다른 시간 어떠세요")
     )
@@ -157,8 +157,8 @@ def test_propose_sets_time_and_emits_event(env):
     assert isinstance(events[0], MeetingProposed)
 
 
-@pytest.mark.parametrize("bad", [T + timedelta(minutes=5), NOW - timedelta(days=1)])
-def test_propose_rejects_unaligned_or_past(env, bad):
+@pytest.mark.parametrize("bad", [NOW, NOW - timedelta(days=1)])
+def test_propose_rejects_present_or_past(env, bad):
     mem, read, bus, _ = env
     m = mem.add()
     with pytest.raises(InvalidSlot):

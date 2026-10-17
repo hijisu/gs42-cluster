@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { anonymous, asUser, mockApi, renderAt } from '../test-utils'
 
@@ -86,4 +86,16 @@ describe('레이아웃: 모바일(≤900px)', () => {
     expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '메뉴 열기' })).toBeNull()
   })
+})
+
+
+it('프로필 사진을 표시하고 실패하면 이니셜로 돌아간다', async () => {
+  stubViewport(false)
+  mockApi(req => req.url.endsWith('/auth/me') ? { json: { id: 1, intra_id: 'jisu', name: '지수', role: 'student', slack_id: null, image_url: 'https://cdn.example/photo.jpg' } } : undefined)
+  renderAt('/')
+  const photo = await screen.findByRole('img', { name: 'jisu 프로필 사진' })
+  expect(photo).toHaveAttribute('src', 'https://cdn.example/photo.jpg')
+  fireEvent.error(photo)
+  expect(screen.queryByRole('img', { name: 'jisu 프로필 사진' })).toBeNull()
+  expect(screen.getByText('JI')).toBeInTheDocument()
 })

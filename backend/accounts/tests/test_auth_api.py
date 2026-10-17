@@ -98,12 +98,16 @@ def _login_flow(settings, monkeypatch, fake, state_ok=True):
 def test_callback_creates_user_and_staff_ids_decide_role(settings, monkeypatch):
     settings.STAFF_INTRA_IDS = ["alice"]
     client, response = _login_flow(
-        settings, monkeypatch, FakeFortyTwo(FortyTwoProfile("alice", "Alice"))
+        settings,
+        monkeypatch,
+        FakeFortyTwo(FortyTwoProfile("alice", "Alice", image_url="https://cdn.example/alice.jpg")),
     )
     assert response.status_code == 302 and response["Location"].endswith("/")
     me = APIClient()
     me.cookies = client.cookies
-    assert me.get("/api/auth/me").json()["role"] == "staff"
+    payload = me.get("/api/auth/me").json()
+    assert payload["role"] == "staff"
+    assert payload["image_url"] == "https://cdn.example/alice.jpg"
 
 
 def test_callback_rejects_state_mismatch(settings, monkeypatch):

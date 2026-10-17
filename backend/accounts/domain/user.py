@@ -10,6 +10,7 @@ class UserAccount:
     role: Role
     slack_id: str | None = None
     id: int | None = None
+    image_url: str = ""
 
     @property
     def is_staff(self) -> bool:

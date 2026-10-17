@@ -3,16 +3,17 @@ import { Button, Card, Modal, Pill, Table, type Column } from '../../components'
 import { ApiError } from '../../lib/api'
 import { formatDateTime } from '../../lib/datetime'
 import type { Meeting } from './api'
-import { useCancelMeeting, useMyMeetings } from './hooks'
+import { useAcceptMeetingProposal, useCancelMeeting, useMyMeetings } from './hooks'
 import { cancelable, errorLabel, statusLabel, statusTone } from './labels'
 
 export function MyMeetings() {
   const { data, isPending, isError } = useMyMeetings()
   const cancel = useCancelMeeting()
+  const accept = useAcceptMeetingProposal()
   const [target, setTarget] = useState<Meeting | null>(null)
 
   const columns: Column<Meeting>[] = [
-    { key: 'at', header: '일시', render: (m) => <span className="mono">{formatDateTime(m.slot_at)}</span> },
+    { key: 'at', header: '일시', render: (m) => <span className="mono">{formatDateTime(m.slot_at)}{m.status === 'proposed' && m.proposed_at && <><br />제안: {formatDateTime(m.proposed_at)}</>}</span> },
     { key: 'type', header: '유형', render: (m) => m.type.name },
     { key: 'staff', header: '담당', render: (m) => m.staff?.name ?? '배정 중' },
     { key: 'loc', header: '장소', render: (m) => m.location || '-' },
@@ -22,9 +23,12 @@ export function MyMeetings() {
       header: '',
       render: (m) =>
         cancelable(m.status) ? (
+          <>
+          {m.status === 'proposed' && m.proposed_at && <Button size="sm" disabled={accept.isPending} onClick={() => accept.mutate(m.id)}>제안 수락(확정하기)</Button>}
           <Button variant="ghost" size="sm" aria-label={`${formatDateTime(m.slot_at)} ${m.type.name} 취소`} onClick={() => setTarget(m)}>
             취소
           </Button>
+          </>
         ) : null,
     },
   ]
@@ -43,6 +47,7 @@ export function MyMeetings() {
       {isPending && <p className="muted" role="status">불러오는 중…</p>}
       {isError && <p role="alert">신청 내역을 불러오지 못했습니다.</p>}
       {data && <Table caption="내 면담 신청 내역" columns={columns} rows={data} rowKey={(m) => m.id} empty="신청한 면담이 없습니다." />}
+      {accept.isError && <p role="alert">제안을 수락하지 못했습니다. 시간 충돌 또는 만료 여부를 확인해 주세요.</p>}
       <Modal
         open={target !== null}
         title="면담을 취소할까요?"

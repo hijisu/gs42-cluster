@@ -14,8 +14,6 @@ export interface Book {
   cover_url: string
   link_url: string
   pub_date: string
-  /** 서가 위치(예: A-2). 비어 있을 수 있다. */
-  location: string
 }
 
 export interface BookSearch {

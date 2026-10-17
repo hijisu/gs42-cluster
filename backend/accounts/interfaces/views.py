@@ -86,6 +86,7 @@ def me(request):
                 "id": user.pk,
                 "intra_id": user.intra_id,
                 "name": user.name,
+                "image_url": user.image_url,
                 "role": user.role,
                 "slack_id": user.slack_id,
             }

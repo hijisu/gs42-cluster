@@ -15,6 +15,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser):
     intra_id = models.CharField(max_length=64, unique=True)
     name = models.CharField(max_length=128)
+    image_url = models.URLField(max_length=2048, blank=True)
     role = models.CharField(max_length=16, choices=[(r.value, r.name) for r in Role])
     slack_id = models.CharField(max_length=32, null=True, blank=True)
     is_active = models.BooleanField(default=True)

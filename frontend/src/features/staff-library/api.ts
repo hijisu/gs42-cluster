@@ -13,7 +13,6 @@ export interface Book {
   cover_url: string
   link_url: string
   pub_date: string
-  location: string
 }
 
 export interface BookSearch {
@@ -22,7 +21,7 @@ export interface BookSearch {
   results: Book[]
 }
 
-export type BookInput = Pick<Book, 'code' | 'title' | 'category' | 'quantity' | 'author' | 'publisher' | 'location'>
+export type BookInput = Pick<Book, 'code' | 'title' | 'category' | 'quantity' | 'author' | 'publisher'>
 
 export type ReportKind = 'lost' | 'damaged'
 export type ReportStatus = 'received' | 'resolved'

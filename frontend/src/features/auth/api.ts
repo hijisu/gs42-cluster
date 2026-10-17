@@ -9,6 +9,7 @@ export interface Me {
   name: string
   role: Role
   slack_id: string | null
+  image_url?: string
 }
 
 /** 미로그인(401)이면 null. CSRF 쿠키도 이 응답에서 발급된다. */

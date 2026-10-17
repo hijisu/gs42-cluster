@@ -20,6 +20,7 @@ class LoginWithProfile:
         else:
             user.name = profile.name
             user.role = role
+        user.image_url = profile.image_url
         return self._users.save(user)
 
 

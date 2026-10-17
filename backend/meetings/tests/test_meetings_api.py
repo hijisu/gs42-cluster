@@ -158,3 +158,54 @@ def test_cancel_confirmed_frees_the_slot(slot_at, staff):
     assert client.get(url).json()[0]["available"] is False
     client.post(f"/api/meetings/{created['id']}/cancel")
     assert client.get(url).json()[0]["available"] is True
+
+
+def proposed_meeting(slot_at, staff):
+    client = login()
+    created = client.post("/api/meetings", body(slot_at), format="json").json()
+    later = slot_at + timedelta(minutes=7)
+    MeetingRequestRow.objects.filter(pk=created["id"]).update(
+        status="proposed", staff=staff, proposed_at=later
+    )
+    return client, created["id"], later
+
+
+def test_student_accepts_proposal_and_cannot_accept_twice(slot_at, staff):
+    client, meeting_id, later = proposed_meeting(slot_at, staff)
+    response = client.post(f"/api/meetings/{meeting_id}/accept")
+    assert response.status_code == 200
+    assert response.json()["status"] == "confirmed"
+    row = MeetingRequestRow.objects.get(pk=meeting_id)
+    assert row.slot_at == later
+    assert client.post(f"/api/meetings/{meeting_id}/accept").status_code == 409
+
+
+def test_other_user_cannot_accept_proposal(slot_at, staff):
+    _, meeting_id, _ = proposed_meeting(slot_at, staff)
+    assert login("staff").post(f"/api/meetings/{meeting_id}/accept").status_code == 403
+    assert MeetingRequestRow.objects.get(pk=meeting_id).status == "proposed"
+
+
+def test_accept_conflicting_proposal_rolls_back(slot_at, staff):
+    client, meeting_id, later = proposed_meeting(slot_at, staff)
+    MeetingRequestRow.objects.create(
+        student_id=MeetingRequestRow.objects.get(pk=meeting_id).student_id,
+        type=freeze(),
+        slot_at=later,
+        staff=staff,
+        status="confirmed",
+        content="기존 면담",
+    )
+    assert client.post(f"/api/meetings/{meeting_id}/accept").status_code == 409
+    assert MeetingRequestRow.objects.get(pk=meeting_id).status == "proposed"
+
+
+def test_cannot_accept_expired_or_pending_proposal(slot_at, staff):
+    client, meeting_id, _ = proposed_meeting(slot_at, staff)
+    MeetingRequestRow.objects.filter(pk=meeting_id).update(
+        proposed_at=datetime.now(KST) - timedelta(days=1)
+    )
+    assert client.post(f"/api/meetings/{meeting_id}/accept").status_code == 409
+    MeetingRequestRow.objects.filter(pk=meeting_id).update(status="pending")
+    assert client.post(f"/api/meetings/{meeting_id}/accept").status_code == 409
+    assert client.post("/api/meetings/99999/accept").status_code == 404

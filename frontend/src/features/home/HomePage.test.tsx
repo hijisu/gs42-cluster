@@ -49,7 +49,7 @@ const course: Course = {
   can_review: true,
 }
 
-const book: Book = { id: 3, code: 'GSIA-IT-003', title: '이펙티브 타입스크립트', author: '댄 밴더캄', publisher: '인사이트', isbn: '', category: '컴퓨터/IT', quantity: 1, description: '', cover_url: '', link_url: '', pub_date: '', location: 'B-4' }
+const book: Book = { id: 3, code: 'GSIA-IT-003', title: '이펙티브 타입스크립트', author: '댄 밴더캄', publisher: '인사이트', isbn: '', category: '컴퓨터/IT', quantity: 1, description: '', cover_url: '', link_url: '', pub_date: '' }
 const wish: BookWish = { id: 1, title: 'Designing Data-Intensive Apps', author: '', reason: '', link_url: '', status: 'requested', staff_note: '', created_at: '2026-10-17T00:00:00Z' }
 
 const data = (over: { meetings?: Meeting[]; reservations?: Reservation[]; courses?: Course[]; wishes?: BookWish[] } = {}): Handler => (req) => {
