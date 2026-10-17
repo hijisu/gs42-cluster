@@ -2,14 +2,12 @@ import { useState } from 'react'
 import { Button, Card, Field, Modal, Pill } from '../../components'
 import type { Room } from '../room/api'
 import { messageFor } from './errors'
-import { useCreateRoom, usePatchRoom } from './hooks'
+import { useCreateRoom } from './hooks'
 import { roomStatusLabel } from './labels'
 
-/** 장소 목록: 예약 받는 중 / 교육 기간 차단 전환, 장소 추가 */
+/** 장소 목록: 상태 표시와 장소 추가. 시간 차단은 '예약 차단 기간'에서 설정한다 */
 export function RoomsPanel({ rooms }: { rooms: Room[] }) {
-  const patch = usePatchRoom()
   const [adding, setAdding] = useState(false)
-  const error = messageFor(patch.error, '변경하지 못했어요. 잠시 후 다시 시도해 주세요.')
   return (
     <Card className="stack" style={{ gap: 8 }}>
       <div className="row">
@@ -22,23 +20,11 @@ export function RoomsPanel({ rooms }: { rooms: Room[] }) {
         {rooms.map((r) => (
           <div key={r.id} className="row">
             <span>{r.name}</span>
-            <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Pill tone={r.status === 'open' ? 'ok' : 'neu'}>{roomStatusLabel[r.status]}</Pill>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={patch.isPending}
-                aria-label={`${r.name} ${r.status === 'open' ? '차단' : '차단 해제'}`}
-                onClick={() => patch.mutate({ id: r.id, status: r.status === 'open' ? 'blocked' : 'open' })}
-              >
-                {r.status === 'open' ? '차단' : '차단 해제'}
-              </Button>
-            </span>
+            <Pill tone={r.status === 'open' ? 'ok' : 'neu'}>{roomStatusLabel[r.status]}</Pill>
           </div>
         ))}
       </div>
-      <p className="muted" style={{ fontSize: 12 }}>차단해도 이미 승인된 예약은 유지되고, 새 요청·승인만 막혀요.</p>
-      {error && <p role="alert" className="login-error">{error}</p>}
+      <p className="muted" style={{ fontSize: 12 }}>시간 단위 차단은 ‘예약 차단 기간’에서 설정해요. 승인된 예약은 차단해도 유지돼요.</p>
       <AddRoomModal open={adding} onClose={() => setAdding(false)} />
     </Card>
   )

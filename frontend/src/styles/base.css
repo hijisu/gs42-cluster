@@ -69,6 +69,13 @@ h1,h2,h3,p{margin:0}
 
 
 .room-split{grid-template-columns:380px minmax(0,1fr)}
+/* 운영 회의실 관리: 같은 줄의 카드는 높이를 맞추고(2:1), 승인 대기는 영역 안에서만 스크롤한다 */
+.r21{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--sp-5);align-items:stretch}
+.r21>.card,.r21>section,.g2>.card{height:100%}
+.r21>.col>.card{height:100%}
+.pend-card{padding:var(--sp-4);gap:10px;flex-shrink:0}
+.pend-wrap{position:relative;flex:1 1 auto;min-height:260px}
+.pend-scroll{position:absolute;inset:0;display:flex;flex-direction:column;gap:var(--sp-3);overflow-y:auto}
 
 
 /* 본문 바로가기: 키보드 사용자가 사이드바를 건너뛴다 */
@@ -84,7 +91,10 @@ h1,h2,h3,p{margin:0}
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
   .main{padding:var(--sp-5) var(--sp-4) 48px;gap:var(--sp-5)}
   .h1{font-size:24px}
-  .split,.room-split,.review-split{grid-template-columns:minmax(0,1fr)}
+  .split,.room-split,.review-split,.r21{grid-template-columns:minmax(0,1fr)}
+  .r21>.card,.r21>section,.g2>.card,.r21>.col>.card{height:auto}
+  .pend-wrap{min-height:0}
+  .pend-scroll{position:static;max-height:340px}
   .g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
 }
 
