@@ -91,3 +91,27 @@ def test_failure_details_never_contain_secrets_or_response_body(monkeypatch):
     text = f"{error} {error.stage} {error.status} {error.reason}"
     for secret in ("super-secret", "one-time-code", "secret-body"):
         assert secret not in text
+
+
+@pytest.mark.parametrize(
+    "image, expected",
+    [
+        ({"link": "https://cdn.example/photo.jpg"}, "https://cdn.example/photo.jpg"),
+        (
+            {"link": None, "versions": {"medium": "https://cdn.example/medium.jpg"}},
+            "https://cdn.example/medium.jpg",
+        ),
+        (None, ""),
+        ({"link": "javascript:alert(1)"}, ""),
+        # 형식이 달라도(문자열·숫자·잘못된 versions) 로그인이 실패하지 않고 사진만 비운다.
+        ("https://cdn.example/legacy.jpg", ""),
+        ({"link": 12345}, ""),
+        ({"link": None, "versions": "medium"}, ""),
+        ({"link": "http://cdn.example/insecure.jpg"}, ""),
+    ],
+)
+def test_profile_photo_extraction(monkeypatch, image, expected):
+    client = FortyTwoOAuthClient("uid", "secret", "http://localhost/callback")
+    monkeypatch.setattr(client, "_post_token", lambda code: "token")
+    monkeypatch.setattr(client, "_get_json", lambda url, token: {"login": "alice", "image": image})
+    assert client.fetch_profile("code").image_url == expected
