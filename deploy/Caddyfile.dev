@@ -7,6 +7,12 @@
 }
 
 :{$WEB_PORT} {
+	# 접근 로그(상태코드·Origin·Host)를 stdout 으로. 403 등이 프록시·Vite·Django 중 어디서 났는지 `docker compose logs web` 로 확인한다.
+	log {
+		output stdout
+		format json
+	}
+
 	handle /api/* {
 		# 백엔드는 서비스 이름 Host 로만 받는다(DJANGO_ALLOWED_HOSTS 의 backend). Origin 헤더는 그대로 전달해 CSRF 가 판단한다.
 		reverse_proxy {$BACKEND_UPSTREAM} {
