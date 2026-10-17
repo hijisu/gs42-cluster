@@ -14,6 +14,8 @@ from meetings.application.ports import (
     StaffMeetingView,
 )
 from meetings.application.usecases import Clock
+from meetings.domain import availability_window
+from meetings.domain.defaults import KST
 from meetings.domain.errors import (
     InvalidSlot,
     MeetingNotFound,
@@ -157,11 +159,22 @@ class StaffAvailability:
     customized_days: list[date]
 
 
+def _days(start: datetime, end: datetime) -> tuple[date, date]:
+    return start.astimezone(KST).date(), end.astimezone(KST).date()
+
+
 class GetAvailabilityUseCase:
-    def __init__(self, availability: AvailabilityRepository) -> None:
+    def __init__(self, availability: AvailabilityRepository, clock: Clock) -> None:
         self._availability = availability
+        self._clock = clock
 
     def execute(self, staff_id: int, start: datetime, end: datetime) -> StaffAvailability:
+        availability_window.ensure_readable(
+            *_days(start, end), today=self._clock().astimezone(KST).date()
+        )
+        return self._read(staff_id, start, end)
+
+    def _read(self, staff_id: int, start: datetime, end: datetime) -> StaffAvailability:
         return StaffAvailability(
             slots=self._availability.for_staff_between(staff_id, start, end),
             customized_days=self._availability.customized_days(staff_id, start, end),
@@ -171,13 +184,19 @@ class GetAvailabilityUseCase:
 class ResetAvailabilityUseCase:
     """범위의 가능 시간을 직접 설정 이전(기본 가능 시간)으로 되돌린다."""
 
-    def __init__(self, availability: AvailabilityRepository, meetings: MeetingRepository) -> None:
+    def __init__(
+        self, availability: AvailabilityRepository, meetings: MeetingRepository, clock: Clock
+    ) -> None:
         self._availability = availability
         self._meetings = meetings
+        self._clock = clock
 
     def execute(self, staff_id: int, start: datetime, end: datetime) -> StaffAvailability:
+        availability_window.ensure_editable(
+            *_days(start, end), today=self._clock().astimezone(KST).date()
+        )
         self._availability.reset_to_default(staff_id, start, end)
-        result = GetAvailabilityUseCase(self._availability).execute(staff_id, start, end)
+        result = GetAvailabilityUseCase(self._availability, self._clock)._read(staff_id, start, end)
         # 확정된 면담이 있는 시간은 닫을 수 없다(호출한 쪽 트랜잭션이 롤백한다).
         booked = set(self._meetings.staff_has_confirmed_between(staff_id, start, end))
         if booked - set(result.slots):
@@ -188,13 +207,19 @@ class ResetAvailabilityUseCase:
 class SetAvailabilityUseCase:
     """[start, end] 범위의 내 가능 시간을 주어진 목록으로 교체한다."""
 
-    def __init__(self, availability: AvailabilityRepository, meetings: MeetingRepository) -> None:
+    def __init__(
+        self, availability: AvailabilityRepository, meetings: MeetingRepository, clock: Clock
+    ) -> None:
         self._availability = availability
         self._meetings = meetings
+        self._clock = clock
 
     def execute(
         self, staff_id: int, start: datetime, end: datetime, slots: list[datetime]
     ) -> list[datetime]:
+        availability_window.ensure_editable(
+            *_days(start, end), today=self._clock().astimezone(KST).date()
+        )
         unique = sorted(set(slots))
         for slot in unique:
             if not is_aligned(slot) or not start <= slot <= end:

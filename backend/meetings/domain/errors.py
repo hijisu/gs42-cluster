@@ -27,3 +27,11 @@ class StaffNotFound(NotFoundError):
 
 class SlotHasMeeting(ConflictError):
     code = "slot_has_meeting"
+
+
+class AvailabilityInPast(InvalidRequestError):
+    code = "availability_past"
+
+
+class AvailabilityBeyondWindow(InvalidRequestError):
+    code = "availability_too_far"
