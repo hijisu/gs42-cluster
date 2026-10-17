@@ -7,7 +7,7 @@ import { BookDetailModal } from './BookDetailModal'
 import { useBooks } from './hooks'
 import { MyRequests } from './MyRequests'
 import { ReportModal } from './ReportModal'
-import { WishForm } from './WishForm'
+import { WishModal } from './WishForm'
 
 /** 오아시스 도서(#28): 검색·카테고리, 상세, 분실·훼손 신고, 희망 도서 신청, 내 신청·신고 */
 export function LibraryPage() {
@@ -18,6 +18,8 @@ export function LibraryPage() {
   const [input, setInput] = useState(q)
   const [detail, setDetail] = useState<Book | null>(null)
   const [reporting, setReporting] = useState<Book | null>(null)
+  const [wishing, setWishing] = useState(false)
+  const [wished, setWished] = useState(false)
   const books = useBooks(q, category, true, page)
 
   // 검색어·카테고리는 주소에 두어 새로고침·뒤로가기·홈 검색 링크가 같은 결과를 보여 준다.
@@ -41,7 +43,9 @@ export function LibraryPage() {
           <h1 className="h1" style={{ marginTop: 8 }}>오아시스 도서</h1>
           <p className="sub">오아시스에 비치된 약 500종의 책을 찾아보세요. 도서는 오아시스 안에서만 열람할 수 있어요.</p>
         </div>
+        <Button onClick={() => { setWished(false); setWishing(true) }}>희망 도서 신청</Button>
       </div>
+      {wished && <p role="status" className="info">신청했어요. 운영팀이 검토하면 '내 신청 · 신고'에 상태가 표시돼요.</p>}
 
       <div className="notice">
         <span className="stack" style={{ gap: 2 }}>
@@ -95,7 +99,6 @@ export function LibraryPage() {
           </div>
         </div>
         <div className="col">
-          <WishForm />
           <MyRequests />
         </div>
       </div>
@@ -108,6 +111,7 @@ export function LibraryPage() {
           setReporting(b)
         }}
       />
+      <WishModal open={wishing} onClose={() => setWishing(false)} onDone={() => { setWishing(false); setWished(true) }} />
       <ReportModal book={reporting} onClose={() => setReporting(null)} />
     </>
   )
