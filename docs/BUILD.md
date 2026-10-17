@@ -100,6 +100,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 
 - 구조: `src/app`(라우터·메뉴 정의), `src/components`(공통 컴포넌트), `src/styles`(스타일·토큰), `src/features/<context>/`(기능별 화면).
 - 라우트는 `src/app/routes.ts`의 메뉴 정의와 `design/*.dc.html` 파일 이름이 1:1이다.
+- 서비스워커는 `src/sw.ts`(vite-plugin-pwa `injectManifest`): 프리캐시 + 웹 푸시 표시·클릭 이동. 푸시 구독 UI는 알림 모달(벨)의 '푸시 알림 켜기'. 서비스워커는 `npm run build` 후 `npm run preview`(또는 localhost)에서 확인한다. iOS는 홈 화면에 설치한 PWA에서만 푸시가 동작한다.
 
 ## 42 OAuth 앱 등록
 

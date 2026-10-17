@@ -1,0 +1,76 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { urlBase64ToUint8Array } from '../../lib/push'
+import { mockApi } from '../../test-utils'
+import { PushSettings } from './PushSettings'
+
+function stubPush(opts: { permission?: 'granted' | 'denied'; existing?: boolean } = {}) {
+  const unsubscribe = vi.fn(async () => true)
+  const subscription = { endpoint: 'https://push.example/abc', toJSON: () => ({ endpoint: 'https://push.example/abc', keys: { p256dh: 'p', auth: 'a' } }), unsubscribe }
+  const subscribe = vi.fn(async () => subscription)
+  const pushManager = { getSubscription: vi.fn(async () => (opts.existing ? subscription : null)), subscribe }
+  Object.defineProperty(navigator, 'serviceWorker', { value: { ready: Promise.resolve({ pushManager }) }, configurable: true })
+  vi.stubGlobal('PushManager', class {})
+  vi.stubGlobal('Notification', { requestPermission: vi.fn(async () => opts.permission ?? 'granted') })
+  return { subscribe, unsubscribe, pushManager }
+}
+
+afterEach(() => {
+  Reflect.deleteProperty(navigator, 'serviceWorker')
+  vi.unstubAllGlobals()
+})
+
+describe('푸시 알림 설정', () => {
+  it('푸시를 지원하지 않는 브라우저에서는 앱 안 알림만 안내한다', () => {
+    render(<PushSettings />)
+    expect(screen.getByText(/푸시 알림을 지원하지 않아요/)).toBeInTheDocument()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('iOS에서 설치 전이면 홈 화면 설치를 안내한다', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)')
+    render(<PushSettings />)
+    expect(screen.getByText(/홈 화면에 추가/)).toBeInTheDocument()
+    vi.restoreAllMocks()
+  })
+
+  it('켜면 권한 요청 → 구독 → 서버 등록을 한다', async () => {
+    const { subscribe } = stubPush()
+    const calls = mockApi((req) => (req.url.endsWith('/push/public-key') ? { json: { public_key: 'AQAB' } } : undefined), (req) => (req.method === 'POST' ? { status: 201, json: {} } : undefined))
+    render(<PushSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
+    expect(await screen.findByRole('button', { name: '푸시 알림 끄기' })).toBeInTheDocument()
+    expect(subscribe).toHaveBeenCalledWith({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array('AQAB') })
+    const post = calls.find((c) => c.method === 'POST')!
+    expect(post.url).toMatch(/\/push\/subscriptions$/)
+    expect(post.body).toEqual({ endpoint: 'https://push.example/abc', keys: { p256dh: 'p', auth: 'a' } })
+  })
+
+  it('권한을 거부하면 안내하고 구독하지 않는다', async () => {
+    const { subscribe } = stubPush({ permission: 'denied' })
+    const calls = mockApi()
+    render(<PushSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('차단돼 있어요')
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(calls).toHaveLength(0)
+  })
+
+  it('이미 구독 중이면 "끄기"가 서버 구독을 지우고 브라우저 구독을 해제한다', async () => {
+    const { unsubscribe } = stubPush({ existing: true })
+    const calls = mockApi((req) => (req.method === 'DELETE' ? { status: 204 } : undefined))
+    render(<PushSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 끄기' }))
+    expect(await screen.findByRole('button', { name: '푸시 알림 켜기' })).toBeInTheDocument()
+    await waitFor(() => expect(unsubscribe).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'DELETE')!.body).toEqual({ endpoint: 'https://push.example/abc' })
+  })
+
+  it('서버 등록이 실패하면 오류를 안내한다', async () => {
+    stubPush()
+    mockApi((req) => (req.url.endsWith('/push/public-key') ? { status: 503, json: { code: 'push_not_configured' } } : undefined))
+    render(<PushSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('바꾸지 못했어요')
+  })
+})
