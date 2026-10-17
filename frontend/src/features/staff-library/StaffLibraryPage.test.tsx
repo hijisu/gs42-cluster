@@ -5,7 +5,7 @@ import type { Book, BookReport, BookWish } from './api'
 
 const book = (over: Partial<Book> = {}): Book => ({
   id: 1, code: 'B-1', title: '클린 코드', author: '로버트 마틴', publisher: '인사이트', isbn: '', category: '컴퓨터/IT',
-  quantity: 2, description: '', cover_url: '', link_url: '', pub_date: '', location: 'A-2', ...over,
+  quantity: 2, description: '', cover_url: '', link_url: '', pub_date: '', ...over,
 })
 const wish = (over: Partial<BookWish> = {}): BookWish => ({
   id: 7, title: '쿠버네티스 인 액션', author: '', reason: '실습용', link_url: '', status: 'requested', staff_note: '',
@@ -31,7 +31,7 @@ describe('운영 도서 관리 화면', () => {
     const calls = await openPage(search([book()]), get('/staff/book-wishes', []), get('/staff/book-reports', []))
     const table = await screen.findByRole('table', { name: '도서 목록' })
     const row = within(table).getByText('클린 코드').closest('tr') as HTMLElement
-    expect(within(row).getByText('A-2')).toBeInTheDocument()
+    expect(within(table).queryByRole('columnheader', { name: '서가' })).toBeNull()
     expect(within(row).getByText('2권')).toBeInTheDocument()
     expect(screen.getByText('총 1종')).toBeInTheDocument()
 
@@ -76,19 +76,20 @@ describe('운영 도서 관리 화면', () => {
   it('도서를 수정할 때 도서 코드는 바꿀 수 없고 서버에 보내지 않는다', async () => {
     const calls = await openPage(
       search([book()]),
-      (req) => (req.method === 'PATCH' ? { json: book({ location: 'B-1' }) } : undefined),
+      (req) => (req.method === 'PATCH' ? { json: book({ title: '수정한 책' }) } : undefined),
     )
     await userEvent.click(await screen.findByRole('button', { name: '클린 코드 수정' }))
     const dialog = screen.getByRole('dialog', { name: '도서 수정' })
     expect(within(dialog).getByLabelText('도서 코드')).toBeDisabled()
-    const loc = within(dialog).getByLabelText('서가 위치')
+    expect(within(dialog).queryByLabelText('서가 위치')).toBeNull()
+    const loc = within(dialog).getByLabelText('제목')
     await userEvent.clear(loc)
-    await userEvent.type(loc, 'B-1')
+    await userEvent.type(loc, '수정한 책')
     await userEvent.click(within(dialog).getByRole('button', { name: '저장' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
     const patch = calls.find((c) => c.method === 'PATCH')
     expect(patch?.url).toMatch(/\/staff\/books\/1$/)
-    expect(patch?.body).toMatchObject({ location: 'B-1', quantity: 2 })
+    expect(patch?.body).toMatchObject({ title: '수정한 책', quantity: 2 })
     expect(patch?.body).not.toHaveProperty('code')
   })
 

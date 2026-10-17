@@ -4,7 +4,7 @@ import type { Book, BookInput } from './api'
 import { messageFor } from './errors'
 import { useSaveBook } from './hooks'
 
-const empty: BookInput = { code: '', title: '', category: '', quantity: 1, author: '', publisher: '', location: '' }
+const empty: BookInput = { code: '', title: '', category: '', quantity: 1, author: '', publisher: '' }
 
 /** book이 null이면 새 도서 추가, 있으면 수정(도서 코드는 바꿀 수 없다). */
 export function BookFormModal({ open, book, categories, onClose }: { open: boolean; book: Book | null; categories: string[]; onClose: () => void }) {
@@ -42,7 +42,6 @@ export function BookFormModal({ open, book, categories, onClose }: { open: boole
       <datalist id="book-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
       <Field label="저자" value={form.author} onChange={(e) => set('author', e.target.value)} />
       <Field label="출판사" value={form.publisher} onChange={(e) => set('publisher', e.target.value)} />
-      <Field label="서가 위치" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="예: A-2" />
       <Field label="수량" type="number" min={0} value={form.quantity} onChange={(e) => set('quantity', Number(e.target.value))} />
       {error && <p role="alert" className="login-error">{error}</p>}
     </Modal>

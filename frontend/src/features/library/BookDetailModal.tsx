@@ -32,7 +32,7 @@ export function BookDetailModal({ book, onClose, onReport }: { book: Book | null
             <dd>{book.category}</dd>
             <dt>비치</dt>
             <dd>
-              {book.quantity}권{book.location ? ` · 서가 ${book.location}` : ''}
+              {book.quantity}권
             </dd>
             {book.isbn && (
               <>

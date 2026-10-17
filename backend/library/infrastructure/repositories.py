@@ -18,7 +18,6 @@ _BOOK_FIELDS = (
     "cover_url",
     "link_url",
     "pub_date",
-    "location",
 )
 
 
