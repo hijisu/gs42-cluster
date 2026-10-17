@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Card } from '../../components'
-import { LIBRARY_URL, STATS_URL } from '../../app/routes'
+import { STATS_URL } from '../../app/routes'
 
 interface Shortcut {
   no: string
@@ -13,8 +13,7 @@ interface Shortcut {
 const shortcuts: Shortcut[] = [
   { no: '01', title: '면담 신청', desc: '대면 면담 일정 잡기', to: '/meeting' },
   { no: '02', title: '회의실 예약', desc: '날짜 선택 후 예약 요청 · 운영팀 승인', to: '/room' },
-  // 도서 화면(#28) 전까지 42gslib 외부 링크(#100)
-  { no: '03', title: '오아시스 도서', desc: '도서 검색 · 분실 신고 · 희망 도서 (42gslib)', external: LIBRARY_URL },
+  { no: '03', title: '오아시스 도서', desc: '도서 검색 · 분실 신고 · 희망 도서', to: '/library' },
   { no: '04', title: '교육과정 후기', desc: '아카데미 운영 과정 후기 읽고 쓰기', to: '/reviews' },
   { no: '05', title: 'gs42stats', desc: '클러스터 · 과제 진행 통계', external: STATS_URL },
 ]

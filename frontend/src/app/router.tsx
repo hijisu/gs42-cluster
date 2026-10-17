@@ -8,6 +8,7 @@ import { RoomPage } from '../features/room/RoomPage'
 import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
 import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
 import { StaffCoursePage } from '../features/staff-course/StaffCoursePage'
+import { LibraryPage } from '../features/library/LibraryPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -33,7 +34,7 @@ export const routes = [
       { index: true, element: <HomePage /> },
       { path: 'meeting', element: <MeetingPage /> },
       { path: 'room', element: <RoomPage /> },
-      { path: 'library', element: page('오아시스 도서') },
+      { path: 'library', element: <LibraryPage /> },
       { path: 'reviews', element: <ReviewPage /> },
       ...(import.meta.env.DEV ? [{ path: 'styleguide', element: <StyleGuidePage /> }] : []),
     ],

@@ -31,6 +31,16 @@
   --c-staff-line: #25494A;
   --c-scrim: rgba(18, 18, 18, 0.55);
 
+  /* 도서 표지가 없을 때 쓰는 대체 색(시안 Library) */
+  --cover-1: #1F3B4D;
+  --cover-2: #7A2E1F;
+  --cover-3: #2D4A2B;
+  --cover-4: #4A3A6B;
+  --cover-5: #121212;
+  --cover-6: #8A5A12;
+  --cover-7: #1E4F6B;
+  --cover-8: #5B2333;
+
   /* font */
   --font-sans: 'IBM Plex Sans KR', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;

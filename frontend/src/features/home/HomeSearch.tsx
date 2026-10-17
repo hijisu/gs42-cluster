@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LIBRARY_URL } from '../../app/routes'
+import { useDebounced } from '../../lib/useDebounced'
+import { useBooks } from '../library/hooks'
 import { useCourses } from '../review/hooks'
 import { useRooms } from '../room/hooks'
 
@@ -11,12 +12,13 @@ interface Hit {
   to: string
 }
 
-/** 통합 검색: 회의실·교육과정은 이미 받은 목록에서 찾고, 도서는 42gslib(새 탭)로 안내한다. */
+/** 통합 검색: 회의실·교육과정은 이미 받은 목록에서 찾고, 도서는 도서 검색 API 결과를 보여 준다. */
 export function HomeSearch() {
   const [q, setQ] = useState('')
   const rooms = useRooms()
   const courses = useCourses()
   const query = q.trim().toLowerCase()
+  const books = useBooks(useDebounced(q.trim()), '', query !== '')
 
   const hits: Hit[] = query
     ? [
@@ -38,10 +40,17 @@ export function HomeSearch() {
               </Link>
             </li>
           ))}
+          {books.data?.results.slice(0, 5).map((b) => (
+            <li key={`book-${b.id}`}>
+              <Link to={`/library?q=${encodeURIComponent(q.trim())}`}>
+                <span className="muted small">도서</span> {b.title}
+              </Link>
+            </li>
+          ))}
           <li>
-            <a href={LIBRARY_URL} target="_blank" rel="noopener noreferrer">
-              <span className="muted small">도서</span> 42gslib에서 '{q.trim()}' 찾기<span className="sr-only"> (새 창)</span>
-            </a>
+            <Link to={`/library?q=${encodeURIComponent(q.trim())}`}>
+              <span className="muted small">도서</span> '{q.trim()}' 도서 검색 결과 보기{books.data ? ` (${books.data.total}종)` : ''}
+            </Link>
           </li>
         </ul>
       )}
