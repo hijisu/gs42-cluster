@@ -55,6 +55,14 @@ def reject(request, reservation_id: int):
 
 
 @staff_api(["POST"])
+def cancel(request, reservation_id: int):
+    """운영팀 취소. 승인된 예약도 취소할 수 있다(교육생은 승인 전까지만)."""
+    with transaction.atomic():
+        view = deps.staff_cancel().execute(reservation_id)
+    return Response(staff_reservation_payload(view))
+
+
+@staff_api(["POST"])
 def reassign(request, reservation_id: int):
     body = ReassignSerializer(data=request.data)
     body.is_valid(raise_exception=True)

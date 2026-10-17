@@ -157,7 +157,24 @@ def test_cancel_own_then_again_409(day):
     ok = client.post(f"/api/reservations/{created['id']}/cancel")
     assert ok.status_code == 200 and ok.json()["status"] == "canceled"
     again = client.post(f"/api/reservations/{created['id']}/cancel")
+    assert again.status_code == 409 and again.json()["code"] == "not_cancelable"
+
+
+def test_student_cannot_cancel_approved_reservation_but_staff_can(day):
+    student, staff = login(), login("staff")
+    created = student.post("/api/reservations", body(day), format="json").json()
+    assert staff.post(f"/api/staff/reservations/{created['id']}/approve").status_code == 200
+
+    denied = student.post(f"/api/reservations/{created['id']}/cancel")
+    assert denied.status_code == 409 and denied.json()["code"] == "not_cancelable"
+    assert RoomReservationRow.objects.get(pk=created["id"]).status == "approved"
+
+    done = staff.post(f"/api/staff/reservations/{created['id']}/cancel")
+    assert done.status_code == 200 and done.json()["status"] == "canceled"
+    again = staff.post(f"/api/staff/reservations/{created['id']}/cancel")
     assert again.status_code == 409 and again.json()["code"] == "invalid_transition"
+    assert staff.post("/api/staff/reservations/999999/cancel").status_code == 404
+    assert student.post(f"/api/staff/reservations/{created['id']}/cancel").status_code == 403
 
 
 def test_cancel_other_users_reservation_403(day):

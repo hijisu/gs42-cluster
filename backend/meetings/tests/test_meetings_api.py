@@ -140,7 +140,7 @@ def test_cancel_own_then_again_409(slot_at):
     response = client.post(f"/api/meetings/{created['id']}/cancel")
     assert response.status_code == 200 and response.json()["status"] == "canceled"
     again = client.post(f"/api/meetings/{created['id']}/cancel")
-    assert again.status_code == 409 and again.json()["code"] == "invalid_transition"
+    assert again.status_code == 409 and again.json()["code"] == "not_cancelable"
 
 
 def test_cancel_other_students_meeting_403(slot_at):
@@ -155,15 +155,35 @@ def test_cancel_unknown_404():
     assert login().post("/api/meetings/9999/cancel").status_code == 404
 
 
-def test_cancel_confirmed_frees_the_slot(slot_at, staff):
+def test_student_cannot_cancel_confirmed_meeting_but_staff_can_and_frees_the_slot(slot_at, staff):
     client = login()
     created = client.post("/api/meetings", body(slot_at), format="json").json()
     MeetingRequestRow.objects.filter(pk=created["id"]).update(status="confirmed", staff=staff)
     day = slot_at.date().isoformat()
     url = f"/api/meetings/slots?from={day}&to={day}"
     assert client.get(url).json()[0]["available"] is False
-    client.post(f"/api/meetings/{created['id']}/cancel")
+
+    denied = client.post(f"/api/meetings/{created['id']}/cancel")
+    assert denied.status_code == 409 and denied.json()["code"] == "not_cancelable"
+    assert MeetingRequestRow.objects.get(pk=created["id"]).status == "confirmed"
+
+    done = login("staff").post(f"/api/staff/meetings/{created['id']}/cancel")
+    assert done.status_code == 200 and done.json()["status"] == "canceled"
     assert client.get(url).json()[0]["available"] is True
+    again = login("staff").post(f"/api/staff/meetings/{created['id']}/cancel")
+    assert again.status_code == 409 and again.json()["code"] == "invalid_transition"
+
+
+def test_proposed_meeting_can_still_be_canceled_by_student(slot_at, staff):
+    client, meeting_id, _ = proposed_meeting(slot_at, staff)
+    assert client.post(f"/api/meetings/{meeting_id}/cancel").json()["status"] == "canceled"
+
+
+def test_staff_cancel_requires_staff_and_existing_meeting(slot_at):
+    created = login().post("/api/meetings", body(slot_at), format="json").json()
+    assert login().post(f"/api/staff/meetings/{created['id']}/cancel").status_code == 403
+    assert APIClient().post(f"/api/staff/meetings/{created['id']}/cancel").status_code == 401
+    assert login("staff").post("/api/staff/meetings/999999/cancel").status_code == 404
 
 
 def proposed_meeting(slot_at, staff):

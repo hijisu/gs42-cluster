@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from common.domain.errors import ForbiddenError
-from meetings.domain.errors import InvalidTransition
+from meetings.domain.errors import InvalidTransition, NotCancelable
 from meetings.domain.meeting import MeetingRequest, MeetingStatus
 from meetings.domain.slots import compute_slots, is_aligned
 
@@ -55,13 +55,36 @@ def test_complete_requires_confirmed():
         new_meeting().complete()
 
 
-@pytest.mark.parametrize(
-    "status", [MeetingStatus.PENDING, MeetingStatus.PROPOSED, MeetingStatus.CONFIRMED]
-)
-def test_owner_can_cancel_active_meeting(status):
+@pytest.mark.parametrize("status", [MeetingStatus.PENDING, MeetingStatus.PROPOSED])
+def test_owner_can_cancel_meeting_before_confirmation(status):
     m = new_meeting(status=status)
     m.cancel(by_student_id=1)
     assert m.status == MeetingStatus.CANCELED
+
+
+@pytest.mark.parametrize(
+    "status", [MeetingStatus.CONFIRMED, MeetingStatus.COMPLETED, MeetingStatus.CANCELED]
+)
+def test_owner_cannot_cancel_confirmed_or_finished_meeting(status):
+    m = new_meeting(status=status)
+    with pytest.raises(NotCancelable):
+        m.cancel(by_student_id=1)
+    assert m.status == status
+
+
+@pytest.mark.parametrize(
+    "status", [MeetingStatus.PENDING, MeetingStatus.PROPOSED, MeetingStatus.CONFIRMED]
+)
+def test_staff_can_cancel_up_to_confirmed(status):
+    m = new_meeting(status=status)
+    m.cancel_by_staff()
+    assert m.status == MeetingStatus.CANCELED
+
+
+@pytest.mark.parametrize("status", [MeetingStatus.COMPLETED, MeetingStatus.CANCELED])
+def test_staff_cannot_cancel_finished_meeting(status):
+    with pytest.raises(InvalidTransition):
+        new_meeting(status=status).cancel_by_staff()
 
 
 def test_non_owner_cannot_cancel():
