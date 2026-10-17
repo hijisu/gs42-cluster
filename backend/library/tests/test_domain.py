@@ -82,3 +82,11 @@ def test_parse_books_drops_unsafe_urls_and_rejects_bad_rows():
         parse_books([row(title="")])
     with pytest.raises(InvalidBook):
         parse_books([row(quantity="많음")])
+
+
+def test_available_quantity_is_derived_from_lost_reports_and_never_negative():
+    b = Book(code="B-1", title="책", category="IT", quantity=3)
+    assert b.available_quantity(0) == 3
+    assert b.available_quantity(1) == 2
+    assert b.available_quantity(9) == 0
+    assert b.quantity == 3

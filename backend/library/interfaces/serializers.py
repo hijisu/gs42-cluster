@@ -38,7 +38,7 @@ class BookWriteSerializer(serializers.Serializer):
     pub_date = serializers.CharField(allow_blank=True, max_length=20, default="")
 
 
-def book_payload(b: Book) -> dict:
+def book_payload(b: Book, lost_count: int = 0) -> dict:
     return {
         "id": b.id,
         "code": b.code,
@@ -48,6 +48,9 @@ def book_payload(b: Book) -> dict:
         "isbn": b.isbn,
         "category": b.category,
         "quantity": b.quantity,
+        # 접수(미처리)된 분실 신고 수와 그에 따른 비치 수(파생값). 수량 자체는 바뀌지 않는다.
+        "lost_count": lost_count,
+        "available_quantity": b.available_quantity(lost_count),
         "description": b.description,
         "cover_url": b.cover_url,
         "link_url": b.link_url,

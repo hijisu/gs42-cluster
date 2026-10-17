@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from library.application.importer import parse_books
 from library.application.ports import (
     BookRepository,
+    BookView,
     ReportRepository,
     ReportView,
     WishRepository,
@@ -23,7 +24,7 @@ MAX_RESULTS = 20
 
 @dataclass(frozen=True)
 class SearchResult:
-    books: list[Book]
+    books: list[BookView]
     total: int
     categories: list[str]
     page: int
@@ -41,8 +42,10 @@ class SearchBooksUseCase:
         page_size = min(max(page_size, 1), 100)
         page = max(page, 1)
         found = self._books.search(query.strip(), category.strip())
+        shown = found[(page - 1) * page_size : page * page_size]
+        lost = self._books.lost_counts([b.id for b in shown if b.id is not None])
         return SearchResult(
-            books=found[(page - 1) * page_size : page * page_size],
+            books=[BookView(b, lost.get(b.id or 0, 0)) for b in shown],
             total=len(found),
             categories=self._books.categories(),
             page=page,
@@ -55,11 +58,11 @@ class GetBookUseCase:
     def __init__(self, books: BookRepository) -> None:
         self._books = books
 
-    def execute(self, book_id: int) -> Book:
+    def execute(self, book_id: int) -> BookView:
         book = self._books.get(book_id)
         if book is None:
             raise BookNotFound("도서를 찾을 수 없습니다")
-        return book
+        return BookView(book, self._books.lost_counts([book_id]).get(book_id, 0))
 
 
 class CreateReportUseCase:
