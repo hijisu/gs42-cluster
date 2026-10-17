@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { Button, Card, Field } from '../../components'
 import { ApiError } from '../../lib/api'
 import { kstDateFromToday, kstToIso } from '../../lib/datetime'
@@ -7,6 +7,30 @@ import { useAvailability, useCreateReservation, useRooms } from './hooks'
 import { errorLabel } from './labels'
 import { MyReservations } from './MyReservations'
 import { Timeline } from './Timeline'
+
+// 예약은 30분 단위(서버 규칙과 동일). type=time은 분을 자유 입력할 수 있어 고정 선택지로 제한한다.
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+
+function TimeSelect({ label, value, onChange, error }: { label: string; value: string; onChange: (value: string) => void; error?: string }) {
+  const id = useId()
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <select id={id} className="input" value={value} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} onChange={(e) => onChange(e.target.value)}>
+        {TIME_OPTIONS.map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <span id={`${id}-error`} className="error" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
+  )
+}
 
 export function RoomPage() {
   const [date, setDate] = useState(() => kstDateFromToday(0))
@@ -80,8 +104,8 @@ export function RoomPage() {
             <h2 className="card-title">예약 요청</h2>
             <Calendar selected={date} onSelect={setDate} />
             <div className="g2" style={{ gap: 12 }}>
-              <Field label="시작" type="time" step={1800} value={start} onChange={(e) => setStart(e.target.value)} />
-              <Field label="종료" type="time" step={1800} value={end} onChange={(e) => setEnd(e.target.value)} error={submitted ? errors.time : undefined} />
+              <TimeSelect label="시작" value={start} onChange={setStart} />
+              <TimeSelect label="종료" value={end} onChange={setEnd} error={submitted ? errors.time : undefined} />
             </div>
             <div className="field">
               <label htmlFor="room-select">장소</label>

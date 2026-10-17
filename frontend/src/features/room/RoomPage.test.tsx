@@ -76,6 +76,21 @@ describe('회의실 예약 화면', () => {
     expect(post.body).toEqual({ room_id: 1, start_at: kstToIso(today, '15:00'), end_at: kstToIso(today, '16:00'), purpose: '스터디', headcount: 4, note: '' })
   })
 
+  it('시작·종료 시간은 30분 단위 선택지로만 고르고 선택값으로 요청한다', async () => {
+    const calls = await openPage((req) => (req.method === 'POST' && req.url.endsWith('/reservations') ? { status: 201, json: reservation() } : undefined))
+    const start = screen.getByLabelText('시작') as HTMLSelectElement
+    const minutes = Array.from(start.options).map((o) => o.value.slice(3))
+    expect(new Set(minutes)).toEqual(new Set(['00', '30']))
+    await userEvent.selectOptions(start, '13:30')
+    await userEvent.selectOptions(screen.getByLabelText('종료'), '15:00')
+    await userEvent.type(screen.getByLabelText('목적'), '스터디')
+    await userEvent.type(screen.getByLabelText('인원'), '4')
+    await userEvent.click(screen.getByRole('button', { name: '예약 요청하기' }))
+    await vi.waitFor(() => expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/reservations'))).toBe(true))
+    const post = calls.find((c) => c.method === 'POST' && c.url.endsWith('/reservations'))!
+    expect(post.body).toMatchObject({ start_at: kstToIso(today, '13:30'), end_at: kstToIso(today, '15:00') })
+  })
+
   it('필수값이 비면 요청하지 않고 안내한다', async () => {
     const calls = await openPage()
     await userEvent.click(screen.getByRole('button', { name: '예약 요청하기' }))
