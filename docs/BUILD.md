@@ -1,6 +1,29 @@
 # 빌드·실행 가이드
 
-> 뼈대 문서입니다. 백엔드·프론트엔드가 구현되는 대로 각 섹션을 채우고, 명령이 바뀌면 같은 PR에서 이 문서도 갱신합니다.
+실행·테스트·빌드 방법의 기준 문서입니다. **명령이나 환경변수가 바뀌면 같은 PR에서 이 문서도 갱신합니다**(`.env.example`의 키는 이 문서에 모두 있어야 하며 CI가 검사합니다).
+
+## 빠른 시작 (Docker)
+
+```bash
+cp .env.example .env                 # 처음 한 번
+docker compose up --build            # DB·백엔드·프론트 (첫 실행은 몇 분)
+```
+
+1. http://localhost:5173 에 접속하면 로그인 화면이 나옵니다. 개발 환경에서는 **모의 로그인**(교육생 / 운영팀) 버튼("개발용 모의 로그인")으로 바로 들어갈 수 있습니다.
+2. 화면에 보여 줄 예시 데이터가 필요하면(선택):
+   ```bash
+   docker compose exec backend python manage.py seed_meeting_demo   # 면담 슬롯·기본 담당자
+   docker compose exec backend python manage.py seed_review_demo    # 교육과정·후기
+   ```
+3. 테스트: `docker compose exec backend pytest -q`, `docker compose exec frontend npm test`.
+4. 실제 42 로그인은 [42 OAuth 앱 등록](#42-oauth-앱-등록)을 마친 뒤 가능합니다.
+
+| 알고 싶은 것 | 위치 |
+| --- | --- |
+| 요구 버전, 환경변수 | [요구 사항](#요구-사항), [환경변수](#환경변수) |
+| 컨테이너 없이 직접 실행 | [백엔드](#백엔드), [프론트엔드](#프론트엔드) |
+| PR 전에 돌릴 검사 | [CI](#ci) |
+| 팀 작업 규칙(브랜치·커밋·리뷰) | [팀 작업 방식](#팀-작업-방식) |
 
 ## 요구 사항
 
@@ -63,6 +86,7 @@ docker compose down                         # 중지(데이터 유지) / down -v
 - 한 PC에서 클론/에이전트를 여러 개 돌릴 때는 `.env`의 `COMPOSE_PROJECT_NAME`과 `*_HOST_PORT`를 서로 다르게 지정합니다(예: `gs42-b`, 8100/5532/5273).
   - `FRONTEND_HOST_PORT`를 바꾸면 compose가 백엔드의 `FRONTEND_ORIGIN`(CSRF 신뢰 origin·CORS)을 `http://localhost:<FRONTEND_HOST_PORT>`로 자동 설정합니다. `.env`의 `FRONTEND_ORIGIN`은 호스트에서 직접 실행할 때만 쓰입니다.
   - `BACKEND_HOST_PORT`를 바꾸면 42 로그인용 `FORTYTWO_REDIRECT_URI`와 intra 앱에 등록한 redirect URI도 같은 포트로 맞춰야 합니다(모의 로그인만 쓰면 무관).
+- **`.env`를 수정한 뒤에는 `docker compose up -d`로 적용합니다.** `docker compose restart`는 `.env`(`env_file`)를 다시 읽지 않아 컨테이너 안의 값이 그대로 남습니다. `up -d`는 환경변수가 바뀐 서비스만 새로 만들며 DB 볼륨은 유지됩니다.
 - 프론트 컨테이너는 `node_modules`를 컨테이너 전용 볼륨에 두므로 호스트의 `node_modules`와 섞이지 않습니다. 의존성을 바꾼 뒤에는 `docker compose restart frontend`(시작 시 `npm ci`)를 실행합니다.
 - 컨테이너 없이 호스트에서 직접 실행하는 방법은 아래 "백엔드"·"프론트엔드" 절을 참고합니다.
 
@@ -78,7 +102,8 @@ pip install -r requirements-dev.txt
 # 로컬 DB: compose의 db 서비스만 띄운다 (.env의 POSTGRES_* 값 사용)
 docker compose up -d db
 
-export POSTGRES_HOST=localhost POSTGRES_PASSWORD=<.env의 비밀번호>   # DB_HOST_PORT를 바꿨다면 POSTGRES_PORT도 같은 값으로
+# 비밀번호 등은 루트 .env 에서 자동으로 읽는다. .env 는 compose 용(POSTGRES_HOST=db)이라 호스트 실행에서만 덮어쓴다.
+export POSTGRES_HOST=localhost       # DB_HOST_PORT 를 바꿨다면 POSTGRES_PORT 도 같은 값으로 지정
 python manage.py migrate
 python manage.py runserver 8000     # GET http://localhost:8000/api/health
 
@@ -118,11 +143,14 @@ python manage.py seed_review_demo   # 교육과정 3개, 참여자(student·intr
 
 ## 프론트엔드
 
+컨테이너 없이 호스트에서 실행하려면 Node.js 22가 필요합니다. 백엔드(`http://localhost:8000`)를 먼저 띄워 두면 `/api`가 그쪽으로 프록시됩니다(다른 주소는 `API_PROXY_TARGET`).
+
 ```bash
 cd frontend
-npm install
+npm ci             # package-lock.json 기준으로 설치
 npm run dev        # 개발 서버 (http://localhost:5173)
 npm run typecheck  # 타입 검사
+npm run lint       # ESLint
 npm test           # vitest
 npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 ```
@@ -143,11 +171,35 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 - CI의 백엔드는 운영과 같은 `DJANGO_DEBUG=false`, 더미 시크릿, `postgres:16` 서비스로 실행합니다(`.env` 없음).
 - `lint-imports`(import-linter, 설정은 `backend/.importlinter`)는 AGENTS.md의 규칙을 검사합니다: `domain`·`application`은 Django/DRF를 import하지 않고, `domain ← application ← interfaces` 바깥 계층을 거꾸로 import하지 않으며, `infrastructure`는 `interfaces`를 import하지 않고, `accounts`·`meetings`·`rooms`·`reviews`는 `notifications`를 import하지 않고(이벤트로만 연동), `meetings`·`rooms`·`reviews`는 서로를 import하지 않습니다. 새 Context나 앱을 추가하면 `.importlinter`의 `root_packages`와 계약에 추가합니다.
 - 프론트의 ESLint는 TypeScript 7에 JS 컴파일러 API가 없어 `typescript-eslint` 대신 Babel 파서(`eslint.config.js`)를 씁니다. 타입 관련 검사는 `tsc`가 맡습니다.
-- main 보호 규칙의 필수 체크 이름은 `backend`, `frontend`입니다(적용은 사람 확인 후).
+- **main 보호 규칙**(ruleset `main protection`, 2026-10-17 적용): PR 필수(main 직접 푸시 금지), 병합은 squash만, force push·브랜치 삭제 금지, 필수 체크는 `backend`·`frontend`(위 CI job)입니다. 승인 수는 0이며 위험 PR의 `review:ok` 라벨 규칙은 규칙(ruleset)이 아니라 팀 규칙입니다. 규칙을 바꾸려면 사람이 repo Settings → Rules에서 합니다.
 
 ## 42 OAuth 앱 등록
 
-TBD (intra 앱 등록 절차, redirect URI)
+실제 42 로그인을 쓰려면 intra에 OAuth 앱을 등록하고 `UID/SECRET`을 `.env`에 넣습니다. 모의 로그인만 쓸 때는 필요 없습니다. (이 절차는 문서 기준이며 실제 계정으로의 로그인 확인은 아직 사람 확인 대기 중입니다. intra 화면 문구는 바뀔 수 있습니다.)
+
+1. 42 intra에 로그인해 **Settings → API → "Register a new app"**(https://profile.intra.42.fr/oauth/applications/new)으로 이동합니다.
+2. 이름(예: `42gs-cluster dev`)을 적고, **Redirect URI**에 `.env`의 `FORTYTWO_REDIRECT_URI`와 **똑같은 값**을 등록합니다. 기본값은 `http://localhost:8000/api/auth/callback`이며 `BACKEND_HOST_PORT`를 바꿨다면 그 포트를 씁니다. Scope는 `public`이면 충분합니다.
+3. 발급된 **UID**와 **SECRET**을 `.env`의 `FORTYTWO_UID`, `FORTYTWO_SECRET`에 넣습니다. **채팅·이슈·PR·커밋에 붙여 넣지 않습니다**(`.env`는 gitignore 대상).
+4. 교육운영팀 계정은 `.env`의 `STAFF_INTRA_IDS`에 intra login을 쉼표로 적습니다(42 응답의 `staff?`는 보조). 바꾼 뒤 **`docker compose up -d`**로 적용합니다(`restart`는 `.env`를 다시 읽지 않아 값이 바뀌지 않습니다).
+5. http://localhost:5173/login 에서 **"42 intra로 로그인"**을 누르고 승인하면 사이드바에 내 `intra_id`가 보입니다. 운영팀으로 등록한 계정이면 '교육운영팀 화면 보기' 토글이 나타납니다.
+
+로그인에 실패하면 `/login?error=<코드>`로 돌아옵니다.
+
+| 증상 | 원인 |
+| --- | --- |
+| `error=invalid_state` | 로그인 중 세션이 끊김(다른 브라우저로 콜백, 쿠키 차단, 오래 지연) → 처음부터 다시 |
+| `error=auth_failed` | UID/SECRET 오류, redirect URI 불일치, 42 API 오류 → `docker compose logs backend` 확인 |
+| `/api/auth/login` 이 503 `oauth_not_configured` | `FORTYTWO_UID`가 비어 있음 |
+
+운영(HTTPS·도메인) 배포용 redirect URI는 도메인이 정해진 뒤 별도로 등록합니다. 캠퍼스 제한 여부는 실계정 응답을 확인한 뒤 결정합니다.
+
+## 팀 작업 방식
+
+- 작업 단위·브랜치·PR·리뷰 규칙: [AGENTS.md](../AGENTS.md) (이슈 1개 = 브랜치 1개 = PR 1개, 브랜치명 `feat/<이슈번호>-<slug>`, PR 본문 `Closes #N`, main 직접 푸시 금지)
+- 커밋 메시지: [CONTRIBUTING.md](../CONTRIBUTING.md) (Conventional Commits)
+- 저장소 구조와 두 저장소 동기화: [docs/REPOSITORY.md](REPOSITORY.md)
+- 시안과 구현의 차이 기록: [docs/DESIGN_DIFFS.md](DESIGN_DIFFS.md)
+- 마이그레이션·CI·공통 파일(`docker-compose*.yml`, `.env.example`, 이 문서) 변경은 **위험 PR**이라 교차 리뷰어의 `review:ok` 라벨 후 머지합니다.
 
 ## 배포 (운영 구성 로컬 검증)
 
