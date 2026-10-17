@@ -1,4 +1,5 @@
-import { Card, Pill } from '../../components'
+import type { KeyboardEvent } from 'react'
+import { Button, Card } from '../../components'
 import { kstDate } from '../../lib/datetime'
 import type { Review } from './api'
 
@@ -12,25 +13,46 @@ export function RatingDots({ value }: { value: number }) {
   )
 }
 
-/** 과정 게시판의 후기 한 건. 제목 없이 만족도·본문·작성자를 보여준다. */
-export function ReviewCard({ review }: { review: Review }) {
+interface ReviewCardProps {
+  review: Review
+  onOpen: (r: Review) => void
+  onEdit: (r: Review) => void
+}
+
+/** 과정 게시판의 후기 한 건: '좋았던 점'은 1줄만 보이고, 카드를 누르면 전문 팝업. 내 후기에만 수정 버튼(삭제 없음). */
+export function ReviewCard({ review, onOpen, onEdit }: ReviewCardProps) {
+  const onKey = (e: KeyboardEvent) => {
+    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      onOpen(review)
+    }
+  }
+  const who = review.mine ? '내 후기' : review.anonymous || !review.author ? '익명' : review.author.intra_id
   return (
-    <Card as="article" className="stack" style={{ gap: 12 }}>
+    <Card as="article" className="stack review-item" style={{ gap: 8 }} role="button" tabIndex={0} aria-label={`${who} 후기 전문 보기`} onClick={() => onOpen(review)} onKeyDown={onKey}>
       <div className="row">
-        <b className="mono">{review.mine ? '내 후기' : review.anonymous || !review.author ? '익명' : review.author.intra_id}</b>
+        <b className="mono small">{who}</b>
         <RatingDots value={review.rating} />
       </div>
-      {review.good && <p className="body-sm"><b>좋았던 점</b> {review.good}</p>}
-      {review.bad && <p className="muted body-sm"><b>아쉬운 점</b> {review.bad}</p>}
-      {review.recommend_to && <p className="muted body-sm"><b>추천 대상</b> {review.recommend_to}</p>}
-      {review.tags.length > 0 && (
-        <div className="chips" style={{ gap: 6 }}>
-          {review.tags.map((t) => (
-            <Pill key={t}>#{t}</Pill>
-          ))}
-        </div>
-      )}
-      <span className="muted small mono">{kstDate(review.created_at)}</span>
+      <p className="body-sm clamp1">
+        <b>좋았던 점</b> {review.good || '-'}
+      </p>
+      <div className="row">
+        <span className="muted small mono">{kstDate(review.created_at)}</span>
+        {review.mine && (
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label="내 후기 수정"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit(review)
+            }}
+          >
+            수정
+          </Button>
+        )}
+      </div>
     </Card>
   )
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button, Card, Pill, Table, type Column } from '../../components'
+import { Card, Pill, Table, type Column } from '../../components'
 import { formatMonthDay } from '../../lib/datetime'
-import type { Course } from './api'
+import type { Course, Review } from './api'
 import { useCourses, useReviews } from './hooks'
 import { ReviewCard } from './ReviewCard'
-import { ReviewModal } from './ReviewModal'
+import { ReviewDetailModal, ReviewEditModal, ReviewForm } from './ReviewModal'
+import { writeState } from './labels'
 import { sortCourses, sortOptions, type CourseSort } from './sort'
 
 const period = (c: Course) => `${formatMonthDay(c.start_date)}–${formatMonthDay(c.end_date)}`
@@ -15,25 +16,19 @@ export function ReviewPage() {
   const courses = useCourses()
   const [params, setParams] = useSearchParams()
   const [sort, setSort] = useState<CourseSort>('reg')
-  const [writing, setWriting] = useState(false)
+  const [opened, setOpened] = useState<Review | null>(null)
+  const [editing, setEditing] = useState<Review | null>(null)
   const courseId = Number(params.get('course')) || null
   const all = courses.data ?? []
   const current = all.find((c) => c.id === courseId) ?? null
   const reviews = useReviews(current?.id ?? null)
-  // 홈의 후기 요청 배너(?write=1)에서 들어오면 작성 팝업을 바로 연다.
-  const askedToWrite = params.get('write') === '1' && current?.can_review === true
-  const dialogOpen = writing || askedToWrite
-
   const open = (id: number | null) => {
     const p = new URLSearchParams()
     if (id !== null) p.set('course', String(id))
     setParams(p)
   }
-  const closeWrite = () => {
-    setWriting(false)
-    if (params.get('write')) setParams(new URLSearchParams({ course: String(courseId) }), { replace: true })
-  }
   const banner = all.find((c) => c.can_review)
+  const mine = all.filter((c) => c.participating)
 
   const columns: Column<Course>[] = [
     {
@@ -67,7 +62,6 @@ export function ReviewPage() {
                 {current.average_rating !== null && ` · 평균 만족도 ${current.average_rating.toFixed(1)}`}
               </p>
             </div>
-            {current.can_review && <Button onClick={() => setWriting(true)}>후기 작성</Button>}
           </div>
         </div>
       ) : (
@@ -90,7 +84,7 @@ export function ReviewPage() {
               <b>{banner.name}</b>에 참여하셨네요. 후기를 남겨 주세요.
             </span>
           </span>
-          <button type="button" className="btn ondark" onClick={() => { open(banner.id); setWriting(true) }}>
+          <button type="button" className="btn ondark" onClick={() => open(banner.id)}>
             지금 작성하기
           </button>
         </div>
@@ -120,21 +114,60 @@ export function ReviewPage() {
       )}
 
       {current && (
-        <>
-          {reviews.isError && <p role="alert">후기를 불러오지 못했습니다.</p>}
-          {!reviews.isPending && !reviews.isError && reviews.reviews.length === 0 && (
-            <Card>
-              <p className="muted">아직 등록된 후기가 없어요.{current.can_review ? ' 첫 후기를 남겨 보세요.' : ''}</p>
+        <div className="split review-split">
+          <div className="col">
+            <Card className="course-summary">
+              <span className="stack" style={{ gap: 2 }}>
+                <span className="label">{current.name}</span>
+                <span className="muted small">
+                  {period(current)} · {current.location || '장소 미정'}
+                </span>
+              </span>
+              <span className="stats">
+                <span className="stack" style={{ gap: 0 }}>
+                  <span className="mono stat">{current.average_rating?.toFixed(1) ?? '-'}</span>
+                  <span className="muted" style={{ fontSize: 12 }}>평균 만족도</span>
+                </span>
+                <span className="stack" style={{ gap: 0 }}>
+                  <span className="mono stat">{current.review_count}</span>
+                  <span className="muted" style={{ fontSize: 12 }}>후기 수</span>
+                </span>
+              </span>
             </Card>
-          )}
-          <div className="g2">
-            {reviews.reviews.map((r) => (
-              <ReviewCard key={r.id} review={r} />
-            ))}
+            {reviews.isError && <p role="alert">후기를 불러오지 못했습니다.</p>}
+            {!reviews.isPending && !reviews.isError && reviews.reviews.length === 0 && (
+              <Card>
+                <p className="muted">아직 등록된 후기가 없어요.{current.can_review ? ' 첫 후기를 남겨 보세요.' : ''}</p>
+              </Card>
+            )}
+            <div className="g2">
+              {reviews.reviews.map((r) => (
+                <ReviewCard key={r.id} review={r} onOpen={setOpened} onEdit={setEditing} />
+              ))}
+            </div>
           </div>
-          <ReviewModal key={current.id} course={current} open={dialogOpen} onClose={closeWrite} />
-        </>
+          <div className="col">
+            <ReviewForm key={current.id} course={current} />
+            <Card className="stack" style={{ gap: 4 }}>
+              <h2 className="card-title">내가 참여한 과정</h2>
+              {mine.length === 0 && <p className="muted">참여한 과정이 없어요.</p>}
+              <div className="list">
+                {mine.map((c) => {
+                  const w = writeState(c)
+                  return (
+                    <div key={c.id} className="row" style={{ padding: '8px 0' }}>
+                      <span style={{ fontSize: 14 }}>{c.name}</span>
+                      <Pill tone={w.tone}>{w.label}</Pill>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          </div>
+        </div>
       )}
+      <ReviewDetailModal review={opened} onClose={() => setOpened(null)} onEdit={(r) => { setOpened(null); setEditing(r) }} />
+      <ReviewEditModal review={editing} onClose={() => setEditing(null)} />
     </>
   )
 }

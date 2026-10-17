@@ -45,4 +45,6 @@ export interface CreateReviewInput {
 
 export const fetchCourses = () => api<Course[]>('/courses')
 export const fetchCourseReviews = (courseId: number) => api<Review[]>(`/courses/${courseId}/reviews`)
+export type UpdateReviewInput = Partial<Omit<CreateReviewInput, 'course_id'>>
+export const updateReview = (id: number, body: UpdateReviewInput) => api<Review>(`/reviews/${id}`, { method: 'PATCH', body })
 export const createReview = (body: CreateReviewInput) => api<Review>('/reviews', { method: 'POST', body })
