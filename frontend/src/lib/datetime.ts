@@ -89,3 +89,21 @@ export function kstTodayLabel(now: Date = new Date()): string {
   const day = EN_WEEKDAYS[new Date(`${d}T00:00:00Z`).getUTCDay()]
   return `${d.replaceAll('-', '.')} ${day}`
 }
+
+/** YYYY-MM-DD에 days일을 더한다(날짜만 다루므로 시간대 영향 없음) */
+export function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/** 그 날짜가 속한 주의 월요일 */
+export function weekStart(date: string): string {
+  const dow = new Date(`${date}T00:00:00Z`).getUTCDay()
+  return addDays(date, dow === 0 ? -6 : 1 - dow)
+}
+
+export const isWeekday = (date: string): boolean => ![0, 6].includes(new Date(`${date}T00:00:00Z`).getUTCDay())
+
+/** 처음 보여줄 주의 월요일: 주말에는 이번 주가 모두 지난 뒤라 다음 주를 보여준다 */
+export const firstViewWeek = (today: string): string => (isWeekday(today) ? weekStart(today) : addDays(weekStart(today), 7))

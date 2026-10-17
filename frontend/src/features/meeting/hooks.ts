@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { kstDateFromToday } from '../../lib/datetime'
+import { addDays, firstViewWeek, kstDateFromToday } from '../../lib/datetime'
 import { acceptMeetingProposal, cancelMeeting, createMeeting, fetchMeetingTypes, fetchMyMeetings, fetchSlots, type Meeting } from './api'
 
-export const SLOT_WINDOW_DAYS = 14
+/** 신청 격자는 주 단위(월~금)로 4주를 보여준다 */
+export const SLOT_WEEKS = 4
 
 const keys = {
   types: ['meetings', 'types'] as const,
@@ -13,8 +14,8 @@ const keys = {
 export const useMeetingTypes = () => useQuery({ queryKey: keys.types, queryFn: fetchMeetingTypes, staleTime: Infinity })
 
 export function useSlots() {
-  const from = kstDateFromToday(0)
-  const to = kstDateFromToday(SLOT_WINDOW_DAYS - 1)
+  const from = firstViewWeek(kstDateFromToday(0))
+  const to = addDays(from, SLOT_WEEKS * 7 - 1)
   return useQuery({ queryKey: [...keys.slots, from, to], queryFn: () => fetchSlots(from, to) })
 }
 

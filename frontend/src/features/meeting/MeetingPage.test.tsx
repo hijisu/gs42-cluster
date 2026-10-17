@@ -2,17 +2,20 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { asUser, mockApi, renderAt, type Handler } from '../../test-utils'
 import type { Meeting } from './api'
-import { kstDateFromToday } from '../../lib/datetime'
 
 const types = [
   { id: 1, code: 'freeze', name: '프리즈' },
   { id: 2, code: 'dormitory', name: '기숙사 이용' },
 ]
-// 내일 KST 15:00 (= 06:00Z) 과 16:00 슬롯
-const day = kstDateFromToday(1)
+// 오늘을 수요일(2026-10-14 KST)로 고정: 이번 주 목요일(10-15) 15:00 가능·16:00 마감·17:00 불가, 다음 주 월요일(10-19) 15:00 가능
+const TODAY = '2026-10-14'
+const day = '2026-10-15'
+const nextMonday = '2026-10-19'
 const slots = [
-  { start_at: `${day}T06:00:00Z`, available: true, remaining: 1 },
-  { start_at: `${day}T07:00:00Z`, available: false, remaining: 0 },
+  { start_at: `${day}T06:00:00Z`, state: 'open', available: true, remaining: 1 },
+  { start_at: `${day}T07:00:00Z`, state: 'full', available: false, remaining: 0 },
+  { start_at: `${day}T08:00:00Z`, state: 'unavailable', available: false, remaining: 0 },
+  { start_at: `${nextMonday}T06:00:00Z`, state: 'open', available: true, remaining: 2 },
 ]
 const created: Meeting = {
   id: 7,
@@ -40,12 +43,36 @@ async function openPage(...extra: Handler[]) {
 }
 
 describe('면담 신청 화면', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(`${TODAY}T03:00:00Z`))
+  })
+  afterEach(() => vi.useRealTimers())
+
   it('유형 chip, 가능/마감 격자, 이용 안내 문구를 보여준다', async () => {
     await openPage()
     expect(await screen.findByRole('button', { name: '프리즈' })).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /15:00 가능/ })).toBeInTheDocument()
     expect(screen.getByLabelText(/16:00 마감/)).toBeInTheDocument()
+    expect(screen.getByLabelText("10.15 17:00 불가")).toBeInTheDocument()
     expect(screen.getByText('#pedago 이용 안내')).toBeInTheDocument()
+  })
+
+  it('월~금 5열을 한 번에 보여주고 주 단위로 이동한다', async () => {
+    await openPage()
+    const grid = await screen.findByRole('group', { name: '희망 시간 선택' })
+    expect(within(grid).getAllByText(/^(월|화|수|목|금)$/)).toHaveLength(5)
+    expect(within(grid).queryByText('토')).toBeNull()
+    expect(screen.getByText('10.12 ~ 10.16')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '이전 주' })).toBeDisabled()
+    expect(within(grid).queryByRole('button', { name: /10\.19 15:00 가능/ })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: '다음 주' }))
+    expect(screen.getByText('10.19 ~ 10.23')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /10\.19 15:00 가능/ })).toBeInTheDocument()
+    // 데이터가 없는 칸은 불가로 표시한다
+    expect(screen.getByLabelText('10.20 15:00 불가')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '이전 주' }))
+    expect(screen.getByText('10.12 ~ 10.16')).toBeInTheDocument()
   })
 
   it('신청하면 내역에 "배정 중"으로 즉시 반영된다', async () => {

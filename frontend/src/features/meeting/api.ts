@@ -6,8 +6,12 @@ export interface MeetingType {
   name: string
 }
 
+/** state: open=신청 가능, full=마감(자리 없음·지난 시간), unavailable=불가(연 담당자 없음) */
+export type SlotState = 'open' | 'full' | 'unavailable'
+
 export interface Slot {
   start_at: string
+  state: SlotState
   available: boolean
   remaining: number
 }
