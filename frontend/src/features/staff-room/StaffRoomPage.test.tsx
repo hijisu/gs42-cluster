@@ -162,17 +162,14 @@ describe('운영 회의실 관리 화면', () => {
     expect(calls.find((c) => c.method === 'PUT')!.body).toEqual({ open_hour: 9, close_hour: 22, usage_rules: ['쓰레기 치우기'] })
   })
 
-  it('장소를 차단/해제하고 장소를 추가한다', async () => {
+  it('장소 목록에는 차단 버튼이 없고 장소를 추가한다', async () => {
     const calls = await openPage(
       pending([]),
       (req) => (req.method === 'PATCH' ? { json: { ...multi, status: 'blocked' } } : undefined),
       (req) => (req.method === 'POST' && req.url.endsWith('/staff/rooms') ? { status: 201, json: { ...small, id: 9, name: '새 회의실' } } : undefined),
     )
     expect(await screen.findByText('교육 기간 차단')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '다목적회의실 차단' }))
-    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
-    expect(calls.find((c) => c.method === 'PATCH')!.url).toMatch(/\/staff\/rooms\/1$/)
-    expect(calls.find((c) => c.method === 'PATCH')!.body).toEqual({ status: 'blocked' })
+    expect(screen.queryByRole('button', { name: /다목적회의실 차단/ })).toBeNull()
 
     await userEvent.click(screen.getByRole('button', { name: '장소 추가' }))
     const dialog = await screen.findByRole('dialog', { name: '장소 추가' })

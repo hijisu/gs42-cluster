@@ -39,14 +39,14 @@ export function PendingCard({ reservation: r, rooms, onReject }: PendingCardProp
   const busy = approve.isPending || reassign.isPending
 
   return (
-    <Card className="stack" data-testid={`pending-${r.id}`} style={conflict ? { border: '2px solid var(--c-ink)' } : undefined}>
+    <Card className="stack pend-card" data-testid={`pending-${r.id}`} style={conflict ? { border: '2px solid var(--c-ink)' } : undefined}>
       <div className="row">
         <span style={{ fontWeight: 700 }}>
           {r.user.intra_id} · {r.purpose}
         </span>
         <Pill tone={conflict ? 'wait' : 'ok'}>{conflict ? '시간 충돌' : '예약 가능'}</Pill>
       </div>
-      <div className="g4" style={{ gap: 12, fontSize: 14 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px', fontSize: 14 }}>
         <Item label="일시">
           {formatDayLabel(kstDate(r.start_at))} {formatTimeRange(r.start_at, r.end_at)}
         </Item>
