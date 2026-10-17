@@ -82,6 +82,16 @@ describe('운영 회의실 관리 화면', () => {
     expect(list.url).toContain('status=pending')
   })
 
+  it('캘린더에서 날짜를 고르면 그 날짜의 회의실 현황을 다시 불러온다', async () => {
+    const calls = await openPage(pending([]))
+    const target = kstDateFromToday(2)
+    const day = Number(target.slice(8))
+    const label = `${Number(target.slice(5, 7))}월 ${day}일`
+    if (target.slice(0, 7) !== today.slice(0, 7)) await userEvent.click(screen.getByRole('button', { name: '다음 달' }))
+    await userEvent.click(await screen.findByRole('button', { name: label }))
+    await waitFor(() => expect(calls.some((c) => c.url.includes(`/rooms/availability?date=${target}`))).toBe(true))
+  })
+
   it('승인하면 요청이 사라진다', async () => {
     let approved = false
     const calls = await openPage(
