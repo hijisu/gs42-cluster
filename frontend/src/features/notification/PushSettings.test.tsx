@@ -66,9 +66,17 @@ describe('푸시 알림 설정', () => {
     expect(calls.find((c) => c.method === 'DELETE')!.body).toEqual({ endpoint: 'https://push.example/abc' })
   })
 
-  it('서버 등록이 실패하면 오류를 안내한다', async () => {
+  it('서버에 푸시가 설정되지 않았으면(503) 전용 안내를 보여준다', async () => {
     stubPush()
     mockApi((req) => (req.url.endsWith('/push/public-key') ? { status: 503, json: { code: 'push_not_configured' } } : undefined))
+    render(<PushSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('아직 설정되지 않았어요')
+  })
+
+  it('알 수 없는 서버 오류는 일반 오류로 안내한다', async () => {
+    stubPush()
+    mockApi((req) => (req.url.endsWith('/push/public-key') ? { status: 500, json: {} } : undefined))
     render(<PushSettings />)
     await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('바꾸지 못했어요')
