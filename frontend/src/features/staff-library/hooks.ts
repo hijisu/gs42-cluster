@@ -8,7 +8,7 @@ const booksKey = ['staff', 'books'] as const
 const reportsKey = ['staff', 'book-reports'] as const
 const wishesKey = ['staff', 'book-wishes'] as const
 
-export const useBooks = (q: string) => useQuery({ queryKey: [...booksKey, q], queryFn: () => searchBooks(q), placeholderData: (prev) => prev })
+export const useBooks = (q: string, page = 1) => useQuery({ queryKey: [...booksKey, q, page], queryFn: () => searchBooks(q, page), placeholderData: (prev) => prev })
 export const useReports = () => useQuery({ queryKey: reportsKey, queryFn: fetchReports })
 export const useWishes = () => useQuery({ queryKey: wishesKey, queryFn: fetchWishes })
 

@@ -52,7 +52,7 @@ export interface BookWish {
   requester: { intra_id: string; name: string }
 }
 
-export const searchBooks = (q: string) => api<BookSearch>(`/books/?q=${encodeURIComponent(q)}`)
+export const searchBooks = (q: string, page = 1) => api<BookSearch>(`/books/?q=${encodeURIComponent(q)}&page=${page}`)
 export const createBook = (body: BookInput) => api<Book>('/staff/books', { method: 'POST', body })
 export const updateBook = (id: number, body: Partial<BookInput>) => api<Book>(`/staff/books/${id}`, { method: 'PATCH', body })
 export const deleteBook = (id: number) => api<void>(`/staff/books/${id}`, { method: 'DELETE' })

@@ -19,7 +19,7 @@ export interface Book {
 }
 
 export interface BookSearch {
-  /** 조건에 맞는 전체 수. results는 최대 200건이라 total이 더 클 수 있다. */
+  /** 조건에 맞는 전체 수. results는 현재 페이지의 항목이다. */
   total: number
   categories: string[]
   results: Book[]
@@ -58,10 +58,11 @@ export interface MyRequests {
   wishes: BookWish[]
 }
 
-export const fetchBooks = (q: string, category: string) => {
+export const fetchBooks = (q: string, category: string, page = 1) => {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
   if (category) params.set('category', category)
+  params.set('page', String(page))
   const qs = params.toString()
   return api<BookSearch>(`/books/${qs ? `?${qs}` : ''}`)
 }

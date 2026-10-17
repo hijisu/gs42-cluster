@@ -8,8 +8,8 @@ const keys = {
 }
 
 /** 검색어·카테고리가 바뀌어도 이전 결과를 유지해 목록이 깜빡이지 않게 한다. */
-export const useBooks = (q: string, category: string, enabled = true) =>
-  useQuery({ queryKey: [...keys.books, q, category], queryFn: () => fetchBooks(q, category), placeholderData: keepPreviousData, enabled })
+export const useBooks = (q: string, category: string, enabled = true, page = 1) =>
+  useQuery({ queryKey: [...keys.books, q, category, page], queryFn: () => fetchBooks(q, category, page), placeholderData: keepPreviousData, enabled })
 
 export const useMyRequests = () => useQuery({ queryKey: keys.mine, queryFn: fetchMyRequests })
 

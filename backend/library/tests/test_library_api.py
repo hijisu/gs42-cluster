@@ -234,3 +234,21 @@ def test_bundled_data_is_valid():
     assert len(books) == 518 and all(
         b.cover_url.startswith("https://") or not b.cover_url for b in books
     )
+
+
+def test_book_pagination_has_no_duplicates_and_filters_before_paging():
+    for i in range(25):
+        BookRow.objects.create(
+            code=f"PAGE-{i:02}", title=f"페이지 도서 {i:02}", category="페이지분류"
+        )
+    client = login()
+    first = client.get("/api/books/?category=페이지분류&page=1&page_size=20").json()
+    second = client.get("/api/books/?category=페이지분류&page=2&page_size=20").json()
+    assert first["total"] == 25 and first["total_pages"] == 2
+    assert len(first["results"]) == 20 and len(second["results"]) == 5
+    assert not ({b["id"] for b in first["results"]} & {b["id"] for b in second["results"]})
+    filtered = client.get("/api/books/?q=페이지 도서 24&page_size=1").json()
+    assert filtered["total"] == 1 and filtered["results"][0]["code"] == "PAGE-24"
+    assert client.get("/api/books/?page=99&category=페이지분류").json()["results"] == []
+    for query in ("page=0", "page=-1", "page=abc", "page_size=101", "page_size=0"):
+        assert client.get(f"/api/books/?{query}").status_code == 400
