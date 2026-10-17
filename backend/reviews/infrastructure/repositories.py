@@ -101,6 +101,20 @@ class DjangoReviewRepository:
         review.id, review.created_at = row.pk, row.created_at
         return review
 
+    def get(self, review_id: int) -> Review | None:
+        row = ReviewRow.objects.select_related("author").filter(pk=review_id).first()
+        return _review(row) if row else None
+
+    def save(self, review: Review) -> None:
+        ReviewRow.objects.filter(pk=review.id).update(
+            rating=review.rating,
+            good=review.good,
+            bad=review.bad,
+            recommend_to=review.recommend_to,
+            tags=review.tags,
+            anonymous=review.anonymous,
+        )
+
     def exists(self, course_id: int, author_id: int) -> bool:
         return ReviewRow.objects.filter(course_id=course_id, author_id=author_id).exists()
 

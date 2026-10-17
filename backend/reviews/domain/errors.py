@@ -9,6 +9,16 @@ class ParticipantNotFound(NotFoundError):
     code = "participant_not_found"
 
 
+class ReviewNotFound(NotFoundError):
+    code = "review_not_found"
+
+
+class NotReviewAuthor(ForbiddenError):
+    """후기는 작성자 본인만 고칠 수 있다."""
+
+    code = "not_review_author"
+
+
 class NotParticipant(ForbiddenError):
     code = "not_participant"
 

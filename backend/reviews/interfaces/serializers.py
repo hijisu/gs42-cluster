@@ -16,6 +16,19 @@ class CreateReviewSerializer(serializers.Serializer):
     anonymous = serializers.BooleanField(default=False)
 
 
+class UpdateReviewSerializer(serializers.Serializer):
+    """일부 항목만 보내도 된다(PATCH). 과정·작성자는 바꿀 수 없다."""
+
+    rating = serializers.IntegerField(min_value=1, max_value=5, required=False)
+    good = serializers.CharField(allow_blank=True, max_length=5000, required=False)
+    bad = serializers.CharField(allow_blank=True, max_length=5000, required=False)
+    recommend_to = serializers.CharField(allow_blank=True, max_length=5000, required=False)
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=40), max_length=20, required=False
+    )
+    anonymous = serializers.BooleanField(required=False)
+
+
 def course_payload(v: CourseView) -> dict:
     c = v.course
     return {

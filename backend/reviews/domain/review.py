@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from reviews.domain.errors import InvalidReview
+from reviews.domain.errors import InvalidReview, NotReviewAuthor
 
 MAX_TAGS = 5
 MAX_TAG_LENGTH = 20
@@ -50,11 +50,35 @@ class Review:
     id: int | None = None
 
     def __post_init__(self) -> None:
+        self._validate()
+
+    def _validate(self) -> None:
         self.tags = normalize_tags(self.tags)
         if not 1 <= self.rating <= 5:
             raise InvalidReview("만족도는 1~5 사이여야 합니다")
         if len(self.tags) > MAX_TAGS or any(len(t) > MAX_TAG_LENGTH for t in self.tags):
             raise InvalidReview(f"태그는 {MAX_TAGS}개 이하, 각 {MAX_TAG_LENGTH}자 이하여야 합니다")
+
+    def ensure_author(self, editor_id: int) -> None:
+        if editor_id != self.author_id:
+            raise NotReviewAuthor("후기는 작성자만 수정할 수 있습니다")
+
+    def edit(self, editor_id: int, **changes) -> None:
+        """작성자 본인만 고친다(삭제 없음). 검증에 실패하면 바뀌지 않는다."""
+        self.ensure_author(editor_id)
+        allowed = {"rating", "good", "bad", "recommend_to", "tags", "anonymous"}
+        unknown = set(changes) - allowed
+        if unknown:
+            raise InvalidReview(f"수정할 수 없는 항목입니다: {', '.join(sorted(unknown))}")
+        before = {name: getattr(self, name) for name in changes}
+        for name, value in changes.items():
+            setattr(self, name, value)
+        try:
+            self._validate()
+        except InvalidReview:
+            for name, value in before.items():
+                setattr(self, name, value)
+            raise
 
     def public_view(self) -> PublicReview:
         return PublicReview(

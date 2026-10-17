@@ -11,6 +11,8 @@ from reviews.application.usecases import (
     ListCourseReviewsUseCase,
     ListCoursesUseCase,
     ListTodoReviewsUseCase,
+    UpdateReviewCommand,
+    UpdateReviewUseCase,
     Viewer,
 )
 from reviews.domain.course import Course, CourseStatus
@@ -19,7 +21,9 @@ from reviews.domain.errors import (
     CourseNotFound,
     InvalidReview,
     NotParticipant,
+    NotReviewAuthor,
     ReviewClosed,
+    ReviewNotFound,
 )
 
 TODAY = date(2026, 11, 27)
@@ -62,6 +66,12 @@ class Reviews:
         review.id = len(self.rows) + 1
         self.rows.append(review)
         return review
+
+    def get(self, review_id):
+        return next((r for r in self.rows if r.id == review_id), None)
+
+    def save(self, review):
+        self.saved = getattr(self, "saved", 0) + 1
 
     def exists(self, course_id, author_id):
         return any(r.course_id == course_id and r.author_id == author_id for r in self.rows)
@@ -185,3 +195,49 @@ def test_todo_lists_unreviewed_open_participated_courses_only(env):
     create.execute(cmd())
     assert todo.execute(ALICE) == []
     assert [v.course.id for v in todo.execute(BOB)] == [1, 3]
+
+
+def _written(course=None, deadline=None):
+    courses = Courses(course or make_course(1, deadline=deadline))
+    reviews = Reviews()
+    CreateReviewUseCase(courses, reviews, lambda: TODAY).execute(
+        CreateReviewCommand(viewer=ALICE, course_id=1, rating=3, good="원문")
+    )
+    return courses, reviews
+
+
+def test_author_updates_own_review_during_review_period():
+    courses, reviews = _written()
+    update = UpdateReviewUseCase(courses, reviews, lambda: TODAY)
+    item = update.execute(
+        UpdateReviewCommand(
+            viewer=ALICE, review_id=1, changes={"rating": 5, "good": "수정", "anonymous": True}
+        )
+    )
+    assert item.mine and item.review.rating == 5 and item.review.good == "수정"
+    assert item.review.author_intra_id is None
+    assert reviews.rows[0].rating == 5 and reviews.saved == 1
+
+
+def test_update_rejects_other_users_missing_review_and_closed_period():
+    courses, reviews = _written(deadline=TODAY + timedelta(days=3))
+    update = UpdateReviewUseCase(courses, reviews, lambda: TODAY)
+    with pytest.raises(NotReviewAuthor):
+        update.execute(UpdateReviewCommand(viewer=BOB, review_id=1, changes={"rating": 1}))
+    with pytest.raises(ReviewNotFound):
+        update.execute(UpdateReviewCommand(viewer=ALICE, review_id=99, changes={"rating": 1}))
+    with pytest.raises(InvalidReview):
+        update.execute(UpdateReviewCommand(viewer=ALICE, review_id=1, changes={"rating": 0}))
+    # 마감일이 지나면 수정할 수 없다
+    late = UpdateReviewUseCase(courses, reviews, lambda: TODAY + timedelta(days=4))
+    with pytest.raises(ReviewClosed):
+        late.execute(UpdateReviewCommand(viewer=ALICE, review_id=1, changes={"rating": 4}))
+    assert reviews.rows[0].rating == 3 and getattr(reviews, "saved", 0) == 0
+
+
+def test_update_requires_still_being_a_participant():
+    courses, reviews = _written()
+    courses.items[1].participants.discard("alice")
+    update = UpdateReviewUseCase(courses, reviews, lambda: TODAY)
+    with pytest.raises(NotParticipant):
+        update.execute(UpdateReviewCommand(viewer=ALICE, review_id=1, changes={"rating": 4}))

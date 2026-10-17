@@ -4,7 +4,7 @@ from datetime import date
 
 from reviews.application.ports import CourseRepository, CourseStats, ReviewRepository
 from reviews.domain.course import Course
-from reviews.domain.errors import AlreadyReviewed, CourseNotFound
+from reviews.domain.errors import AlreadyReviewed, CourseNotFound, ReviewNotFound
 from reviews.domain.review import PublicReview, Review
 
 Today = Callable[[], date]
@@ -117,3 +117,32 @@ class CreateReviewUseCase:
         )
         saved = self._reviews.add(review)
         return ReviewItem(review=saved.public_view(), mine=True)
+
+
+@dataclass(frozen=True)
+class UpdateReviewCommand:
+    viewer: Viewer
+    review_id: int
+    changes: dict
+
+
+class UpdateReviewUseCase:
+    """작성자 본인이 자기 후기를 고친다. 후기를 받는 기간(종료 후 ~ 마감 전)의 참여자만 가능하다."""
+
+    def __init__(self, courses: CourseRepository, reviews: ReviewRepository, today: Today) -> None:
+        self._courses = courses
+        self._reviews = reviews
+        self._today = today
+
+    def execute(self, cmd: UpdateReviewCommand) -> ReviewItem:
+        review = self._reviews.get(cmd.review_id)
+        if review is None:
+            raise ReviewNotFound("후기를 찾을 수 없습니다")
+        course = self._courses.get(review.course_id)
+        if course is None:
+            raise CourseNotFound("교육과정을 찾을 수 없습니다")
+        review.ensure_author(cmd.viewer.user_id)
+        course.ensure_can_review(cmd.viewer.intra_id, self._today())
+        review.edit(cmd.viewer.user_id, **cmd.changes)
+        self._reviews.save(review)
+        return ReviewItem(review=review.public_view(), mine=True)

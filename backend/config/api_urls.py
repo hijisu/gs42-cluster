@@ -25,6 +25,7 @@ urlpatterns = [
     path("courses", review_views.courses, name="courses"),
     path("courses/", include(course_urlpatterns)),
     path("reviews", review_views.create_review, name="review-create"),
+    path("reviews/<int:review_id>", review_views.update_review, name="review-update"),
     path("reviews/", include(review_urlpatterns)),
     path("books/", include(library_urlpatterns)),
     path("notifications", notification_views.list_notifications, name="notifications"),

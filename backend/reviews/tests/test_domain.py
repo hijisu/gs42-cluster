@@ -5,7 +5,7 @@ from datetime import date, timedelta
 import pytest
 
 from reviews.domain.course import Course, CourseStatus
-from reviews.domain.errors import InvalidReview, NotParticipant, ReviewClosed
+from reviews.domain.errors import InvalidReview, NotParticipant, NotReviewAuthor, ReviewClosed
 from reviews.domain.review import Review
 
 TODAY = date(2026, 11, 27)
@@ -120,3 +120,29 @@ def test_review_opens_on_the_end_date_and_closes_after_the_deadline():
     assert c.is_open_for_review(TODAY)
     assert c.is_open_for_review(TODAY + timedelta(days=3))
     assert not c.is_open_for_review(TODAY + timedelta(days=4))
+
+
+def test_author_edits_own_review_fields():
+    r = review(good="좋아요", tags=["a"])
+    r.edit(1, rating=5, bad="아쉬워요", tags=["#인프라", "실습", "인프라"], anonymous=True)
+    assert (r.rating, r.good, r.bad, r.anonymous) == (5, "좋아요", "아쉬워요", True)
+    assert r.tags == ["인프라", "실습"]
+    assert r.public_view().author_intra_id is None  # 익명으로 바꾸면 작성자가 가려진다
+
+
+def test_only_the_author_can_edit_and_nothing_changes_otherwise():
+    r = review(rating=3, good="원문")
+    with pytest.raises(NotReviewAuthor):
+        r.edit(2, rating=5, good="바꿈")
+    assert (r.rating, r.good) == (3, "원문")
+
+
+def test_invalid_edit_is_rejected_and_leaves_review_unchanged():
+    r = review(rating=3, tags=["a"])
+    with pytest.raises(InvalidReview):
+        r.edit(1, rating=9)
+    with pytest.raises(InvalidReview):
+        r.edit(1, tags=[f"t{i}" for i in range(6)])
+    with pytest.raises(InvalidReview):
+        r.edit(1, author_id=7)  # 작성자·과정 등은 바꿀 수 없다
+    assert (r.rating, r.tags, r.author_id) == (3, ["a"], 1)
