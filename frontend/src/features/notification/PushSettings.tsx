@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../components'
 import { ApiError } from '../../lib/api'
-import { currentSubscription, disablePush, enablePush, pushSupport } from '../../lib/push'
+import { ServiceWorkerNotReadyError, disablePush, enablePush, pushSupport, serviceWorkerReady } from '../../lib/push'
 
 type State = 'loading' | 'on' | 'off'
+
+const SW_HINT = '서비스워커가 아직 준비되지 않았어요. 새로고침 후 다시 시도해 주세요.'
 
 /** 알림 목록 모달 안의 푸시 알림 켜기/끄기. 구독하지 않아도 앱 안 알림은 그대로 표시된다. */
 export function PushSettings() {
@@ -15,8 +17,17 @@ export function PushSettings() {
   useEffect(() => {
     if (support !== 'ready') return
     let alive = true
-    currentSubscription()
-      .then((s) => alive && setState(s ? 'on' : 'off'))
+    serviceWorkerReady()
+      .then(async (reg) => {
+        if (!alive) return
+        if (!reg) {
+          // 서비스워커가 아직 없으면 버튼을 영구 비활성으로 두지 않고 안내한다.
+          setState('off')
+          setMessage(SW_HINT)
+          return
+        }
+        setState((await reg.pushManager.getSubscription()) ? 'on' : 'off')
+      })
       .catch(() => alive && setState('off'))
     return () => {
       alive = false
@@ -45,9 +56,11 @@ export function PushSettings() {
     } catch (e) {
       // 서버에 VAPID 키가 없으면 503 push_not_configured
       setMessage(
-        e instanceof ApiError && e.code === 'push_not_configured'
-          ? '서버에 푸시 알림이 아직 설정되지 않았어요. 앱 안 알림만 표시돼요.'
-          : '푸시 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.',
+        e instanceof ServiceWorkerNotReadyError
+          ? SW_HINT
+          : e instanceof ApiError && e.code === 'push_not_configured'
+            ? '서버에 푸시 알림이 아직 설정되지 않았어요. 앱 안 알림만 표시돼요.'
+            : '푸시 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.',
       )
     } finally {
       setBusy(false)

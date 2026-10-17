@@ -26,17 +26,33 @@ export const fetchPublicKey = () => api<{ public_key: string }>('/push/public-ke
 export const registerSubscription = (subscription: unknown) => api<void>('/push/subscriptions', { method: 'POST', body: subscription })
 export const removeSubscription = (endpoint: string) => api<void>('/push/subscriptions', { method: 'DELETE', body: { endpoint } })
 
-export async function currentSubscription(): Promise<PushSubscription | null> {
-  const reg = await navigator.serviceWorker.ready
-  return reg.pushManager.getSubscription()
+/** 서비스워커 준비를 기다리되, 등록된 서비스워커가 없어 영원히 끝나지 않는 경우를 위해 시간 제한을 둔다. */
+export const SW_READY_TIMEOUT_MS = 3000
+
+export class ServiceWorkerNotReadyError extends Error {
+  constructor() {
+    super('service worker not ready')
+  }
 }
 
-/** 권한 요청 → 브라우저 구독 → 서버 등록. 권한이 거부되면 'denied'. */
+export async function serviceWorkerReady(timeoutMs = SW_READY_TIMEOUT_MS): Promise<ServiceWorkerRegistration | null> {
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs))
+  return Promise.race([navigator.serviceWorker.ready, timeout])
+}
+
+/** 현재 브라우저 구독. 서비스워커가 준비되지 않았으면 null. */
+export async function currentSubscription(): Promise<PushSubscription | null> {
+  const reg = await serviceWorkerReady()
+  return reg ? reg.pushManager.getSubscription() : null
+}
+
+/** 권한 요청 → 브라우저 구독 → 서버 등록. 권한이 거부되면 'denied', 서비스워커가 없으면 ServiceWorkerNotReadyError. */
 export async function enablePush(): Promise<'enabled' | 'denied'> {
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return 'denied'
+  const reg = await serviceWorkerReady()
+  if (!reg) throw new ServiceWorkerNotReadyError()
   const { public_key } = await fetchPublicKey()
-  const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(public_key) })
   await registerSubscription(sub.toJSON())
   return 'enabled'
