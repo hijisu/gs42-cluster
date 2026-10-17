@@ -7,7 +7,7 @@ export interface StaffReservation extends Reservation {
   conflict_ids: number[]
 }
 
-export const fetchStaffReservations = (date: string, status: string) => api<StaffReservation[]>(`/staff/reservations?date=${date}&status=${status}`)
+export const fetchStaffReservations = (date: string, status: string) => api<StaffReservation[]>(`/staff/reservations?${date ? `date=${date}&` : ''}status=${status}`)
 export const approve = (id: number) => api<StaffReservation>(`/staff/reservations/${id}/approve`, { method: 'POST' })
 export const reject = (id: number, reason: string) => api<StaffReservation>(`/staff/reservations/${id}/reject`, { method: 'POST', body: { reason } })
 export const reassign = (id: number, roomId: number) => api<StaffReservation>(`/staff/reservations/${id}/reassign`, { method: 'POST', body: { room_id: roomId } })
