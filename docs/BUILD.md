@@ -4,6 +4,17 @@
 
 ## 빠른 시작 (Docker)
 
+저장소 루트의 `Makefile`로 한 명령에 띄울 수 있습니다(먼저 `cp .env.example .env`).
+
+| 명령 | 하는 일 |
+| --- | --- |
+| `make dev` | **개발 모드**로 빌드·기동하고, 백엔드가 준비되면(마이그레이션 포함) `seed_demo`와 `import_books`를 실행합니다. 반복 실행해도 안전합니다(`seed_demo`는 `--reset` 없이 실행하므로 데이터를 지우지 않음). 접속: `http://localhost:<FRONTEND_HOST_PORT>`(기본 5173) |
+| `make run` | **운영 모드**(`docker-compose.prod.yml`, 프로젝트 `<COMPOSE_PROJECT_NAME>-prod`)로 빌드·기동하고 `import_books`만 실행합니다. 시연 데이터(`seed_demo`)는 넣지 않습니다. `.env`의 `DJANGO_SECRET_KEY`를 실제 값으로 바꿔 둬야 합니다(예시 값이면 기동을 거부). 접속: `http://localhost:<PROD_HTTP_PORT>`(기본 80) |
+| `make demoreset` | 시연 데이터를 처음 상태로 되돌립니다(`seed_demo --reset`: 모의 계정 `student`·`staff`의 면담·예약·후기·알림만 지우고 다시 만듦). 개발 모드가 떠 있어야 합니다 |
+| `make` | 위 사용법을 출력 |
+
+개별 명령으로 하려면 아래를 따릅니다.
+
 ```bash
 cp .env.example .env                 # 처음 한 번
 docker compose up --build            # DB·백엔드·프론트 (첫 실행은 몇 분)
@@ -240,7 +251,7 @@ cp .env.example .env     # 이미 있으면 생략
 # .env 의 DJANGO_SECRET_KEY 를 실제 값으로 바꾼다 (예시 값 change-me 로는 기동하지 않는다)
 python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 
-docker compose -p gs42-prod -f docker-compose.prod.yml up -d --build
+docker compose -p gs42-prod -f docker-compose.prod.yml up -d --build   # 또는 `make run`(도서 가져오기까지)
 open http://localhost        # PROD_HTTP_PORT 를 바꿨다면 http://localhost:<포트>
 docker compose -p gs42-prod -f docker-compose.prod.yml logs -f backend
 docker compose -p gs42-prod -f docker-compose.prod.yml down          # 데이터 유지 / -v 는 DB 볼륨까지 삭제
