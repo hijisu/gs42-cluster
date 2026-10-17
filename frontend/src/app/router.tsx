@@ -7,6 +7,7 @@ import { ReviewPage } from '../features/review/ReviewPage'
 import { RoomPage } from '../features/room/RoomPage'
 import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
 import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
+import { StaffCoursePage } from '../features/staff-course/StaffCoursePage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -56,7 +57,7 @@ export const routes = [
       { path: 'meeting', element: <StaffMeetingPage /> },
       { path: 'room', element: <StaffRoomPage /> },
       { path: 'library', element: page('도서 관리') },
-      { path: 'courses', element: page('교육과정 · 후기 관리') },
+      { path: 'courses', element: <StaffCoursePage /> },
     ],
   },
     ],
