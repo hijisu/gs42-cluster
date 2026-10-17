@@ -5,6 +5,7 @@ import { kstDateFromToday, kstToIso } from '../../lib/datetime'
 import type { Meeting } from '../meeting/api'
 import type { Reservation, Room } from '../room/api'
 import type { Course } from '../review/api'
+import type { Book, BookWish } from '../library/api'
 
 const day = kstDateFromToday(3)
 const room: Room = { id: 1, code: 'multipurpose', name: '다목적회의실', capacity_note: '', equipment: 'TV', status: 'open' }
@@ -48,7 +49,12 @@ const course: Course = {
   can_review: true,
 }
 
-const data = (over: { meetings?: Meeting[]; reservations?: Reservation[]; courses?: Course[] } = {}): Handler => (req) => {
+const book: Book = { id: 3, code: 'GSIA-IT-003', title: '이펙티브 타입스크립트', author: '댄 밴더캄', publisher: '인사이트', isbn: '', category: '컴퓨터/IT', quantity: 1, description: '', cover_url: '', link_url: '', pub_date: '', location: 'B-4' }
+const wish: BookWish = { id: 1, title: 'Designing Data-Intensive Apps', author: '', reason: '', link_url: '', status: 'requested', staff_note: '', created_at: '2026-10-17T00:00:00Z' }
+
+const data = (over: { meetings?: Meeting[]; reservations?: Reservation[]; courses?: Course[]; wishes?: BookWish[] } = {}): Handler => (req) => {
+  if (req.url.endsWith('/books/my-requests')) return { json: { reports: [], wishes: over.wishes ?? [wish] } }
+  if (req.url.includes('/books/')) return { json: { total: 1, categories: ['컴퓨터/IT'], results: [book] } }
   if (req.url.endsWith('/meetings/me')) return { json: over.meetings ?? [meeting] }
   if (req.url.endsWith('/reservations/me')) return { json: over.reservations ?? [reservation] }
   if (req.url.endsWith('/courses')) return { json: over.courses ?? [course] }
@@ -108,12 +114,18 @@ describe('교육생 홈 대시보드', () => {
     expect(await within(card('작성할 후기')).findByText('1건')).toBeInTheDocument()
   })
 
-  it('희망 도서 카드는 42gslib 새 탭 링크로 안내한다', async () => {
+  it('희망 도서 카드는 내 신청을 요약하고 도서 화면으로 연결한다', async () => {
     await openHome(data())
-    const link = within(card('희망 도서')).getByRole('link', { name: /42gslib 열기/ })
-    expect(link).toHaveAttribute('href', 'https://42gslib.pages.dev/')
-    expect(link).toHaveAttribute('target', '_blank')
-    expect(link.getAttribute('rel')).toMatch(/noopener/)
+    const v = card('희망 도서')
+    expect(await within(v).findByText('1건 신청')).toBeInTheDocument()
+    expect(within(v).getByText('Designing Data-Intensive Apps')).toBeInTheDocument()
+    expect(within(v).getByText('접수', { selector: '.pill' })).toBeInTheDocument()
+    expect(within(v).getByRole('link', { name: /자세히 보기/ })).toHaveAttribute('href', '/library')
+  })
+
+  it('희망 도서 신청이 없으면 빈 상태를 보여준다', async () => {
+    await openHome(data({ wishes: [] }))
+    expect(await within(card('희망 도서')).findByText('신청한 희망 도서가 없어요.')).toBeInTheDocument()
   })
 
   it('바로가기: 내부 화면 링크와 외부 링크(도서·gs42stats)가 맞다', async () => {
@@ -122,9 +134,7 @@ describe('교육생 홈 대시보드', () => {
     expect(section.getByRole('link', { name: /면담 신청/ })).toHaveAttribute('href', '/meeting')
     expect(section.getByRole('link', { name: /회의실 예약/ })).toHaveAttribute('href', '/room')
     expect(section.getByRole('link', { name: /교육과정 후기/ })).toHaveAttribute('href', '/reviews')
-    const lib = section.getByRole('link', { name: /오아시스 도서/ })
-    expect(lib).toHaveAttribute('href', 'https://42gslib.pages.dev/')
-    expect(lib).toHaveAttribute('target', '_blank')
+    expect(section.getByRole('link', { name: /오아시스 도서/ })).toHaveAttribute('href', '/library')
     const stats = section.getByRole('link', { name: /gs42stats/ })
     expect(stats).toHaveAttribute('href', 'https://gs42stat.hijae.dev/home')
     expect(stats).toHaveAttribute('target', '_blank')
@@ -132,17 +142,26 @@ describe('교육생 홈 대시보드', () => {
     expect(section.getByText('문의는 #pedago')).toBeInTheDocument()
   })
 
-  it('통합 검색: 회의실·교육과정을 찾아 연결하고 도서는 42gslib로 안내한다', async () => {
+  it('통합 검색: 회의실·교육과정·도서를 찾아 해당 화면으로 연결한다', async () => {
     await openHome(data())
     expect(screen.queryByRole('list', { name: '검색 결과' })).toBeNull()
     await userEvent.type(screen.getByLabelText('통합 검색'), '데이터')
     const results = await screen.findByRole('list', { name: '검색 결과' })
     expect(within(results).getByRole('link', { name: /경북 특화형 데이터센터 기초과정/ })).toHaveAttribute('href', '/reviews')
     expect(within(results).queryByRole('link', { name: /다목적회의실/ })).toBeNull()
-    expect(within(results).getByRole('link', { name: /42gslib에서 '데이터' 찾기/ })).toHaveAttribute('target', '_blank')
+    expect(within(results).getByRole('link', { name: /'데이터' 도서 검색 결과 보기/ })).toHaveAttribute('href', '/library?q=%EB%8D%B0%EC%9D%B4%ED%84%B0')
 
     await userEvent.clear(screen.getByLabelText('통합 검색'))
     await userEvent.type(screen.getByLabelText('통합 검색'), '회의실')
     expect(await within(await screen.findByRole('list', { name: '검색 결과' })).findByRole('link', { name: /다목적회의실/ })).toHaveAttribute('href', '/room')
+  })
+
+  it('통합 검색의 도서 결과는 도서 화면(검색어 포함)으로 연결한다', async () => {
+    await openHome(data())
+    await userEvent.type(screen.getByLabelText('통합 검색'), '타입')
+    const results = await screen.findByRole('list', { name: '검색 결과' })
+    const hit = await within(results).findByRole('link', { name: /이펙티브 타입스크립트/ })
+    expect(hit).toHaveAttribute('href', `/library?q=${encodeURIComponent('타입')}`)
+    expect(await within(results).findByText(/\(1종\)/)).toBeInTheDocument()
   })
 })

@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { Layout } from '../components/Layout'
-import { PlaceholderPage } from '../components/PlaceholderPage'
 import { HomePage } from '../features/home/HomePage'
 import { StyleGuidePage } from '../features/home/StyleGuidePage'
 import { ReviewPage } from '../features/review/ReviewPage'
@@ -8,14 +7,13 @@ import { RoomPage } from '../features/room/RoomPage'
 import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
 import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
 import { StaffCoursePage } from '../features/staff-course/StaffCoursePage'
+import { LibraryPage } from '../features/library/LibraryPage'
 import { StaffHomePage } from '../features/staff-home/StaffHomePage'
 import { StaffLibraryPage } from '../features/staff-library/StaffLibraryPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
 import { staffNav, studentNav } from './routes'
-
-const page = (title: string) => <PlaceholderPage title={title} />
 
 export const routes = [
   { path: '/login', element: <LoginPage /> },
@@ -35,7 +33,7 @@ export const routes = [
       { index: true, element: <HomePage /> },
       { path: 'meeting', element: <MeetingPage /> },
       { path: 'room', element: <RoomPage /> },
-      { path: 'library', element: page('오아시스 도서') },
+      { path: 'library', element: <LibraryPage /> },
       { path: 'reviews', element: <ReviewPage /> },
       ...(import.meta.env.DEV ? [{ path: 'styleguide', element: <StyleGuidePage /> }] : []),
     ],

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Card, Pill } from '../../components'
-import { LIBRARY_URL } from '../../app/routes'
 import { formatDateTime, formatMonthDay, formatTimeRange, kstDate } from '../../lib/datetime'
 import { useMyMeetings } from '../meeting/hooks'
 import { statusLabel as meetingStatus, statusTone as meetingTone } from '../meeting/labels'
+import { useMyRequests } from '../library/hooks'
+import { wishStatusLabel, wishStatusTone } from '../library/labels'
 import { useCourses } from '../review/hooks'
 import { useMyReservations } from '../room/hooks'
 import { statusLabel as reservationStatus, statusTone as reservationTone } from '../room/labels'
@@ -39,6 +40,7 @@ export function SummaryCards() {
   const meetings = useMyMeetings()
   const reservations = useMyReservations()
   const courses = useCourses()
+  const library = useMyRequests()
 
   const meeting = meetings.data ? nextMeeting(meetings.data) : null
   const reservation = reservations.data ? nextReservation(reservations.data) : null
@@ -76,14 +78,19 @@ export function SummaryCards() {
         ))}
       </SummaryCard>
 
-      {/* 도서 화면(#28) 전까지 희망 도서는 42gslib에서 확인한다(#100) */}
-      <Card className="stack summary-card" style={{ gap: 10 }}>
-        <p className="label">희망 도서</p>
-        <Sub>희망 도서 신청과 검색은 42gslib에서 해요.</Sub>
-        <a className="summary-link" href={LIBRARY_URL} target="_blank" rel="noopener noreferrer">
-          42gslib 열기<span className="sr-only"> (새 창)</span>
-        </a>
-      </Card>
+      <SummaryCard label="희망 도서" to="/library">
+        {library.isPending && <Loading />}
+        {library.isError && <Failed what="희망 도서" />}
+        {library.data && (library.data.wishes.length > 0 ? (
+          <>
+            <Big>{library.data.wishes.length}건 신청</Big>
+            <Sub>{library.data.wishes[0].title}</Sub>
+            <Pill tone={wishStatusTone[library.data.wishes[0].status]}>{wishStatusLabel[library.data.wishes[0].status]}</Pill>
+          </>
+        ) : (
+          <Sub>신청한 희망 도서가 없어요.</Sub>
+        ))}
+      </SummaryCard>
 
       <SummaryCard label="작성할 후기" to="/reviews">
         {courses.isPending && <Loading />}

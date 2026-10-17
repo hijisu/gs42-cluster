@@ -9,14 +9,11 @@ export interface NavItem {
   external?: string
 }
 
-export const LIBRARY_URL = 'https://42gslib.pages.dev/'
-
 export const studentNav: NavItem[] = [
   { no: '00', label: '홈', path: '/', design: 'Main' },
   { no: '01', label: '면담 신청', path: '/meeting', design: 'Meeting' },
   { no: '02', label: '회의실 예약', path: '/room', design: 'Room' },
-  // 도서 화면(#28) 전까지 임시로 42gslib 외부 링크(#100). 화면이 완성되면 external을 지운다.
-  { no: '03', label: '오아시스 도서', path: '/library', design: 'Library', external: LIBRARY_URL },
+  { no: '03', label: '오아시스 도서', path: '/library', design: 'Library' },
   { no: '04', label: '교육과정 후기', path: '/reviews', design: 'Reviews' },
 ]
 
