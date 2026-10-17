@@ -11,8 +11,9 @@
 
 ```bash
 cp .env.example .env                       # 처음 한 번
-docker compose up -d --build               # DB·백엔드·프론트
+docker compose up -d --build               # DB·백엔드·프론트·프록시
 docker compose exec backend python manage.py seed_demo --reset
+# 위 세 줄 대신 `make dev`(기동 + 시연 데이터 + 도서)와 `make demoreset`(시연 데이터 초기화)을 써도 됩니다.
 ```
 
 `seed_demo`는 시연용 데이터를 한 번에 준비합니다(여러 번 실행해도 안전, `DJANGO_DEBUG=true`에서만 동작).

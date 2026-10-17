@@ -26,7 +26,7 @@ export const fetchStaffMeetings = (status: StaffMeetingStatus) => api<StaffMeeti
 export const fetchMembers = () => api<StaffMember[]>('/staff/members')
 export const confirmMeeting = (id: number, body: { location: string; staff_id?: number; note?: string }) =>
   api<StaffMeeting>(`/staff/meetings/${id}/confirm`, { method: 'POST', body })
-export const proposeMeeting = (id: number, body: { proposed_at: string; note?: string }) =>
+export const proposeMeeting = (id: number, body: { proposed_at: string; note?: string; location?: string }) =>
   api<StaffMeeting>(`/staff/meetings/${id}/propose`, { method: 'POST', body })
 export const fetchMyAvailability = (from: string, to: string) => api<{ slots: string[] }>(`/staff/availability?from=${from}&to=${to}`)
 export const saveMyAvailability = (body: { from: string; to: string; slots: string[] }) => api<{ slots: string[] }>('/staff/availability', { method: 'PUT', body })

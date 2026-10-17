@@ -78,6 +78,7 @@ def propose(request, meeting_id: int):
                 acting_staff_id=request.user.pk,
                 proposed_at=body.validated_data["proposed_at"],
                 note=body.validated_data["note"],
+                location=body.validated_data["location"],
             )
         )
     return Response(staff_meeting_payload(view))

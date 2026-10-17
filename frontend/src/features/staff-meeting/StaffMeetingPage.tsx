@@ -10,7 +10,7 @@ import { RequestCard } from './RequestCard'
 
 export function StaffMeetingPage() {
   const [status, setStatus] = useState<StaffMeetingStatus>('pending')
-  const [proposing, setProposing] = useState<StaffMeeting | null>(null)
+  const [proposing, setProposing] = useState<{ meeting: StaffMeeting; location: string } | null>(null)
   const list = useStaffMeetings(status)
   const counts = useTabCounts()
   const members = useMembers()
@@ -42,7 +42,7 @@ export function StaffMeetingPage() {
           {list.isError && <p role="alert">면담 요청을 불러오지 못했어요.</p>}
           {list.data?.length === 0 && <p className="muted">{emptyLabel[status]}</p>}
           {list.data?.map((m) => (
-            <RequestCard key={m.id} meeting={m} members={members.data ?? []} types={types.data ?? []} meId={me?.id} onPropose={setProposing} />
+            <RequestCard key={m.id} meeting={m} members={members.data ?? []} types={types.data ?? []} meId={me?.id} onPropose={(meeting, location) => setProposing({ meeting, location })} />
           ))}
         </div>
         <div className="col">
@@ -55,7 +55,7 @@ export function StaffMeetingPage() {
           </div>
         </div>
       </div>
-      <ProposeModal meeting={proposing} onClose={() => setProposing(null)} />
+      <ProposeModal key={proposing?.meeting.id ?? 'none'} meeting={proposing?.meeting ?? null} defaultLocation={proposing?.location ?? ''} onClose={() => setProposing(null)} />
     </>
   )
 }

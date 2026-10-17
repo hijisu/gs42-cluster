@@ -110,7 +110,28 @@ describe('운영 면담 관리 화면', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: '시간 제안하기' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     const post = calls.find((c) => c.url.endsWith('/propose'))!
-    expect(post.body).toEqual({ proposed_at: kstToIso('2030-10-16', '14:07') })
+    expect(post.body).toEqual({ proposed_at: kstToIso('2030-10-16', '14:07'), location: '1층 사무실 앞' })
+  })
+
+  it('요청 카드에 입력한 장소가 제안 모달의 기본값이 되고, 수정해서 보낼 수 있다', async () => {
+    const calls = await openPage(
+      lists({ pending: [meeting()] }),
+      (req) => (req.method === 'POST' && req.url.endsWith('/propose') ? { json: meeting({ status: 'proposed' }) } : undefined),
+    )
+    const card = await screen.findByTestId('meeting-5')
+    const loc = within(card).getByLabelText('장소')
+    await userEvent.clear(loc)
+    await userEvent.type(loc, '2층 라운지')
+    await userEvent.click(within(card).getByRole('button', { name: '다른 시간 제안' }))
+    const dialog = await screen.findByRole('dialog', { name: '다른 시간 제안' })
+    expect(within(dialog).getByLabelText('장소')).toHaveValue('2층 라운지')
+    await userEvent.type(within(dialog).getByLabelText('날짜'), '2030-10-16')
+    await userEvent.type(within(dialog).getByLabelText('시간'), '14:00')
+    await userEvent.clear(within(dialog).getByLabelText('장소'))
+    await userEvent.type(within(dialog).getByLabelText('장소'), '회의실 B')
+    await userEvent.click(within(dialog).getByRole('button', { name: '시간 제안하기' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(calls.find((c) => c.url.endsWith('/propose'))!.body).toEqual({ proposed_at: kstToIso('2030-10-16', '14:00'), location: '회의실 B' })
   })
 
   it('확정 탭은 담당자·장소를 읽기 전용으로 보여준다', async () => {

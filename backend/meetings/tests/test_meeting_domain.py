@@ -139,3 +139,19 @@ def test_accept_proposal_requires_owner_and_active_future_proposal():
     with pytest.raises(InvalidTransition):
         m.accept_proposal(1, T)
     assert m.status == MeetingStatus.PROPOSED
+
+
+def test_propose_with_location_is_kept_when_student_accepts():
+    m = new_meeting()
+    m.propose(9, T + timedelta(minutes=7), "메모", location="  1층 사무실 앞  ")
+    assert m.location == "1층 사무실 앞"
+    m.accept_proposal(1, NOW)
+    assert m.status == MeetingStatus.CONFIRMED
+    assert m.location == "1층 사무실 앞"
+
+
+def test_propose_without_location_keeps_existing_location():
+    m = new_meeting()
+    m.location = "2층 라운지"
+    m.propose(9, T + timedelta(minutes=7), location="  ")
+    assert m.location == "2층 라운지"

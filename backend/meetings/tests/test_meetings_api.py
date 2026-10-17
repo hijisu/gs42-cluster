@@ -215,3 +215,30 @@ def test_cannot_accept_expired_or_pending_proposal(slot_at, staff):
     MeetingRequestRow.objects.filter(pk=meeting_id).update(status="pending")
     assert client.post(f"/api/meetings/{meeting_id}/accept").status_code == 409
     assert client.post("/api/meetings/99999/accept").status_code == 404
+
+
+def test_proposal_location_is_kept_after_student_accepts(slot_at, staff):
+    client = login()
+    created = client.post("/api/meetings", body(slot_at), format="json").json()
+    later = (slot_at + timedelta(minutes=7)).isoformat()
+    staff_client = login("staff")
+    url = f"/api/staff/meetings/{created['id']}/propose"
+    proposed = staff_client.post(
+        url, {"proposed_at": later, "location": "1층 사무실 앞"}, format="json"
+    )
+    assert proposed.status_code == 200 and proposed.json()["location"] == "1층 사무실 앞"
+    accepted = client.post(f"/api/meetings/{created['id']}/accept")
+    assert accepted.status_code == 200
+    assert accepted.json()["status"] == "confirmed"
+    assert accepted.json()["location"] == "1층 사무실 앞"
+
+
+def test_proposal_without_location_is_still_accepted_with_empty_location(slot_at, staff):
+    client = login()
+    created = client.post("/api/meetings", body(slot_at), format="json").json()
+    later = (slot_at + timedelta(minutes=7)).isoformat()
+    login("staff").post(
+        f"/api/staff/meetings/{created['id']}/propose", {"proposed_at": later}, format="json"
+    )
+    accepted = client.post(f"/api/meetings/{created['id']}/accept")
+    assert accepted.status_code == 200 and accepted.json()["location"] == ""
