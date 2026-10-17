@@ -2,7 +2,7 @@
 """시연 핵심 시나리오 2개를 실행 중인 스택에 HTTP로 처음부터 끝까지 재현·검증한다.
 
   python3 scripts/e2e_demo.py                         # http://localhost:5173 (프론트 프록시 경유)
-  python3 scripts/e2e_demo.py --base http://localhost:8000 --runs 2 --skip-spa   # 백엔드 직접
+  python3 scripts/e2e_demo.py --base http://localhost:8000 --runs 2 --skip-spa   # 호스트에서 runserver 로 띄운 백엔드 직접
 
 시나리오 1 (회의실): 교육생 로그인 → 이용수칙·현황 확인 → 예약 요청 → 운영팀 목록에서 확인·승인
                     → 교육생 결과(상태·현황·알림) 확인 → (정리) 취소

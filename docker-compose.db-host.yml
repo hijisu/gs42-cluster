@@ -1,0 +1,9 @@
+# 선택: 호스트에서 백엔드를 직접 실행(manage.py·pytest)할 때만 DB 를 이 PC 루프백에 연다.
+#   docker compose -f docker-compose.yml -f docker-compose.db-host.yml up -d db
+# 기본 구성에서 DB 는 backend 전용 내부 네트워크(data)에만 있어 호스트에서 접속할 수 없다.
+# 호스트 포트는 .env 의 DB_HOST_PORT, 컨테이너 안 포트는 POSTGRES_PORT.
+services:
+  db:
+    networks: [data, edge]
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:${POSTGRES_PORT:-5432}"

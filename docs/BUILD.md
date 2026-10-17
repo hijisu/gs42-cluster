@@ -51,8 +51,9 @@ cp .env.example .env
 | `TIME_ZONE` | 표시 시간대 (`Asia/Seoul`) | O |
 | `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트. compose에서는 `POSTGRES_HOST=db`로 자동 덮어씀 | O |
 | `COMPOSE_PROJECT_NAME` | **개발용** compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경. 운영 구성은 `-p <이름>-prod`로 따로 지정 | - |
-| `FRONTEND_BIND` | 프론트 포트를 여는 주소. 기본 `0.0.0.0`(같은 네트워크의 다른 기기에서 접속 가능, 아래 "다른 기기에서 접속"), 이 PC에서만 쓰려면 `127.0.0.1` | - |
-| `DB_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT` | compose가 호스트에 여는 포트(기본 5432 / 8000 / 5173). 컨테이너 안 포트는 고정 | - |
+| `FRONTEND_HOST_PORT` / `FRONTEND_BIND` / `FRONTEND_PUBLIC_HOST` | 리버스 프록시(`web`)가 호스트에 여는 포트(기본 5173) / 여는 주소(`0.0.0.0` 다른 기기 접속 가능, `127.0.0.1` 이 PC만) / 브라우저가 접속하는 호스트(기본 `localhost`). 호스트에 여는 서비스 포트는 이것 하나뿐 | - |
+| `WEB_PORT` / `BACKEND_PORT` / `FRONTEND_PORT` | 컨테이너 안 포트(프록시 80 / Django 8000 / Vite 5173). 보통 바꿀 필요 없음 | - |
+| `DB_HOST_PORT` | (선택) `docker-compose.db-host.yml`로 호스트에서 백엔드를 직접 실행할 때 DB를 여는 루프백 포트(기본 5432) | - |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
 | `FRONTEND_ORIGIN` / `VITE_API_BASE_URL` | 프론트엔드 주소·API 경로. compose에서는 `FRONTEND_ORIGIN`이 `FRONTEND_HOST_PORT`로 자동 계산됨 | O |
@@ -74,9 +75,10 @@ docker compose up --build       # 첫 실행은 이미지 빌드와 npm ci 때�
 
 | 서비스 | 주소 | 설명 |
 | --- | --- | --- |
-| frontend | http://localhost:5173 | Vite 개발 서버. `/api`는 backend로 프록시(같은 origin이라 세션 쿠키·CSRF가 그대로 동작) |
-| backend | http://localhost:8000 | Django. 시작할 때 `migrate`를 자동 실행. 소스는 볼륨 마운트라 수정이 바로 반영됨 |
-| db | localhost:5432 | PostgreSQL 16. 데이터는 `db-data` 볼륨에 보존 |
+| web | http://localhost:5173 | **유일한 진입점**(Caddy 리버스 프록시, `deploy/Caddyfile.dev`). `/api`는 backend로, 나머지는 frontend로 전달(같은 origin이라 세션 쿠키·CSRF가 그대로 동작) |
+| frontend | (호스트에 열지 않음) | Vite 개발 서버(HMR). web을 통해서만 접속 |
+| backend | (호스트에 열지 않음) | Django. 시작할 때 `migrate`를 자동 실행. 소스는 볼륨 마운트라 수정이 바로 반영됨. 호스트에서 확인은 `docker compose exec backend …` 또는 web 주소의 `/api` |
+| db | (호스트에 열지 않음) | PostgreSQL 16. backend 전용 내부 네트워크(`data`)에만 있어 호스트·frontend·web에서 접속할 수 없음. 데이터는 `db-data` 볼륨에 보존 |
 
 ```bash
 docker compose exec backend pytest -q      # 컨테이너 안에서 백엔드 테스트
@@ -87,10 +89,10 @@ docker compose down                         # 중지(데이터 유지) / down -v
 
 - 한 PC에서 클론/에이전트를 여러 개 돌릴 때는 `.env`의 `COMPOSE_PROJECT_NAME`과 `*_HOST_PORT`를 서로 다르게 지정합니다(예: `gs42-b`, 8100/5532/5273).
   - `FRONTEND_HOST_PORT`를 바꾸면 compose가 백엔드의 `FRONTEND_ORIGIN`(CSRF 신뢰 origin·CORS)을 `http://localhost:<FRONTEND_HOST_PORT>`로 자동 설정합니다. `.env`의 `FRONTEND_ORIGIN`은 호스트에서 직접 실행할 때만 쓰입니다.
-  - `BACKEND_HOST_PORT`를 바꾸면 42 로그인용 `FORTYTWO_REDIRECT_URI`와 intra 앱에 등록한 redirect URI도 같은 포트로 맞춰야 합니다(모의 로그인만 쓰면 무관).
-- **다른 기기에서 접속(개발·테스트용)**: 프론트 포트(5173)는 기본으로 모든 인터페이스에 열려 있어, 같은 네트워크의 PC·휴대폰에서 `http://<이 PC의 IP>:5173`으로 접속합니다(IP 확인: macOS `ipconfig getifaddr en0`). `/api`는 프론트가 프록시하므로 DB(5432)·백엔드(8000) 포트는 계속 이 PC에서만 열립니다. 개발 모드(`DJANGO_DEBUG=true`)에서는 사설망 IP(10.x·172.16–31.x·192.168.x)로 접속한 프론트의 origin을 CSRF에서 자동 신뢰하므로 별도 설정이 필요 없습니다(운영 모드에서는 적용되지 않음). 이 PC에서만 쓰려면 `.env`에 `FRONTEND_BIND=127.0.0.1`을 지정하고 `docker compose up -d`를 실행합니다.
+  - 42 로그인용 redirect URI는 프록시 주소(`http://<FRONTEND_PUBLIC_HOST>:<FRONTEND_HOST_PORT>/api/auth/callback`)입니다. `FRONTEND_HOST_PORT`·`FRONTEND_PUBLIC_HOST`를 바꾸면 intra 앱에 등록한 redirect URI도 같은 값으로 맞춥니다(모의 로그인만 쓰면 무관).
+- **다른 기기에서 접속(개발·테스트용)**: 리버스 프록시(`web`)의 포트(5173) 하나만 기본으로 모든 인터페이스에 열려 있어, 같은 네트워크의 PC·휴대폰에서 `http://<이 PC의 IP>:5173`으로 접속합니다(IP 확인: macOS `ipconfig getifaddr en0`). 백엔드(8000)·프론트 개발 서버(5173 내부)는 호스트에 열리지 않고, DB(5432)는 이 PC에서만 열립니다. 개발 모드(`DJANGO_DEBUG=true`)에서는 사설망 IP(10.x·172.16–31.x·192.168.x)로 접속한 프론트의 origin을 CSRF에서 자동 신뢰하므로 모의 로그인은 별도 설정 없이 동작합니다(운영 모드에서는 적용되지 않음). 이 PC에서만 쓰려면 `.env`에 `FRONTEND_BIND=127.0.0.1`을 지정하고 `docker compose up -d`를 실행합니다.
   - **주의**: 개발 모드는 모의 로그인이 켜져 있어 그 네트워크의 누구나 운영팀 계정으로 들어올 수 있습니다. 신뢰하는 네트워크에서만 쓰고, 공용 와이파이에서는 `FRONTEND_BIND=127.0.0.1`로 닫습니다. 인터넷 공개·HTTPS는 #43 범위입니다.
-  - 42 로그인은 redirect URI가 `localhost`라 다른 기기에서는 동작하지 않습니다. 다른 기기에서는 모의 로그인을 씁니다.
+  - 다른 기기에서 **42 로그인**까지 쓰려면 `.env`에 `FRONTEND_PUBLIC_HOST=<이 PC의 IP>`를 지정하고(`FRONTEND_ORIGIN`·redirect URI가 `http://<IP>:5173…`로 자동 계산됨), intra 앱에 `http://<IP>:5173/api/auth/callback`도 Redirect URI로 등록합니다(앱 설정은 사람이 합니다).
   - 웹 푸시는 보안 컨텍스트(HTTPS 또는 localhost)에서만 동작해 `http://<IP>`로 접속한 기기에서는 켜지지 않습니다. 앱 안 알림(벨)은 동작합니다.
 - **`.env`를 수정한 뒤에는 `docker compose up -d`로 적용합니다.** `docker compose restart`는 `.env`(`env_file`)를 다시 읽지 않아 컨테이너 안의 값이 그대로 남습니다. `up -d`는 환경변수가 바뀐 서비스만 새로 만들며 DB 볼륨은 유지됩니다.
 - 프론트 컨테이너는 `node_modules`를 컨테이너 전용 볼륨에 두므로 호스트의 `node_modules`와 섞이지 않습니다. 의존성을 바꾼 뒤에는 `docker compose restart frontend`(시작 시 `npm ci`)를 실행합니다.
@@ -105,8 +107,9 @@ cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-# 로컬 DB: compose의 db 서비스만 띄운다 (.env의 POSTGRES_* 값 사용)
-docker compose up -d db
+# 로컬 DB: 기본 compose 의 DB 는 backend 전용 내부 네트워크라 호스트에서 접속할 수 없다.
+# 호스트에서 직접 실행할 때만 override 로 DB 를 이 PC 루프백(DB_HOST_PORT)에 연다 (.env의 POSTGRES_* 값 사용).
+docker compose -f docker-compose.yml -f docker-compose.db-host.yml up -d db
 
 # 비밀번호 등은 루트 .env 에서 자동으로 읽는다. .env 는 compose 용(POSTGRES_HOST=db)이라 호스트 실행에서만 덮어쓴다.
 export POSTGRES_HOST=localhost       # DB_HOST_PORT 를 바꿨다면 POSTGRES_PORT 도 같은 값으로 지정
@@ -116,6 +119,8 @@ python manage.py runserver 8000     # GET http://localhost:8000/api/health
 pytest                              # 도메인 테스트는 DB 없이, 통합 테스트는 pytest-django(DB 필요)
 ruff check . && ruff format --check .
 ```
+
+compose 로 띄운 스택에서는 override 없이 컨테이너 안에서 실행해도 됩니다: `docker compose exec backend pytest`(환경 문서 정합성 등 저장소 루트 파일이 필요한 테스트는 컨테이너에서 건너뛰므로 호스트에서도 한 번 실행).
 
 `DJANGO_DEBUG=false`에서는 `DJANGO_SECRET_KEY`가 필수입니다.
 
@@ -129,8 +134,8 @@ ruff check . && ruff format --check .
 
 ```bash
 curl -c cookies.txt -X POST -H 'Content-Type: application/json' \
-  -d '{"role":"staff"}' http://localhost:8000/api/auth/mock-login   # role: student | staff
-curl -b cookies.txt http://localhost:8000/api/auth/me
+  -d '{"role":"staff"}' http://localhost:5173/api/auth/mock-login   # role: student | staff (compose, 프록시 경유)
+curl -b cookies.txt http://localhost:5173/api/auth/me
 ```
 
 ### 개발용 면담 슬롯 시드
@@ -203,7 +208,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 실제 42 로그인을 쓰려면 intra에 OAuth 앱을 등록하고 `UID/SECRET`을 `.env`에 넣습니다. 모의 로그인만 쓸 때는 필요 없습니다. (이 절차는 문서 기준이며 실제 계정으로의 로그인 확인은 아직 사람 확인 대기 중입니다. intra 화면 문구는 바뀔 수 있습니다.)
 
 1. 42 intra에 로그인해 **Settings → API → "Register a new app"**(https://profile.intra.42.fr/oauth/applications/new)으로 이동합니다.
-2. 이름(예: `42gs-cluster dev`)을 적고, **Redirect URI**에 `.env`의 `FORTYTWO_REDIRECT_URI`와 **똑같은 값**을 등록합니다. 기본값은 `http://localhost:8000/api/auth/callback`이며 `BACKEND_HOST_PORT`를 바꿨다면 그 포트를 씁니다. Scope는 `public`이면 충분합니다.
+2. 이름(예: `42gs-cluster dev`)을 적고, **Redirect URI**에 `.env`의 `FORTYTWO_REDIRECT_URI`와 **똑같은 값**을 등록합니다. compose 기본값은 `http://localhost:5173/api/auth/callback`(프록시 경유)이며 `FRONTEND_HOST_PORT`·`FRONTEND_PUBLIC_HOST`를 바꿨다면 그 값을 씁니다. 호스트에서 backend를 직접 실행할 때는 `http://localhost:8000/api/auth/callback`입니다. Scope는 `public`이면 충분합니다.
 3. 발급된 **UID**와 **SECRET**을 `.env`의 `FORTYTWO_UID`, `FORTYTWO_SECRET`에 넣습니다. **채팅·이슈·PR·커밋에 붙여 넣지 않습니다**(`.env`는 gitignore 대상).
 4. 교육운영팀 계정은 `.env`의 `STAFF_INTRA_IDS`에 intra login을 쉼표로 적습니다(42 응답의 `staff?`는 보조). 바꾼 뒤 **`docker compose up -d`**로 적용합니다(`restart`는 `.env`를 다시 읽지 않아 값이 바뀌지 않습니다).
 5. http://localhost:5173/login 에서 **"42 intra로 로그인"**을 누르고 승인하면 사이드바에 내 `intra_id`가 보입니다. 운영팀으로 등록한 계정이면 '교육운영팀 화면 보기' 토글이 나타납니다.
