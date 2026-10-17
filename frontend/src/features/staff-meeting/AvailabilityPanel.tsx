@@ -109,7 +109,7 @@ function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
 
   return (
     <>
-      <div className="row">
+      <div className="row av-head-row">
         {tabs}
         <div style={{ display: 'flex', gap: 6 }}>
           <Button variant="secondary" size="sm" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
@@ -120,11 +120,18 @@ function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
           </Button>
         </div>
       </div>
-      <div className="av-toolbar">{nav}</div>
-      {/* 높이를 고정한 줄이라 안내가 나타나도 격자가 움직이지 않는다 */}
-      <p className="av-status" role="status">
-        {message ?? (dirty ? '저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.' : '')}
-      </p>
+      {/* 데스크톱: 날짜 이동은 가운데, 안내는 오른쪽 작은 글씨(별도 높이 없음). 모바일: 이동 아래 한 줄(높이 고정). */}
+      <div className="av-toolbar">
+        {nav}
+        <p className="av-status" role="status" title={message ?? undefined}>
+          {message ?? (dirty ? (
+            <>
+              <span className="av-hint-long">저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.</span>
+              <span className="av-hint-short">저장하지 않은 변경 있음</span>
+            </>
+          ) : '')}
+        </p>
+      </div>
       <div className="av-grid" role="group" aria-label="가능 시간 선택">
         <span />
         {days.map((d) => (
