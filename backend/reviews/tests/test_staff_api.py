@@ -39,12 +39,14 @@ def staff():
 
 
 def body(**kw):
+    if kw.pop("status", None) == "ongoing":  # 진행 단계는 날짜로 계산된다
+        kw.setdefault("start_date", (TODAY - timedelta(days=2)).isoformat())
+        kw.setdefault("end_date", (TODAY + timedelta(days=3)).isoformat())
     return {
         "name": "서울대학교 파이썬 AI 교육",
         "start_date": (TODAY - timedelta(days=12)).isoformat(),
         "end_date": (TODAY - timedelta(days=3)).isoformat(),
         "location": "온라인",
-        "status": "completed",
         "review_deadline": (TODAY + timedelta(days=7)).isoformat(),
         "intra_ids": ["alice", "bob", "student"],
         **kw,
@@ -93,7 +95,6 @@ def test_create_accepts_csv_and_merges_with_list(staff):
         {"end_date": (TODAY - timedelta(days=40)).isoformat()},
         {"review_deadline": (TODAY - timedelta(days=9)).isoformat()},
         {"intra_ids": ["alice", "bad id!"]},
-        {"status": "weird"},
     ],
 )
 def test_create_validation_400_and_nothing_saved(staff, bad):
@@ -133,13 +134,16 @@ def test_detail_unknown_404(staff):
     assert staff.get("/api/staff/courses/999").status_code == 404
 
 
-def test_patch_status_opens_reviews_for_students(staff):
+def test_course_status_is_derived_and_end_date_change_opens_reviews(staff):
     course = create(staff, status="ongoing")
+    assert course["status"] == "ongoing"
     student = login("student")
     payload = {"course_id": course["id"], "rating": 5, "title": "t"}
     assert student.post("/api/reviews", payload, format="json").json()["code"] == "review_closed"
     patched = staff.patch(
-        f"/api/staff/courses/{course['id']}", {"status": "completed"}, format="json"
+        f"/api/staff/courses/{course['id']}",
+        {"end_date": (TODAY - timedelta(days=1)).isoformat()},
+        format="json",
     )
     assert patched.status_code == 200 and patched.json()["status"] == "completed"
     assert student.post("/api/reviews", payload, format="json").status_code == 201
@@ -252,3 +256,47 @@ def test_review_rows_by_non_participants_do_not_inflate_rate(staff):
     ReviewRow.objects.create(course_id=course["id"], author=outsider, rating=3, title="x")
     (row,) = staff.get("/api/staff/courses").json()
     assert row["reviewed_count"] == 0 and row["review_rate"] == 0.0
+
+
+# ── 참여자 제거(#128) ──
+def test_remove_participant_keeps_review_and_drops_it_from_rate(staff):
+    course = create(staff)  # alice, bob, student
+    student = login("student")
+    payload = {"course_id": course["id"], "rating": 5, "title": "t"}
+    assert student.post("/api/reviews", payload, format="json").status_code == 201
+
+    removed = staff.delete(f"/api/staff/courses/{course['id']}/participants/STUDENT")
+    assert removed.status_code == 200 and removed.json()["had_review"] is True
+    detail = removed.json()["course"]
+    assert [p["intra_id"] for p in detail["participants"]] == ["alice", "bob"]
+    assert detail["participant_count"] == 2 and detail["reviewed_count"] == 0
+    # 후기는 지워지지 않고, 제거된 참여자는 더 쓸 수 없다
+    assert student.get(f"/api/courses/{course['id']}/reviews").json() != []
+    assert student.post("/api/reviews", payload, format="json").status_code in (403, 409)
+
+    again = staff.post(
+        f"/api/staff/courses/{course['id']}/participants", {"intra_ids": ["student"]}, format="json"
+    )
+    assert again.status_code == 200
+    restored = staff.get(f"/api/staff/courses/{course['id']}").json()
+    assert restored["reviewed_count"] == 1  # 다시 추가하면 후기가 작성률에 복원
+
+
+def test_remove_participant_without_review(staff):
+    course = create(staff)
+    result = staff.delete(f"/api/staff/courses/{course['id']}/participants/alice")
+    assert result.status_code == 200 and result.json()["had_review"] is False
+    assert result.json()["course"]["participant_count"] == 2
+
+
+def test_remove_unknown_participant_or_course_404(staff):
+    course = create(staff)
+    missing = staff.delete(f"/api/staff/courses/{course['id']}/participants/nobody")
+    assert missing.status_code == 404 and missing.json()["code"] == "participant_not_found"
+    assert staff.delete("/api/staff/courses/999/participants/alice").status_code == 404
+
+
+def test_remove_participant_requires_staff():
+    student = login("student")
+    assert student.delete("/api/staff/courses/1/participants/alice").status_code == 403
+    assert APIClient().delete("/api/staff/courses/1/participants/alice").status_code == 401

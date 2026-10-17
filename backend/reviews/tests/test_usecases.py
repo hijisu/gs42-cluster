@@ -28,12 +28,16 @@ BOB = Viewer(user_id=2, intra_id="bob")
 
 
 def make_course(id, status=CourseStatus.COMPLETED, participants=("alice", "bob"), deadline=None):
+    start, end = {
+        CourseStatus.COMPLETED: (0, 0),
+        CourseStatus.ONGOING: (-1, 1),
+        CourseStatus.UPCOMING: (1, 2),
+    }[status]
     return Course(
         id=id,
         name=f"과정{id}",
-        start_date=TODAY,
-        end_date=TODAY,
-        status=status,
+        start_date=TODAY + timedelta(days=start),
+        end_date=TODAY + timedelta(days=end),
         review_deadline=deadline,
         participants=set(participants),
     )

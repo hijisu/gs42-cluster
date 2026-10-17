@@ -24,12 +24,13 @@ def login(role="student"):
 
 def make_course(name="과정", status="completed", participants=("student",), deadline=14):
     today = timezone.localdate()
+    # 진행 단계는 날짜로 계산된다(저장하지 않음)
+    start, end = {"completed": (-20, -10), "ongoing": (-3, 5), "upcoming": (5, 12)}[status]
     course = CourseRow.objects.create(
         name=name,
-        start_date=today - timedelta(days=20),
-        end_date=today - timedelta(days=10),
+        start_date=today + timedelta(days=start),
+        end_date=today + timedelta(days=end),
         location="유니버스룸",
-        status=status,
         review_deadline=today + timedelta(days=deadline) if deadline is not None else None,
     )
     for login_id in participants:

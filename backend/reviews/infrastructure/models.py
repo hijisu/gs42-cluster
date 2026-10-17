@@ -1,8 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-from reviews.domain.course import CourseStatus
-
 
 class CourseRow(models.Model):
     name = models.CharField(max_length=128)
@@ -10,11 +8,6 @@ class CourseRow(models.Model):
     end_date = models.DateField()
     location = models.CharField(max_length=128, blank=True)
     intro = models.TextField(blank=True)
-    status = models.CharField(
-        max_length=16,
-        choices=[(s.value, s.name) for s in CourseStatus],
-        default=CourseStatus.UPCOMING.value,
-    )
     review_deadline = models.DateField(null=True, blank=True)
 
     class Meta:

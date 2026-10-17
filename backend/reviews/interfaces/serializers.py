@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.application.usecases import CourseView, ReviewItem
@@ -25,7 +26,7 @@ def course_payload(v: CourseView) -> dict:
         "end_date": c.end_date,
         "location": c.location,
         "intro": c.intro,
-        "status": c.status.value,
+        "status": c.phase(timezone.localdate()).value,
         "review_deadline": c.review_deadline,
         "average_rating": v.stats.average_rating,
         "review_count": v.stats.review_count,

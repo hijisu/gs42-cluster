@@ -167,7 +167,6 @@ def test_review_request_notifies_registered_participants_only():
         name="파이썬 AI 교육",
         start_date=today - timedelta(days=12),
         end_date=today - timedelta(days=3),
-        status="completed",
         review_deadline=today + timedelta(days=7),
     )
     for intra in ("student", "not_signed_up_yet"):

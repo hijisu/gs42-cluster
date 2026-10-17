@@ -1,7 +1,8 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.application.staff_usecases import StaffCourseView
-from reviews.domain.course import CourseStatus, ReviewTarget
+from reviews.domain.course import ReviewTarget
 
 
 class CourseWriteSerializer(serializers.Serializer):
@@ -10,7 +11,6 @@ class CourseWriteSerializer(serializers.Serializer):
     end_date = serializers.DateField()
     location = serializers.CharField(allow_blank=True, max_length=128, default="")
     intro = serializers.CharField(allow_blank=True, max_length=5000, default="")
-    status = serializers.ChoiceField(choices=[s.value for s in CourseStatus], default="upcoming")
     review_deadline = serializers.DateField(allow_null=True, default=None)
     intra_ids = serializers.ListField(
         child=serializers.CharField(max_length=64), max_length=500, default=list
@@ -24,7 +24,6 @@ class CoursePatchSerializer(serializers.Serializer):
     end_date = serializers.DateField(required=False)
     location = serializers.CharField(allow_blank=True, max_length=128, required=False)
     intro = serializers.CharField(allow_blank=True, max_length=5000, required=False)
-    status = serializers.ChoiceField(choices=[s.value for s in CourseStatus], required=False)
     review_deadline = serializers.DateField(allow_null=True, required=False)
 
 
@@ -54,7 +53,7 @@ def staff_course_payload(v: StaffCourseView, detail: bool = False) -> dict:
         "end_date": c.end_date,
         "location": c.location,
         "intro": c.intro,
-        "status": c.status.value,
+        "status": c.phase(timezone.localdate()).value,
         "review_deadline": c.review_deadline,
         "participant_count": v.participant_count,
         "reviewed_count": v.reviewed_count,

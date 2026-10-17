@@ -11,15 +11,23 @@ from reviews.domain.review import Review
 TODAY = date(2026, 11, 27)
 
 
+# 진행 단계는 날짜로 계산된다: (시작일, 종료일) 오프셋
+PHASE_DATES = {
+    CourseStatus.UPCOMING: (5, 10),
+    CourseStatus.ONGOING: (-2, 3),
+    CourseStatus.COMPLETED: (-10, -1),
+}
+
+
 def course(
     status=CourseStatus.COMPLETED, deadline=TODAY + timedelta(days=7), participants=("alice",)
 ):
+    start, end = PHASE_DATES[status]
     return Course(
         id=1,
         name="과정",
-        start_date=TODAY - timedelta(days=10),
-        end_date=TODAY - timedelta(days=1),
-        status=status,
+        start_date=TODAY + timedelta(days=start),
+        end_date=TODAY + timedelta(days=end),
         review_deadline=deadline,
         participants=set(participants),
     )
@@ -97,3 +105,23 @@ def test_public_view_hides_author_when_anonymous():
     view = review(id=1, anonymous=True).public_view()
     assert view.author_intra_id is None and view.anonymous is True
     assert "alice" not in repr(view)  # 어떤 필드에도 작성자 정보가 없다
+
+
+def test_phase_is_computed_from_dates():
+    assert course(CourseStatus.UPCOMING).phase(TODAY) == CourseStatus.UPCOMING
+    assert course(CourseStatus.ONGOING).phase(TODAY) == CourseStatus.ONGOING
+    assert course(CourseStatus.COMPLETED).phase(TODAY) == CourseStatus.COMPLETED
+
+
+def test_review_opens_on_the_end_date_and_closes_after_the_deadline():
+    c = Course(
+        name="과정",
+        start_date=TODAY - timedelta(days=5),
+        end_date=TODAY,
+        review_deadline=TODAY + timedelta(days=3),
+        participants={"alice"},
+    )
+    assert not c.is_open_for_review(TODAY - timedelta(days=1))
+    assert c.is_open_for_review(TODAY)
+    assert c.is_open_for_review(TODAY + timedelta(days=3))
+    assert not c.is_open_for_review(TODAY + timedelta(days=4))
