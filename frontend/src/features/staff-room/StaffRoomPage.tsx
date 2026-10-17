@@ -15,7 +15,7 @@ export function StaffRoomPage() {
   const [date, setDate] = useState(() => kstDateFromToday(0))
   const [rejecting, setRejecting] = useState<StaffReservation | null>(null)
   const [direct, setDirect] = useState(false)
-  const pending = useStaffPending(date)
+  const pending = useStaffPending()
   const availability = useAvailability(date)
   const rooms = useRooms()
   const rules = useRules()
@@ -39,9 +39,9 @@ export function StaffRoomPage() {
             <h2 style={{ fontSize: 18 }}>승인 대기 {pending.data?.length ?? ''}</h2>
             {pending.isPending && <p className="muted" role="status">불러오는 중…</p>}
             {pending.isError && <p role="alert">예약 요청을 불러오지 못했어요.</p>}
-            {pending.data?.length === 0 && <p className="muted">이 날짜에 승인 대기 중인 요청이 없어요.</p>}
+            {pending.data?.length === 0 && <p className="muted">승인 대기 중인 요청이 없어요.</p>}
             {pending.data?.map((r) => (
-              <PendingCard key={r.id} reservation={r} rooms={rooms.data ?? []} availability={availability.data} onReject={setRejecting} />
+              <PendingCard key={r.id} reservation={r} rooms={rooms.data ?? []} onReject={setRejecting} />
             ))}
           </section>
           {availability.isPending && <p className="muted" role="status">회의실 현황을 불러오는 중…</p>}

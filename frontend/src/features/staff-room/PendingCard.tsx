@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Card, Pill } from '../../components'
 import { formatDayLabel, formatTimeRange, kstDate, kstTime } from '../../lib/datetime'
 import type { Availability, Room } from '../room/api'
+import { useAvailability } from '../room/hooks'
 import type { StaffReservation } from './api'
 import { messageFor } from './errors'
 import { useApprove, useReassign } from './hooks'
@@ -22,14 +23,15 @@ function candidateRooms(r: StaffReservation, rooms: Room[], availability: Availa
 interface PendingCardProps {
   reservation: StaffReservation
   rooms: Room[]
-  availability: Availability | undefined
   onReject: (r: StaffReservation) => void
 }
 
-export function PendingCard({ reservation: r, rooms, availability, onReject }: PendingCardProps) {
+export function PendingCard({ reservation: r, rooms, onReject }: PendingCardProps) {
   const approve = useApprove()
   const reassign = useReassign()
-  const candidates = candidateRooms(r, rooms, availability)
+  // 요청 날짜의 현황으로 대체 후보를 계산한다(선택한 날짜와 다른 날 요청도 있다)
+  const availability = useAvailability(kstDate(r.start_at))
+  const candidates = candidateRooms(r, rooms, availability.data)
   const [altId, setAltId] = useState<number | null>(null)
   const alt = altId !== null && candidates.some((c) => c.id === altId) ? altId : (candidates[0]?.id ?? null)
   const conflict = r.conflict_ids.length > 0
