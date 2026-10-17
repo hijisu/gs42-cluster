@@ -8,6 +8,7 @@ import { RoomPage } from '../features/room/RoomPage'
 import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
 import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
 import { StaffCoursePage } from '../features/staff-course/StaffCoursePage'
+import { StaffHomePage } from '../features/staff-home/StaffHomePage'
 import { StaffLibraryPage } from '../features/staff-library/StaffLibraryPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
@@ -54,7 +55,7 @@ export const routes = [
       />
     ),
     children: [
-      { index: true, element: page('운영 홈') },
+      { index: true, element: <StaffHomePage /> },
       { path: 'meeting', element: <StaffMeetingPage /> },
       { path: 'room', element: <StaffRoomPage /> },
       { path: 'library', element: <StaffLibraryPage /> },
