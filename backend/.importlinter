@@ -6,6 +6,7 @@ root_packages =
     meetings
     rooms
     reviews
+    library
     notifications
     common
     config
@@ -20,6 +21,7 @@ source_modules =
     meetings.domain
     rooms.domain
     reviews.domain
+    library.domain
     notifications.domain
     common.domain
 forbidden_modules =
@@ -34,6 +36,7 @@ source_modules =
     meetings.application
     rooms.application
     reviews.application
+    library.application
     notifications.application
 forbidden_modules =
     django
@@ -47,6 +50,7 @@ source_modules =
     meetings.domain
     rooms.domain
     reviews.domain
+    library.domain
     notifications.domain
 forbidden_modules =
     accounts.application
@@ -59,8 +63,11 @@ forbidden_modules =
     rooms.infrastructure
     rooms.interfaces
     reviews.application
+    library.application
     reviews.infrastructure
+    library.infrastructure
     reviews.interfaces
+    library.interfaces
     notifications.application
     notifications.infrastructure
     notifications.interfaces
@@ -73,6 +80,7 @@ source_modules =
     meetings.application
     rooms.application
     reviews.application
+    library.application
     notifications.application
 forbidden_modules =
     accounts.infrastructure
@@ -82,7 +90,9 @@ forbidden_modules =
     rooms.infrastructure
     rooms.interfaces
     reviews.infrastructure
+    library.infrastructure
     reviews.interfaces
+    library.interfaces
     notifications.infrastructure
     notifications.interfaces
 
@@ -94,12 +104,14 @@ source_modules =
     meetings.infrastructure
     rooms.infrastructure
     reviews.infrastructure
+    library.infrastructure
     notifications.infrastructure
 forbidden_modules =
     accounts.interfaces
     meetings.interfaces
     rooms.interfaces
     reviews.interfaces
+    library.interfaces
     notifications.interfaces
 
 [importlinter:contract:contexts-are-decoupled-from-notifications]
@@ -110,14 +122,16 @@ source_modules =
     meetings
     rooms
     reviews
+    library
     common
 forbidden_modules =
     notifications
 
 [importlinter:contract:business-contexts-are-independent]
-name = meetings·rooms·reviews는 서로를 import하지 않는다
+name = meetings·rooms·reviews·library는 서로를 import하지 않는다
 type = independence
 modules =
     meetings
     rooms
     reviews
+    library

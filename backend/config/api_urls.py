@@ -2,6 +2,8 @@ from django.urls import include, path
 
 from accounts.interfaces.urls import auth_urlpatterns, staff_urlpatterns
 from common.interfaces.views import health
+from library.interfaces.staff_urls import staff_urlpatterns as library_staff_urlpatterns
+from library.interfaces.urls import urlpatterns as library_urlpatterns
 from meetings.interfaces import views as meeting_views
 from meetings.interfaces.staff_urls import staff_urlpatterns as meeting_staff_urlpatterns
 from meetings.interfaces.urls import urlpatterns as meeting_urlpatterns
@@ -24,6 +26,7 @@ urlpatterns = [
     path("courses/", include(course_urlpatterns)),
     path("reviews", review_views.create_review, name="review-create"),
     path("reviews/", include(review_urlpatterns)),
+    path("books/", include(library_urlpatterns)),
     path("notifications", notification_views.list_notifications, name="notifications"),
     path("notifications/", include(notification_urlpatterns)),
     path("push/", include(push_urlpatterns)),
@@ -38,6 +41,7 @@ urlpatterns = [
             staff_urlpatterns
             + meeting_staff_urlpatterns
             + review_staff_urlpatterns
+            + library_staff_urlpatterns
             + room_staff_urlpatterns
         ),
     ),

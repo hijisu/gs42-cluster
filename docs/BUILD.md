@@ -114,6 +114,8 @@ ruff check . && ruff format --check .
 
 `DJANGO_DEBUG=false`에서는 `DJANGO_SECRET_KEY`가 필수입니다.
 
+**도서 데이터**: 42gslib(https://42gslib.pages.dev/) 도서 518종은 `backend/library/data/books.json`에 들어 있습니다. 마이그레이션 후 `python manage.py import_books`(compose는 `docker compose exec backend python manage.py import_books`)로 가져옵니다. 도서 코드 기준 upsert라 여러 번 실행해도 건수가 늘지 않고, 신고·희망 도서 기록은 그대로 둡니다. 다른 파일은 `--file 경로`로 지정합니다.
+
 **PostgreSQL 확장 `btree_gist`**: 회의실 예약의 겹침 방지(승인된 예약끼리 같은 장소·시간 중복 금지)를 DB 배타 제약으로도 보장하기 위해 `rooms` 마이그레이션(0003)이 `CREATE EXTENSION btree_gist`를 실행합니다. 신뢰 확장(trusted)이라 DB 소유자 권한이면 충분하며, docker `postgres` 이미지의 기본 사용자(`POSTGRES_USER`)는 바로 가능합니다. 운영 DB에서 권한이 없으면 관리자가 한 번 `CREATE EXTENSION btree_gist;`를 실행해 두세요.
 
 ### 인증 (개발용 모의 로그인)
