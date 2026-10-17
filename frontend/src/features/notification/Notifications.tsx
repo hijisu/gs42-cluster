@@ -5,6 +5,7 @@ import { formatDateTime } from '../../lib/datetime'
 import type { AppNotification } from './api'
 import { useMarkAllRead, useMarkRead, useNotifications } from './hooks'
 import { titleOf } from './labels'
+import { PushSettings } from './PushSettings'
 
 function useOpenNotification() {
   const markRead = useMarkRead()
@@ -44,6 +45,7 @@ export function NotificationBell() {
           </>
         }
       >
+        <PushSettings />
         {isError && <p role="alert">알림을 불러오지 못했습니다.</p>}
         {data && data.items.length === 0 && <p className="muted">새 알림이 없어요.</p>}
         <ul className="noti-list">

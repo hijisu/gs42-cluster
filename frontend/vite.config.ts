@@ -7,6 +7,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // 웹 푸시 핸들러가 필요해 직접 작성한 서비스워커(src/sw.ts)를 쓴다.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: '42gs-cluster',
