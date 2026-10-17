@@ -44,6 +44,7 @@ export function StaffRoomPage() {
               <PendingCard key={r.id} reservation={r} rooms={rooms.data ?? []} availability={availability.data} onReject={setRejecting} />
             ))}
           </section>
+          {availability.isPending && <p className="muted" role="status">회의실 현황을 불러오는 중…</p>}
           {availability.isError && <p role="alert">회의실 현황을 불러오지 못했어요.</p>}
           {availability.data && (
             <Timeline
@@ -59,6 +60,8 @@ export function StaffRoomPage() {
           )}
         </div>
         <div className="col">
+          {(rules.isError || rooms.isError) && <p role="alert">이용수칙·장소 목록을 불러오지 못했어요.</p>}
+          {(rules.isPending || rooms.isPending) && <p className="muted" role="status">이용수칙·장소 목록을 불러오는 중…</p>}
           {rules.data && <RulesPanel rules={rules.data} />}
           {rooms.data && <RoomsPanel rooms={rooms.data} />}
         </div>

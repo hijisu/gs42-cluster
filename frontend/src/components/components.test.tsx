@@ -77,3 +77,41 @@ describe('공통 컴포넌트', () => {
     expect(screen.getByLabelText('사유')).toHaveValue('여러 글자')
   })
 })
+
+describe('접근성', () => {
+  it('Modal에서 Tab/Shift+Tab이 모달 안에서 순환한다', async () => {
+    render(
+      <Modal open title="포커스" onClose={() => {}} actions={<Button>확인</Button>}>
+        <Field label="이름" />
+      </Modal>,
+    )
+    const input = screen.getByLabelText('이름')
+    const confirm = screen.getByRole('button', { name: '확인' })
+    input.focus()
+    await userEvent.tab()
+    expect(confirm).toHaveFocus()
+    await userEvent.tab() // 마지막 → 처음으로
+    expect(input).toHaveFocus()
+    await userEvent.tab({ shift: true }) // 처음 → 마지막으로
+    expect(confirm).toHaveFocus()
+  })
+
+  it('Modal을 닫으면 열기 전 포커스로 돌아간다', async () => {
+    function Demo() {
+      const [open, setOpen] = useState(false)
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>열기</Button>
+          <Modal open={open} title="제목" onClose={() => setOpen(false)}>
+            본문
+          </Modal>
+        </>
+      )
+    }
+    render(<Demo />)
+    const opener = screen.getByRole('button', { name: '열기' })
+    await userEvent.click(opener)
+    await userEvent.keyboard('{Escape}')
+    expect(opener).toHaveFocus()
+  })
+})
