@@ -64,6 +64,14 @@ class MeetingRequest:
         self._require({MeetingStatus.CONFIRMED}, "complete")
         self.status = MeetingStatus.COMPLETED
 
+    def accept_proposal(self, student_id: int, now: datetime) -> None:
+        if student_id != self.student_id:
+            raise ForbiddenError("본인의 면담만 수락할 수 있습니다")
+        self._require({MeetingStatus.PROPOSED}, "accept")
+        if self.proposed_at is None or self.proposed_at <= now or self.staff_id is None:
+            raise InvalidTransition("수락할 수 있는 미래의 시간 제안이 없습니다")
+        self.confirm(self.staff_id, self.location)
+
     def cancel(self, by_student_id: int) -> None:
         """신청한 본인만 취소할 수 있다."""
         if by_student_id != self.student_id:

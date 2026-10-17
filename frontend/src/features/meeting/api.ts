@@ -39,3 +39,5 @@ export const fetchSlots = (from: string, to: string) => api<Slot[]>(`/meetings/s
 export const fetchMyMeetings = () => api<Meeting[]>('/meetings/me')
 export const createMeeting = (body: CreateMeetingInput) => api<Meeting>('/meetings', { method: 'POST', body })
 export const cancelMeeting = (id: number) => api<Meeting>(`/meetings/${id}/cancel`, { method: 'POST' })
+
+export const acceptMeetingProposal = (id: number) => api<Meeting>(`/meetings/${id}/accept`, { method: 'POST' })
