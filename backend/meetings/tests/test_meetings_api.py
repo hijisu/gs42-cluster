@@ -37,6 +37,12 @@ def slot_at(staff):
     return start
 
 
+def one(slots, at):
+    """격자 응답에서 해당 시각의 칸 하나."""
+    (found,) = [s for s in slots if datetime.fromisoformat(s["start_at"]) == at]
+    return found
+
+
 def login(role="student"):
     client = APIClient()
     client.post("/api/auth/mock-login", {"role": role}, format="json")
@@ -70,14 +76,16 @@ def test_slots_available_then_closed_after_confirm(slot_at, staff):
     client = login()
     day = slot_at.date().isoformat()
     url = f"/api/meetings/slots?from={day}&to={day}"
-    (slot,) = client.get(url).json()
-    assert slot["available"] is True and slot["remaining"] == 1
+    slot = one(client.get(url).json(), slot_at)
+    assert slot["available"] is True and slot["remaining"] == 1 and slot["state"] == "open"
 
     created = client.post("/api/meetings", body(slot_at), format="json").json()
-    assert client.get(url).json()[0]["available"] is True  # pending은 자리를 막지 않는다
+    # pending은 자리를 막지 않는다
+    assert one(client.get(url).json(), slot_at)["available"] is True
 
     MeetingRequestRow.objects.filter(pk=created["id"]).update(status="confirmed", staff=staff)
-    assert client.get(url).json()[0]["available"] is False
+    closed = one(client.get(url).json(), slot_at)
+    assert closed["available"] is False and closed["state"] == "full"
 
 
 def test_slots_query_validation():
@@ -161,9 +169,9 @@ def test_cancel_confirmed_frees_the_slot(slot_at, staff):
     MeetingRequestRow.objects.filter(pk=created["id"]).update(status="confirmed", staff=staff)
     day = slot_at.date().isoformat()
     url = f"/api/meetings/slots?from={day}&to={day}"
-    assert client.get(url).json()[0]["available"] is False
+    assert one(client.get(url).json(), slot_at)["available"] is False
     client.post(f"/api/meetings/{created['id']}/cancel")
-    assert client.get(url).json()[0]["available"] is True
+    assert one(client.get(url).json(), slot_at)["available"] is True
 
 
 def proposed_meeting(slot_at, staff):
