@@ -92,7 +92,7 @@ export function StaffHomePage() {
                   <span>{t.who} · {todoKindLabel[t.kind]} · {t.title}</span>
                   {t.detail && <span className="muted small">{formatDateTime(t.detail)}</span>}
                 </span>
-                <Link className="btn ghost sm" to={t.to} aria-label={`${t.who} ${todoKindLabel[t.kind]} ${t.title} 처리`}>처리</Link>
+                <Link className="btn secondary sm" to={t.to} aria-label={`${t.who} ${todoKindLabel[t.kind]} ${t.title} 처리`}>처리</Link>
               </li>
             ))}
           </ul>

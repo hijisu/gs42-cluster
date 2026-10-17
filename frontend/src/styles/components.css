@@ -1,12 +1,15 @@
 /* 공통 컴포넌트 스타일. 색·간격은 tokens.css의 변수만 사용한다. */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:var(--touch);padding:0 var(--sp-5);border-radius:var(--r-md);border:1px solid var(--c-ink);background:var(--c-ink);color:var(--c-surface);font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+/* 버튼 규격: 역할(primary/secondary/danger/ondark) × 크기(md 36px · sm 28px). 글자는 항상 가로 한 줄이다. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);box-sizing:border-box;height:36px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--c-ink);background:var(--c-ink);color:var(--c-surface);font:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;writing-mode:horizontal-tb}
 .btn:hover{background:var(--c-ink-hover);color:var(--c-surface)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.ghost{background:var(--c-surface);color:var(--c-ink)}
-.btn.ghost:hover{background:var(--c-line-soft);color:var(--c-ink)}
-.btn.teal{background:var(--c-teal);border-color:var(--c-teal);color:var(--c-ink)}
-.btn.warn{background:var(--c-surface);border-color:var(--c-warn-line);color:var(--c-warn-text)}
-.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.btn.secondary{background:var(--c-surface);color:var(--c-ink)}
+.btn.secondary:hover{background:var(--c-line-soft);color:var(--c-ink)}
+.btn.danger{background:var(--c-surface);border-color:var(--c-warn-line);color:var(--c-warn-text)}
+.btn.danger:hover{background:var(--c-warn-bg);color:var(--c-warn-text)}
+.btn.ondark{background:var(--c-teal);border-color:var(--c-teal);color:var(--c-ink)}
+.btn.ondark:hover{background:var(--c-teal-dark);color:var(--c-surface)}
+.btn.sm{height:28px;min-height:28px;padding:0 10px;font-size:12px;border-radius:7px}
 
 .pill{display:inline-flex;align-items:center;padding:3px var(--sp-3) 3px 10px;border-radius:var(--r-pill);font-size:12px;font-weight:600;white-space:nowrap}
 .pill.ok{background:var(--c-teal-soft);color:var(--c-teal-text)}
@@ -23,7 +26,7 @@
 .field label{font-size:13px;font-weight:600}
 .field .hint{font-size:12px;color:var(--c-muted)}
 .field .error{font-size:12px;color:var(--c-warn-text)}
-.input{min-height:var(--touch);border:1px solid var(--c-line-input);border-radius:var(--r-md);padding:0 14px;font:inherit;background:var(--c-surface);width:100%;color:var(--c-ink)}
+.input{min-height:36px;border:1px solid var(--c-line-input);border-radius:var(--r-md);padding:0 14px;font:inherit;background:var(--c-surface);width:100%;color:var(--c-ink)}
 textarea.input{padding:var(--sp-3) 14px;min-height:96px;resize:vertical}
 .input[aria-invalid='true']{border-color:var(--c-warn-line)}
 
@@ -125,7 +128,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 /* ===== 모바일 ===== */
 @media (max-width:900px){
   /* 터치 대상은 최소 44px */
-  .btn,.btn.sm,.chip,.tabs button,.cal button,.nav a,.switch,.bell{min-height:44px}
+  .btn,.btn.sm,.chip,.tabs button,.cal button,.nav a,.switch,.bell,.input{height:auto;min-height:44px}
   .btn.sm,.chip{min-width:44px}
   /* 달력 7열: 카드 안쪽 여백과 칸 간격을 줄여 칸 폭을 최대한 확보 */
   .cal{gap:0}

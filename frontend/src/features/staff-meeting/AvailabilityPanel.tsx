@@ -36,10 +36,10 @@ export function AvailabilityPanel() {
           onDirty={setDirty}
           nav={
             <div className="av-nav">
-              <Button variant="ghost" size="sm" aria-label="이전 주" disabled={dirty || atStart} onClick={() => setFrom(addDays(from, -7))}>‹</Button>
+              <Button variant="secondary" size="sm" aria-label="이전 주" disabled={dirty || atStart} onClick={() => setFrom(addDays(from, -7))}>‹</Button>
               <span className="av-title" aria-live="polite">{formatMonthDay(days[0])} ~ {formatMonthDay(days[4])}</span>
-              <Button variant="ghost" size="sm" aria-label="다음 주" disabled={dirty || atEnd} onClick={() => setFrom(addDays(from, 7))}>›</Button>
-              <Button variant="ghost" size="sm" disabled={dirty || atStart} onClick={() => setFrom(firstWeek)}>오늘</Button>
+              <Button variant="secondary" size="sm" aria-label="다음 주" disabled={dirty || atEnd} onClick={() => setFrom(addDays(from, 7))}>›</Button>
+              <Button variant="secondary" size="sm" disabled={dirty || atStart} onClick={() => setFrom(firstWeek)}>오늘</Button>
             </div>
           }
         />
@@ -110,7 +110,7 @@ function Editor({ from, days, today, slots, nav, onDirty }: EditorProps) {
       <div className="row">
         <h2 className="card-title">내 면담 가능 시간</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="ghost" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
+          <Button variant="secondary" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
             변경 취소
           </Button>
           <Button disabled={save.isPending || !dirty} onClick={() => save.mutate({ from: saveFrom, to: saveTo, slots: toSlots(picked, saveFrom, saveTo) })}>

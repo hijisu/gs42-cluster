@@ -153,11 +153,11 @@ function BlockForm({ target, rooms, onClose }: { target: BlockTarget; rooms: Roo
       )}
       {error && <p role="alert" className="login-error">{error}</p>}
       <div className="modal-actions">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>
         {warning ? (
-          <Button variant="warn" disabled={mutation.isPending} onClick={() => run(false)}>
+          <Button variant="danger" disabled={mutation.isPending} onClick={() => run(false)}>
             겹치는 예약이 있어도 저장
           </Button>
         ) : (

@@ -88,9 +88,9 @@ export function LibraryPage() {
             </p>
           )}
           {data && data.total > 20 && <nav aria-label="도서 페이지" className="row">
-            <Button variant="ghost" disabled={page <= 1 || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page - 1)); setParams(p) }}>이전</Button>
+            <Button variant="secondary" disabled={page <= 1 || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page - 1)); setParams(p) }}>이전</Button>
             <span>{page} / {Math.ceil(data.total / 20)} 페이지</span>
-            <Button variant="ghost" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page + 1)); setParams(p) }}>다음</Button>
+            <Button variant="secondary" disabled={page >= Math.ceil(data.total / 20) || books.isPlaceholderData} onClick={() => { const p = new URLSearchParams(params); p.set('page', String(page + 1)); setParams(p) }}>다음</Button>
           </nav>}
           <div className="g4 book-grid">
             {data?.results.map((b) => (

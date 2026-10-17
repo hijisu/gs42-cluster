@@ -12,7 +12,7 @@ export function RoomsPanel({ rooms }: { rooms: Room[] }) {
     <Card className="stack" style={{ gap: 8 }}>
       <div className="row">
         <h2 className="card-title">장소 목록</h2>
-        <Button variant="ghost" size="sm" onClick={() => setAdding(true)}>
+        <Button variant="secondary" size="sm" onClick={() => setAdding(true)}>
           장소 추가
         </Button>
       </div>
@@ -52,7 +52,7 @@ function AddRoomModal({ open, onClose }: { open: boolean; onClose: () => void })
       onClose={close}
       actions={
         <>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="secondary" onClick={close}>
             취소
           </Button>
           <Button

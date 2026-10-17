@@ -31,7 +31,7 @@ export function BookFormModal({ open, book, categories, onClose }: { open: boole
       onClose={close}
       actions={
         <>
-          <Button variant="ghost" onClick={close}>취소</Button>
+          <Button variant="secondary" onClick={close}>취소</Button>
           <Button disabled={save.isPending} onClick={submit}>{save.isPending ? '저장 중…' : '저장'}</Button>
         </>
       }

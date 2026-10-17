@@ -72,15 +72,15 @@ export function PendingCard({ reservation: r, rooms, onReject }: PendingCardProp
                 </option>
               ))}
             </select>
-            <Button size="sm" variant="ghost" disabled={busy || alt === null} onClick={() => alt !== null && reassign.mutate({ id: r.id, roomId: alt })}>
+            <Button size="sm" variant="secondary" disabled={busy || alt === null} onClick={() => alt !== null && reassign.mutate({ id: r.id, roomId: alt })}>
               대체 장소로 승인
             </Button>
           </>
         )}
-        <Button size="sm" variant="warn" disabled={busy} onClick={() => onReject(r)}>
+        <Button size="sm" variant="danger" disabled={busy} onClick={() => onReject(r)}>
           반려
         </Button>
-        <Button size="sm" variant="teal" disabled={busy} onClick={() => approve.mutate(r.id)}>
+        <Button size="sm" variant="primary" disabled={busy} onClick={() => approve.mutate(r.id)}>
           {approve.isPending ? '승인 중…' : '승인 · 이용수칙 전송'}
         </Button>
       </div>

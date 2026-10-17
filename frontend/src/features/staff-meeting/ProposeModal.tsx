@@ -34,7 +34,7 @@ export function ProposeModal({ meeting, defaultLocation, onClose }: { meeting: S
       onClose={close}
       actions={
         <>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="secondary" onClick={close}>
             취소
           </Button>
           <Button

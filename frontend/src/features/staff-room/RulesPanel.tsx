@@ -11,7 +11,7 @@ export function RulesPanel({ rules }: { rules: RoomRules }) {
     <Card className="stack">
       <div className="row">
         <h2 className="card-title">이용수칙</h2>
-        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+        <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
           편집
         </Button>
       </div>
@@ -52,7 +52,7 @@ function RulesEditor({ rules, onClose }: { rules: RoomRules; onClose: () => void
       <Field label="이용수칙" hint="한 줄에 하나씩 입력하세요" multiline rows={8} value={text} onChange={(e) => setText(e.target.value)} error={submitted ? rulesError : undefined} />
       {error && <p role="alert" className="login-error">{error}</p>}
       <div className="modal-actions">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           취소
         </Button>
         <Button

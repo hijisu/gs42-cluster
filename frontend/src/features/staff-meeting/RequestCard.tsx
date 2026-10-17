@@ -72,7 +72,7 @@ export function RequestCard({ meeting, members, types, meId, onPropose }: Reques
           </div>
           {error && <p role="alert" className="login-error">{error}</p>}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="sm" onClick={() => onPropose(meeting, location.trim())}>
+            <Button variant="secondary" size="sm" onClick={() => onPropose(meeting, location.trim())}>
               다른 시간 제안
             </Button>
             <Button

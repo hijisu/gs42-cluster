@@ -35,7 +35,7 @@ export function ReportModal({ book, onClose }: { book: Book | null; onClose: () 
           <Button onClick={close}>닫기</Button>
         ) : (
           <>
-            <Button variant="ghost" onClick={close}>
+            <Button variant="secondary" onClick={close}>
               취소
             </Button>
             <Button

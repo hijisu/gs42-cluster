@@ -5,10 +5,26 @@ import { Button, Chip, Field, Modal, Pill, Table } from '.'
 
 describe('공통 컴포넌트', () => {
   it('Button은 기본 type=button이고 variant 클래스를 붙인다', () => {
-    render(<Button variant="teal" size="sm">저장</Button>)
-    const btn = screen.getByRole('button', { name: '저장' })
+    render(<Button variant="danger" size="sm">삭제</Button>)
+    const btn = screen.getByRole('button', { name: '삭제' })
     expect(btn).toHaveAttribute('type', 'button')
-    expect(btn).toHaveClass('btn', 'teal', 'sm')
+    expect(btn).toHaveClass('btn', 'danger', 'sm')
+  })
+
+  it('Button 역할은 primary(기본)·secondary·danger·ondark 4가지, 크기는 md·sm 2가지다', () => {
+    render(
+      <>
+        <Button>기본</Button>
+        <Button variant="secondary">보조</Button>
+        <Button variant="ondark">배너</Button>
+        <Button size="md">큼</Button>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: '기본' })).toHaveClass('btn')
+    expect(screen.getByRole('button', { name: '기본' }).className).toBe('btn')
+    expect(screen.getByRole('button', { name: '보조' })).toHaveClass('btn', 'secondary')
+    expect(screen.getByRole('button', { name: '배너' })).toHaveClass('btn', 'ondark')
+    expect(screen.getByRole('button', { name: '큼' })).not.toHaveClass('sm')
   })
 
   it('Pill은 tone 클래스를 붙인다', () => {

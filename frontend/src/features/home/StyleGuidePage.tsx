@@ -16,10 +16,12 @@ export function StyleGuidePage() {
       <Card style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="row" style={{ justifyContent: 'flex-start' }}>
           <Button>기본</Button>
-          <Button variant="ghost">고스트</Button>
-          <Button variant="teal">강조</Button>
-          <Button variant="warn">주의</Button>
-          <Button size="sm">작게</Button>
+          <Button variant="secondary">보조</Button>
+          <Button variant="danger">위험</Button>
+          <Button size="sm">작게(카드·표)</Button>
+          <span className="notice" style={{ padding: 8 }}>
+            <Button variant="ondark">어두운 배너용</Button>
+          </span>
         </div>
         <div className="row" style={{ justifyContent: 'flex-start' }}>
           <Pill tone="ok">승인</Pill>

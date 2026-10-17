@@ -32,17 +32,17 @@ export function LoginPage() {
             {errorLabel[error] ?? '로그인에 실패했습니다.'}
           </p>
         )}
-        <a className="btn teal" href={loginUrl}>
+        <a className="btn" href={loginUrl}>
           42 intra로 로그인
         </a>
         {import.meta.env.DEV && (
           <div className="login-mock">
             <p className="label">개발용 모의 로그인</p>
             <div className="row" style={{ justifyContent: 'flex-start' }}>
-              <Button variant="ghost" size="sm" disabled={mock.isPending} onClick={() => mock.mutate('student')}>
+              <Button variant="secondary" size="sm" disabled={mock.isPending} onClick={() => mock.mutate('student')}>
                 교육생
               </Button>
-              <Button variant="ghost" size="sm" disabled={mock.isPending} onClick={() => mock.mutate('staff')}>
+              <Button variant="secondary" size="sm" disabled={mock.isPending} onClick={() => mock.mutate('staff')}>
                 운영팀
               </Button>
             </div>

@@ -52,7 +52,7 @@ export function StaffRoomPage() {
         <Card className="stack" style={{ gap: 16 }}>
           <div className="row">
             <h2 className="card-title">날짜 선택</h2>
-            <Button variant="ghost" size="sm" onClick={() => setDirect(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setDirect(true)}>
               운영팀 직접 예약
             </Button>
           </div>
