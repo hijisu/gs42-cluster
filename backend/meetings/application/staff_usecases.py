@@ -1,7 +1,7 @@
 """교육운영팀용 유스케이스."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 
 from common.domain.events import EventDispatcher
 from meetings.application.ports import (
@@ -148,12 +148,38 @@ class ProposeMeetingUseCase:
         return self._read.get(meeting.id)
 
 
+@dataclass(frozen=True)
+class StaffAvailability:
+    slots: list[datetime]
+    customized_days: list[date]
+
+
 class GetAvailabilityUseCase:
     def __init__(self, availability: AvailabilityRepository) -> None:
         self._availability = availability
 
-    def execute(self, staff_id: int, start: datetime, end: datetime) -> list[datetime]:
-        return self._availability.for_staff_between(staff_id, start, end)
+    def execute(self, staff_id: int, start: datetime, end: datetime) -> StaffAvailability:
+        return StaffAvailability(
+            slots=self._availability.for_staff_between(staff_id, start, end),
+            customized_days=self._availability.customized_days(staff_id, start, end),
+        )
+
+
+class ResetAvailabilityUseCase:
+    """범위의 가능 시간을 직접 설정 이전(기본 가능 시간)으로 되돌린다."""
+
+    def __init__(self, availability: AvailabilityRepository, meetings: MeetingRepository) -> None:
+        self._availability = availability
+        self._meetings = meetings
+
+    def execute(self, staff_id: int, start: datetime, end: datetime) -> StaffAvailability:
+        self._availability.reset_to_default(staff_id, start, end)
+        result = GetAvailabilityUseCase(self._availability).execute(staff_id, start, end)
+        # 확정된 면담이 있는 시간은 닫을 수 없다(호출한 쪽 트랜잭션이 롤백한다).
+        booked = set(self._meetings.staff_has_confirmed_between(staff_id, start, end))
+        if booked - set(result.slots):
+            raise SlotHasMeeting("확정된 면담이 있는 시간은 닫을 수 없습니다")
+        return result
 
 
 class SetAvailabilityUseCase:

@@ -10,6 +10,7 @@ from meetings.application.staff_usecases import (
     ListMeetingTypesForStaffUseCase,
     ListStaffMeetingsUseCase,
     ProposeMeetingUseCase,
+    ResetAvailabilityUseCase,
     SetAvailabilityUseCase,
     SetDefaultStaffUseCase,
 )
@@ -104,3 +105,7 @@ def accept_meeting_proposal() -> AcceptMeetingProposalUseCase:
     return AcceptMeetingProposalUseCase(
         DjangoMeetingRepository(), DjangoMeetingReadModel(), event_bus, timezone.now
     )
+
+
+def reset_availability() -> ResetAvailabilityUseCase:
+    return ResetAvailabilityUseCase(DjangoAvailabilityRepository(), DjangoMeetingRepository())

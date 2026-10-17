@@ -12,7 +12,7 @@ docker compose up --build            # DB·백엔드·프론트 (첫 실행은 �
 1. http://localhost:5173 에 접속하면 로그인 화면이 나옵니다. 개발 환경에서는 **모의 로그인**(교육생 / 운영팀) 버튼("개발용 모의 로그인")으로 바로 들어갈 수 있습니다.
 2. 화면에 보여 줄 예시 데이터가 필요하면(선택):
    ```bash
-   docker compose exec backend python manage.py seed_meeting_demo   # 면담 슬롯·기본 담당자
+   docker compose exec backend python manage.py seed_meeting_demo   # 면담 기본 담당자
    docker compose exec backend python manage.py seed_review_demo    # 교육과정·후기
    ```
 3. 테스트: `docker compose exec backend pytest -q`, `docker compose exec frontend npm test`.
@@ -138,12 +138,12 @@ curl -c cookies.txt -X POST -H 'Content-Type: application/json' \
 curl -b cookies.txt http://localhost:5173/api/auth/me
 ```
 
-### 개발용 면담 슬롯 시드
+### 면담 가능 시간 기본값과 개발용 시드
 
-면담 유형 6종은 마이그레이션으로 들어갑니다. 슬롯과 기본 담당자는 개발용 명령으로 채웁니다(`DJANGO_DEBUG=true`에서만, 반복 실행해도 안전).
+면담 유형 6종은 마이그레이션으로 들어갑니다. **모든 스태프의 면담 가능 시간 기본값은 평일 10:00~12:00, 13:00~17:00(30분 단위, KST)** 이며 스태프를 만들 때 따로 설정하지 않아도 적용됩니다. 스태프가 `PUT /api/staff/availability`로 저장한 **날짜만** 직접 설정한 값(저장한 슬롯만)이 되고, 나머지 날은 계속 기본값입니다. `DELETE /api/staff/availability?from=&to=`는 그 범위를 기본값으로 되돌립니다(확정된 면담이 있는 시간이 닫히면 409). 기본 담당자는 개발용 명령으로 지정합니다(`DJANGO_DEBUG=true`에서만, 반복 실행해도 안전).
 
 ```bash
-python manage.py seed_meeting_demo --days 7   # 모의 운영팀(staff)을 기본 담당자로, 평일 10·11·13·14·15·16시 슬롯 생성
+python manage.py seed_meeting_demo   # 모의 운영팀(staff)을 면담 유형 기본 담당자로 지정(가능 시간은 기본값)
 ```
 
 ### 개발용 교육과정·후기 시드

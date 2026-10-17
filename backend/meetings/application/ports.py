@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import Protocol
 
 from meetings.domain.meeting import MeetingRequest
@@ -83,6 +83,12 @@ class AvailabilityRepository(Protocol):
     def replace_for_staff(
         self, staff_id: int, start: datetime, end: datetime, slots: list[datetime]
     ) -> None: ...
+
+    def customized_days(self, staff_id: int, start: datetime, end: datetime) -> list[date]:
+        """범위 안에서 직접 저장해 기본 가능 시간을 쓰지 않는 날(KST)."""
+        ...
+
+    def reset_to_default(self, staff_id: int, start: datetime, end: datetime) -> None: ...
 
 
 class MeetingTypeRepository(Protocol):

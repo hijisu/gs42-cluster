@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
@@ -11,9 +11,15 @@ from meetings.application.ports import (
     StaffMeetingView,
     StudentInfo,
 )
+from meetings.domain.defaults import KST, default_slots
 from meetings.domain.errors import MeetingNotFound, SlotUnavailable
 from meetings.domain.meeting import MeetingRequest, MeetingStatus
-from meetings.infrastructure.models import AvailabilitySlot, MeetingRequestRow, MeetingType
+from meetings.infrastructure.models import (
+    AvailabilityCustomDay,
+    AvailabilitySlot,
+    MeetingRequestRow,
+    MeetingType,
+)
 
 
 def _to_domain(row: MeetingRequestRow) -> MeetingRequest:
@@ -93,17 +99,46 @@ class DjangoMeetingRepository:
         return list(rows)
 
 
+def _kst_days(start: datetime, end: datetime) -> list[date]:
+    first, last = start.astimezone(KST).date(), end.astimezone(KST).date()
+    return [first + timedelta(days=n) for n in range((last - first).days + 1)]
+
+
 class DjangoAvailabilityRepository:
+    """직접 저장한 날은 저장한 슬롯만, 그 외 날은 모든 스태프가 기본 가능 시간을 쓴다."""
+
+    @staticmethod
+    def _custom_days(start: datetime, end: datetime) -> dict[int, set[date]]:
+        days = _kst_days(start, end)
+        found: dict[int, set[date]] = {}
+        for staff_id, day in AvailabilityCustomDay.objects.filter(
+            day__gte=days[0], day__lte=days[-1]
+        ).values_list("staff_id", "day"):
+            found.setdefault(staff_id, set()).add(day)
+        return found
+
+    @staticmethod
+    def _defaults_for(slots: list[datetime], custom: set[date]) -> set[datetime]:
+        return {slot for slot in slots if slot.astimezone(KST).date() not in custom}
+
     def for_staff_between(self, staff_id: int, start: datetime, end: datetime) -> list[datetime]:
-        rows = AvailabilitySlot.objects.filter(
-            staff_id=staff_id, start_at__gte=start, start_at__lte=end
-        ).order_by("start_at")
-        return list(rows.values_list("start_at", flat=True))
+        stored = set(
+            AvailabilitySlot.objects.filter(
+                staff_id=staff_id, start_at__gte=start, start_at__lte=end
+            ).values_list("start_at", flat=True)
+        )
+        custom = self._custom_days(start, end).get(staff_id, set())
+        return sorted(stored | self._defaults_for(default_slots(start, end), custom))
 
     @transaction.atomic
     def replace_for_staff(
         self, staff_id: int, start: datetime, end: datetime, slots: list[datetime]
     ) -> None:
+        # 저장하는 범위의 날들은 이제 직접 설정한 날이다(그 밖의 날은 기본 가능 시간 그대로).
+        AvailabilityCustomDay.objects.bulk_create(
+            [AvailabilityCustomDay(staff_id=staff_id, day=d) for d in _kst_days(start, end)],
+            ignore_conflicts=True,
+        )
         AvailabilitySlot.objects.filter(
             staff_id=staff_id, start_at__gte=start, start_at__lte=end
         ).exclude(start_at__in=slots).delete()
@@ -116,9 +151,38 @@ class DjangoAvailabilityRepository:
             [AvailabilitySlot(staff_id=staff_id, start_at=t) for t in slots if t not in existing]
         )
 
+    def customized_days(self, staff_id: int, start: datetime, end: datetime) -> list[date]:
+        return sorted(self._custom_days(start, end).get(staff_id, set()))
+
+    @transaction.atomic
+    def reset_to_default(self, staff_id: int, start: datetime, end: datetime) -> None:
+        days = _kst_days(start, end)
+        AvailabilityCustomDay.objects.filter(
+            staff_id=staff_id, day__gte=days[0], day__lte=days[-1]
+        ).delete()
+        AvailabilitySlot.objects.filter(
+            staff_id=staff_id, start_at__gte=start, start_at__lte=end
+        ).delete()
+
     def offered_between(self, start: datetime, end: datetime) -> list[tuple[int, datetime]]:
-        rows = AvailabilitySlot.objects.filter(start_at__gte=start, start_at__lte=end)
-        return list(rows.values_list("staff_id", "start_at"))
+        offered = set(
+            AvailabilitySlot.objects.filter(start_at__gte=start, start_at__lte=end).values_list(
+                "staff_id", "start_at"
+            )
+        )
+        custom = self._custom_days(start, end)
+        defaults = default_slots(start, end)
+        staff_ids = (
+            get_user_model()
+            .objects.filter(role=Role.STAFF.value, is_active=True)
+            .values_list("pk", flat=True)
+        )
+        for staff_id in staff_ids:
+            offered.update(
+                (staff_id, slot)
+                for slot in self._defaults_for(defaults, custom.get(staff_id, set()))
+            )
+        return sorted(offered, key=lambda item: (item[1], item[0]))
 
 
 def _type_info(row: MeetingType) -> MeetingTypeInfo:

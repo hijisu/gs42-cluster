@@ -13,6 +13,12 @@ KST = ZoneInfo("Asia/Seoul")
 
 
 @pytest.fixture(autouse=True)
+def _no_default_availability(monkeypatch):
+    """슬롯을 직접 만들어 검증하므로 기본 가능 시간은 끈다(test_default_availability 참고)."""
+    monkeypatch.setattr("meetings.infrastructure.repositories.default_slots", lambda start, end: [])
+
+
+@pytest.fixture(autouse=True)
 def _mock_login(settings):
     settings.MOCK_LOGIN_ENABLED = True
 
