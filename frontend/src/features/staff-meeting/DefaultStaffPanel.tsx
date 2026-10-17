@@ -6,7 +6,7 @@ import { useSaveDefaultStaff } from './hooks'
 import { errorLabel } from './labels'
 
 /** 유형별 기본 담당자 설정 */
-export function DefaultStaffPanel({ types, members }: { types: StaffMeetingType[]; members: StaffMember[] }) {
+export function DefaultStaffPanel({ types, members, tabs }: { types: StaffMeetingType[]; members: StaffMember[]; tabs: React.ReactNode }) {
   const save = useSaveDefaultStaff()
   // 사용자가 바꾼 값만 보관하고, 나머지는 서버 값을 그대로 보여준다.
   const [edits, setEdits] = useState<Record<number, number | null>>({})
@@ -17,7 +17,26 @@ export function DefaultStaffPanel({ types, members }: { types: StaffMeetingType[
 
   return (
     <Card className="stack" style={{ gap: 10 }}>
-      <h2 className="card-title">유형별 기본 담당자</h2>
+      <div className="row">
+        {tabs}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button variant="secondary" size="sm" disabled={!dirty || save.isPending} onClick={() => setEdits({})}>
+            변경 취소
+          </Button>
+          <Button
+            size="sm"
+            disabled={!dirty || save.isPending}
+            onClick={() =>
+              save.mutate(
+                types.map((t) => ({ id: t.id, default_staff_id: current(t) })),
+                { onSuccess: () => setEdits({}) },
+              )
+            }
+          >
+            {save.isPending ? '저장 중…' : '저장'}
+          </Button>
+        </div>
+      </div>
       <div className="list">
         {types.map((t) => (
           <div key={t.id} className="row">
@@ -27,7 +46,7 @@ export function DefaultStaffPanel({ types, members }: { types: StaffMeetingType[
             <select
               id={`default-${t.id}`}
               className="input"
-              style={{ width: 150, minHeight: 44 }}
+              style={{ width: 160, minHeight: 32, fontSize: 13 }}
               value={current(t) ?? ''}
               onChange={(e) => setEdits({ ...edits, [t.id]: e.target.value === '' ? null : Number(e.target.value) })}
             >
@@ -42,20 +61,6 @@ export function DefaultStaffPanel({ types, members }: { types: StaffMeetingType[
         ))}
       </div>
       {error && <p role="alert" className="login-error">{error}</p>}
-      <div>
-        <Button
-          size="sm"
-          disabled={!dirty || save.isPending}
-          onClick={() =>
-            save.mutate(
-              types.map((t) => ({ id: t.id, default_staff_id: current(t) })),
-              { onSuccess: () => setEdits({}) },
-            )
-          }
-        >
-          {save.isPending ? '저장 중…' : '기본 담당자 저장'}
-        </Button>
-      </div>
     </Card>
   )
 }

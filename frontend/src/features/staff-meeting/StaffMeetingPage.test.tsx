@@ -143,13 +143,28 @@ describe('운영 면담 관리 화면', () => {
     expect(within(card).queryByRole('button', { name: '희망 일시로 확정' })).toBeNull()
   })
 
+  it('가능 시간과 유형별 기본 담당자는 한 카드의 탭이고, 탭을 바꿔도 저장 전 편집이 남는다', async () => {
+    await openPage(lists({}))
+    const availability = await screen.findByRole('tab', { name: '내 면담 가능 시간' })
+    expect(availability).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByRole('group', { name: '가능 시간 선택' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: '유형별 기본 담당자' }))
+    expect(screen.getByRole('tab', { name: '유형별 기본 담당자' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('group', { name: '가능 시간 선택' })).toBeNull()
+    expect(await screen.findByLabelText('기숙사 이용')).toBeInTheDocument()
+    await userEvent.click(screen.getAllByRole('tab', { name: '내 면담 가능 시간' })[0])
+    expect(await screen.findByRole('group', { name: '가능 시간 선택' })).toBeInTheDocument()
+  })
+
   it('유형별 기본 담당자를 저장한다', async () => {
     const calls = await openPage(
       lists({}),
       (req) => (req.method === 'PUT' && req.url.endsWith('/staff/meeting-types') ? { json: types } : undefined),
     )
+    await screen.findByRole('group', { name: '가능 시간 선택' }) // 화면이 다 불러와진 뒤 탭을 바꾼다
+    await userEvent.click(screen.getByRole('tab', { name: '유형별 기본 담당자' }))
     await userEvent.selectOptions(await screen.findByLabelText('기숙사 이용'), '1')
-    await userEvent.click(screen.getByRole('button', { name: '기본 담당자 저장' }))
+    await userEvent.click(screen.getByRole('button', { name: '저장' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
     expect(calls.find((c) => c.method === 'PUT')!.body).toEqual([
       { id: 1, default_staff_id: 2 },

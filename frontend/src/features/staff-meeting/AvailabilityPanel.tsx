@@ -10,7 +10,7 @@ import { errorLabel } from './labels'
 const WEEKS = 4
 
 /** 내 면담 가능 시간: 평일 5일 × 30분 칸. 칸을 누르거나 끌어서 열고 닫는다. */
-export function AvailabilityPanel() {
+export function AvailabilityPanel({ tabs }: { tabs: React.ReactNode }) {
   const today = kstDateFromToday(0)
   const firstWeek = firstViewWeek(today)
   const [from, setFrom] = useState(firstWeek)
@@ -23,7 +23,7 @@ export function AvailabilityPanel() {
 
   return (
     <Card className="stack" style={{ gap: 12 }}>
-      {isPending && <h2 className="card-title">내 면담 가능 시간</h2>}
+      {(isPending || isError) && <div className="row">{tabs}</div>}
       {isPending && <p className="muted" role="status">불러오는 중…</p>}
       {isError && <p role="alert">가능 시간을 불러오지 못했어요.</p>}
       {data && (
@@ -33,6 +33,7 @@ export function AvailabilityPanel() {
           days={days}
           today={today}
           slots={data.slots}
+          tabs={tabs}
           onDirty={setDirty}
           nav={
             <div className="av-nav">
@@ -54,10 +55,11 @@ interface EditorProps {
   today: string
   slots: string[]
   nav: React.ReactNode
+  tabs: React.ReactNode
   onDirty: (dirty: boolean) => void
 }
 
-function Editor({ from, days, today, slots, nav, onDirty }: EditorProps) {
+function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
   const save = useSaveAvailability()
   const initial = toKeys(slots)
   const [picked, setPicked] = useState<Set<string>>(initial)
@@ -108,12 +110,12 @@ function Editor({ from, days, today, slots, nav, onDirty }: EditorProps) {
   return (
     <>
       <div className="row">
-        <h2 className="card-title">내 면담 가능 시간</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
+        {tabs}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button variant="secondary" size="sm" disabled={save.isPending || !dirty} onClick={() => setPicked(initial)}>
             변경 취소
           </Button>
-          <Button disabled={save.isPending || !dirty} onClick={() => save.mutate({ from: saveFrom, to: saveTo, slots: toSlots(picked, saveFrom, saveTo) })}>
+          <Button size="sm" disabled={save.isPending || !dirty} onClick={() => save.mutate({ from: saveFrom, to: saveTo, slots: toSlots(picked, saveFrom, saveTo) })}>
             {save.isPending ? '저장 중…' : '저장'}
           </Button>
         </div>
