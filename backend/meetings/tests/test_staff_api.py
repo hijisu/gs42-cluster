@@ -183,9 +183,7 @@ def test_propose_rejects_past_but_accepts_arbitrary_minutes(staff_client, meetin
         staff_client.post(url, {"proposed_at": past.isoformat()}, format="json").status_code == 400
     )
     odd = (slot_at + timedelta(minutes=7)).isoformat()
-    assert (
-        staff_client.post(url, {"proposed_at": odd}, format="json").status_code == 200
-    )
+    assert staff_client.post(url, {"proposed_at": odd}, format="json").status_code == 200
 
 
 def test_canceled_meeting_cannot_be_confirmed(staff_client, student_client, meeting):
