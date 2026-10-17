@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { kstDateFromToday } from '../../lib/datetime'
-import { cancelMeeting, createMeeting, fetchMeetingTypes, fetchMyMeetings, fetchSlots, type Meeting } from './api'
+import { acceptMeetingProposal, cancelMeeting, createMeeting, fetchMeetingTypes, fetchMyMeetings, fetchSlots, type Meeting } from './api'
 
 export const SLOT_WINDOW_DAYS = 14
 
@@ -41,5 +41,18 @@ export function useCancelMeeting() {
       qc.setQueryData<Meeting[]>(keys.mine, (old) => old?.map((m) => (m.id === updated.id ? updated : m)))
       qc.invalidateQueries({ queryKey: keys.slots })
     },
+  })
+}
+
+export function useAcceptMeetingProposal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: acceptMeetingProposal,
+    onSuccess: (updated) => {
+      qc.setQueryData<Meeting[]>(keys.mine, (old) => old?.map((m) => m.id === updated.id ? updated : m))
+      qc.invalidateQueries({ queryKey: keys.slots })
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+    },
+    onError: () => qc.invalidateQueries({ queryKey: keys.mine }),
   })
 }

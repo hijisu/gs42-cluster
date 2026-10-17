@@ -176,16 +176,14 @@ def test_propose_then_confirm_uses_proposed_time(staff_client, student_client, m
     ) == datetime.fromisoformat(later)
 
 
-def test_propose_rejects_past_and_unaligned(staff_client, meeting, slot_at):
+def test_propose_rejects_past_but_accepts_arbitrary_minutes(staff_client, meeting, slot_at):
     url = f"/api/staff/meetings/{meeting['id']}/propose"
     past = (datetime.now(KST) - timedelta(days=1)).replace(minute=0, second=0, microsecond=0)
     assert (
         staff_client.post(url, {"proposed_at": past.isoformat()}, format="json").status_code == 400
     )
     odd = (slot_at + timedelta(minutes=7)).isoformat()
-    assert (
-        staff_client.post(url, {"proposed_at": odd}, format="json").json()["code"] == "invalid_slot"
-    )
+    assert staff_client.post(url, {"proposed_at": odd}, format="json").status_code == 200
 
 
 def test_canceled_meeting_cannot_be_confirmed(staff_client, student_client, meeting):
