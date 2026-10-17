@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "meetings",
     "rooms",
     "reviews",
+    "library",
     "notifications",
     "devtools",
 ]
