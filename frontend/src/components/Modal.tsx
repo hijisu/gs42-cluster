@@ -13,19 +13,25 @@ export function Modal({ open, title, onClose, children, actions }: ModalProps) {
   const titleId = useId()
   const ref = useRef<HTMLDivElement>(null)
 
+  // onClose는 렌더링마다 바뀔 수 있어 ref로 보관한다. effect가 다시 실행되면 포커스를 되돌려 입력이 끊긴다.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     if (!open) return
     const previous = document.activeElement as HTMLElement | null
     ref.current?.focus()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
       previous?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
   return (

@@ -6,6 +6,7 @@ import { StyleGuidePage } from '../features/home/StyleGuidePage'
 import { ReviewPage } from '../features/review/ReviewPage'
 import { RoomPage } from '../features/room/RoomPage'
 import { StaffMeetingPage } from '../features/staff-meeting/StaffMeetingPage'
+import { StaffRoomPage } from '../features/staff-room/StaffRoomPage'
 import { MeetingPage } from '../features/meeting/MeetingPage'
 import { RequireAuth } from '../features/auth/guards'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -53,7 +54,7 @@ export const routes = [
     children: [
       { index: true, element: page('운영 홈') },
       { path: 'meeting', element: <StaffMeetingPage /> },
-      { path: 'room', element: page('회의실 관리') },
+      { path: 'room', element: <StaffRoomPage /> },
       { path: 'library', element: page('도서 관리') },
       { path: 'courses', element: page('교육과정 · 후기 관리') },
     ],

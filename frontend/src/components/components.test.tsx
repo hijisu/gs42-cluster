@@ -61,4 +61,19 @@ describe('공통 컴포넌트', () => {
     await userEvent.click(document.querySelector('.scrim')!)
     expect(onClose).toHaveBeenCalledTimes(2)
   })
+
+  it('Modal은 부모가 다시 렌더링되어도 입력창 포커스를 빼앗지 않는다', async () => {
+    function Demo() {
+      const [text, setText] = useState('')
+      // onClose를 매 렌더링마다 새로 만든다.
+      return (
+        <Modal open title="입력" onClose={() => setText('')}>
+          <Field label="사유" value={text} onChange={(e) => setText(e.target.value)} />
+        </Modal>
+      )
+    }
+    render(<Demo />)
+    await userEvent.type(screen.getByLabelText('사유'), '여러 글자')
+    expect(screen.getByLabelText('사유')).toHaveValue('여러 글자')
+  })
 })

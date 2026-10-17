@@ -1,17 +1,18 @@
+import type { ReactNode } from 'react'
 import { Card } from '../../components'
 import { formatDayLabel } from '../../lib/datetime'
 import type { Availability } from './api'
 import { hourStateLabel } from './labels'
 
 // 선택한 날짜의 장소 × 시간 타임라인 (확정/대기/빔/차단)
-export function Timeline({ date, data }: { date: string; data: Availability }) {
+export function Timeline({ date, data, title = '예약 현황', action }: { date: string; data: Availability; title?: string; action?: ReactNode }) {
   const hours = data.rooms[0]?.hours.map((h) => h.hour) ?? []
   const cols = `repeat(${hours.length}, minmax(0, 1fr))`
   return (
     <Card className="stack">
       <div className="row">
-        <h2 className="card-title">{formatDayLabel(date)} 예약 현황</h2>
-        <span className="muted small">선택한 날짜 기준</span>
+        <h2 className="card-title">{formatDayLabel(date)} {title}</h2>
+        {action ?? <span className="muted small">선택한 날짜 기준</span>}
       </div>
       <div className="timeline-scroll">
         <div className="timeline" role="table" aria-label="장소별 예약 현황">
