@@ -135,7 +135,10 @@ describe('오아시스 도서 화면', () => {
       (req) => (req.method === 'POST' && req.url.endsWith('/books/wishes') ? ((posted = true), { status: 201, json: wish() }) : undefined),
       (req) => (req.url.endsWith('/books/my-requests') ? { json: { reports: [], wishes: posted ? [wish()] : [] } } : undefined),
     )
-    await userEvent.click(await screen.findByRole('button', { name: '신청하기' }))
+    expect(screen.queryByRole('dialog', { name: '희망 도서 신청' })).toBeNull()
+    await userEvent.click(await screen.findByRole('button', { name: '희망 도서 신청' }))
+    expect(await screen.findByRole('dialog', { name: '희망 도서 신청' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '신청하기' }))
     expect(await screen.findByText('도서명을 입력해 주세요.')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST')).toBe(false)
 
@@ -143,6 +146,7 @@ describe('오아시스 도서 화면', () => {
     await userEvent.type(screen.getByLabelText('저자 · 출판사'), '우재남')
     await userEvent.click(screen.getByRole('button', { name: '신청하기' }))
     expect(await screen.findByText(/신청했어요/)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '희망 도서 신청' })).toBeNull()
     expect(calls.find((c) => c.method === 'POST')!.body).toEqual({ title: '이것이 리눅스다', author: '우재남', reason: '', link_url: '' })
     const item = await screen.findByTestId('wish-1')
     expect(within(item).getByText('접수', { selector: '.pill' })).toBeInTheDocument()

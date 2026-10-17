@@ -34,7 +34,7 @@ export function BookCard({ book, onOpen, onReport }: BookCardProps) {
     <Card as="article" className="book-card">
       <BookCover book={book} />
       <div className="stack" style={{ gap: 4 }}>
-        <button type="button" className="book-title" onClick={() => onOpen(book)}>
+        <button type="button" className="book-title" title={book.title} onClick={() => onOpen(book)}>
           {book.title}
         </button>
         <span className="muted small">{book.author || '저자 미상'}</span>
