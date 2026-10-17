@@ -23,10 +23,14 @@ NOW = datetime(2026, 10, 17, tzinfo=UTC)
 
 
 class FakeBooks:
-    def __init__(self, books=()):
+    def __init__(self, books=(), lost=None):
         self.rows = {}
+        self.lost = lost or {}  # book_id → 접수된 분실 신고 수
         for b in books:
             self.add(b)
+
+    def lost_counts(self, book_ids):
+        return {i: self.lost[i] for i in book_ids if self.lost.get(i)}
 
     def search(self, query, category):
         terms = query.split()
@@ -145,8 +149,8 @@ def test_search_limits_results_but_reports_total_and_categories():
 def test_search_filters_by_terms_and_category():
     books = FakeBooks([book(author="마틴"), book("H-1", "사피엔스", category="인문")])
     search = uc.SearchBooksUseCase(books)
-    assert [b.code for b in search.execute("클린 마틴").books] == ["B-1"]
-    assert [b.code for b in search.execute("", "인문").books] == ["H-1"]
+    assert [v.book.code for v in search.execute("클린 마틴").books] == ["B-1"]
+    assert [v.book.code for v in search.execute("", "인문").books] == ["H-1"]
     assert search.execute("없는책").total == 0
 
 
@@ -226,3 +230,18 @@ def test_delete_book_and_import_counts():
     uc.DeleteBookUseCase(books).execute(1)
     with pytest.raises(BookNotFound):
         uc.DeleteBookUseCase(books).execute(1)
+
+
+def test_search_and_get_expose_lost_count_and_derived_availability():
+    books = FakeBooks(
+        [book("A-1", "책 A", quantity=3), book("B-1", "책 B", quantity=1)], lost={1: 1, 2: 5}
+    )
+    found = uc.SearchBooksUseCase(books).execute()
+    by_code = {v.book.code: v for v in found.books}
+    assert (by_code["A-1"].lost_count, by_code["A-1"].available_quantity) == (1, 2)
+    # 분실 신고가 수량을 넘어도 비치 수는 0 미만이 되지 않는다. 수량 자체는 그대로다.
+    assert (by_code["B-1"].lost_count, by_code["B-1"].available_quantity) == (5, 0)
+    assert books.rows[1].quantity == 3
+    one = uc.GetBookUseCase(books).execute(1)
+    assert one.lost_count == 1 and one.available_quantity == 2
+    assert uc.GetBookUseCase(FakeBooks([book()])).execute(1).available_quantity == 1

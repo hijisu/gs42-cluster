@@ -25,7 +25,23 @@ class WishView:
     created_at: datetime
 
 
+@dataclass(frozen=True)
+class BookView:
+    """도서 + 접수된 분실 신고 수. 비치 수는 그로부터 계산한 파생값이다."""
+
+    book: Book
+    lost_count: int = 0
+
+    @property
+    def available_quantity(self) -> int:
+        return self.book.available_quantity(self.lost_count)
+
+
 class BookRepository(Protocol):
+    def lost_counts(self, book_ids: list[int]) -> dict[int, int]:
+        """book_id → 접수(미처리)된 분실 신고 수. 훼손 신고와 처리 완료 신고는 세지 않는다."""
+        ...
+
     def search(self, query: str, category: str) -> list[Book]: ...
     def categories(self) -> list[str]: ...
     def get(self, book_id: int) -> Book | None: ...

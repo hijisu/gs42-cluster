@@ -252,3 +252,38 @@ def test_book_pagination_has_no_duplicates_and_filters_before_paging():
     assert client.get("/api/books/?page=99&category=페이지분류").json()["results"] == []
     for query in ("page=0", "page=-1", "page=abc", "page_size=101", "page_size=0"):
         assert client.get(f"/api/books/?{query}").status_code == 400
+
+
+def test_lost_report_lowers_available_quantity_until_resolved_and_damaged_does_not():
+    book = make_book(quantity=3)
+    student, staff = login(), login("staff")
+    first = student.get(f"/api/books/{book.pk}").json()
+    assert (first["quantity"], first["lost_count"], first["available_quantity"]) == (3, 0, 3)
+
+    lost = student.post(
+        "/api/books/reports", {"book_id": book.pk, "kind": "lost"}, format="json"
+    ).json()
+    student.post(
+        "/api/books/reports",
+        {"book_id": book.pk, "kind": "damaged", "detail": "표지 찢어짐"},
+        format="json",
+    )  # 훼손은 비치 수에 영향 없음
+    detail = student.get(f"/api/books/{book.pk}").json()
+    assert (detail["quantity"], detail["lost_count"], detail["available_quantity"]) == (3, 1, 2)
+    listed = student.get("/api/books/").json()["results"][0]
+    assert (listed["lost_count"], listed["available_quantity"]) == (1, 2)
+
+    assert staff.post(f"/api/staff/book-reports/{lost['id']}/resolve").status_code == 200
+    back = student.get(f"/api/books/{book.pk}").json()
+    assert (back["quantity"], back["lost_count"], back["available_quantity"]) == (3, 0, 3)
+
+
+def test_lost_count_is_per_book_and_counts_every_open_report():
+    a = make_book("A-1", "책 A", quantity=2)
+    make_book("B-1", "책 B", quantity=2)
+    student = login()
+    for _ in range(2):
+        student.post("/api/books/reports", {"book_id": a.pk, "kind": "lost"}, format="json")
+    results = {r["code"]: r for r in student.get("/api/books/").json()["results"]}
+    assert (results["A-1"]["lost_count"], results["A-1"]["available_quantity"]) == (2, 0)
+    assert (results["B-1"]["lost_count"], results["B-1"]["available_quantity"]) == (0, 2)

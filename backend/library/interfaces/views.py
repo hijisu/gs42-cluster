@@ -29,14 +29,15 @@ def books(request):
             "page_size": result.page_size,
             "total_pages": result.total_pages,
             "categories": result.categories,
-            "results": [book_payload(b) for b in result.books],
+            "results": [book_payload(v.book, v.lost_count) for v in result.books],
         }
     )
 
 
 @api_view(["GET"])
 def book_detail(request, book_id: int):
-    return Response(book_payload(deps.get_book().execute(book_id)))
+    view = deps.get_book().execute(book_id)
+    return Response(book_payload(view.book, view.lost_count))
 
 
 @api_view(["POST"])

@@ -27,3 +27,7 @@ class Book:
             raise InvalidBook("도서 제목이 필요합니다")
         if self.quantity < 0:
             raise InvalidBook("수량은 0 이상이어야 합니다")
+
+    def available_quantity(self, lost_reports: int) -> int:
+        """비치 수 = 수량 − 접수된 분실 신고 수(0 미만 없음). 수량 자체는 바꾸지 않는 파생값이다."""
+        return max(0, self.quantity - max(0, lost_reports))

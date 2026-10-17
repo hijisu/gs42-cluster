@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from library.application.ports import ReportView, WishView
 from library.domain.book import Book
@@ -34,6 +34,16 @@ def _values(book: Book) -> dict:
 
 
 class DjangoBookRepository:
+    def lost_counts(self, book_ids: list[int]) -> dict[int, int]:
+        rows = (
+            BookReportRow.objects.filter(
+                book_id__in=book_ids, kind=ReportKind.LOST.value, status=ReportStatus.RECEIVED.value
+            )
+            .values("book_id")
+            .annotate(n=Count("id"))
+        )
+        return {r["book_id"]: r["n"] for r in rows}
+
     def search(self, query: str, category: str) -> list[Book]:
         rows = BookRow.objects.all()
         if category:
