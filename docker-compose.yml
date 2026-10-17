@@ -48,7 +48,9 @@ services:
     environment:
       API_PROXY_TARGET: http://backend:8000
     ports:
-      - "127.0.0.1:${FRONTEND_HOST_PORT:-5173}:5173"
+      # 같은 네트워크의 다른 기기에서 http://<이 PC의 IP>:5173 으로 테스트할 수 있게 프론트 포트만 모든 인터페이스에 연다.
+      # 이 PC에서만 쓰려면 .env 에 FRONTEND_BIND=127.0.0.1 (BUILD.md '다른 기기에서 접속').
+      - "${FRONTEND_BIND:-0.0.0.0}:${FRONTEND_HOST_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app/frontend
       - frontend-node-modules:/app/frontend/node_modules

@@ -51,6 +51,7 @@ cp .env.example .env
 | `TIME_ZONE` | 표시 시간대 (`Asia/Seoul`) | O |
 | `POSTGRES_*` | DB 이름·사용자·비밀번호·호스트·포트. compose에서는 `POSTGRES_HOST=db`로 자동 덮어씀 | O |
 | `COMPOSE_PROJECT_NAME` | **개발용** compose 프로젝트 이름(기본 `gs42`). 한 PC에서 클론을 여러 개 돌릴 때만 변경. 운영 구성은 `-p <이름>-prod`로 따로 지정 | - |
+| `FRONTEND_BIND` | 프론트 포트를 여는 주소. 기본 `0.0.0.0`(같은 네트워크의 다른 기기에서 접속 가능, 아래 "다른 기기에서 접속"), 이 PC에서만 쓰려면 `127.0.0.1` | - |
 | `DB_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT` | compose가 호스트에 여는 포트(기본 5432 / 8000 / 5173). 컨테이너 안 포트는 고정 | - |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `FORTYTWO_REDIRECT_URI` | 42 OAuth 앱 정보 | O |
 | `STAFF_INTRA_IDS` | 교육운영팀 intra login 목록(쉼표 구분) | O |
@@ -64,7 +65,7 @@ cp .env.example .env
 
 ## 로컬 실행
 
-`docker compose up` 한 번으로 DB·백엔드·프론트를 함께 띄웁니다. 포트는 모두 이 PC의 루프백(`127.0.0.1`)에만 열립니다(예시 비밀번호의 DB와 모의 로그인이 같은 네트워크의 다른 PC에 노출되지 않게).
+`docker compose up` 한 번으로 DB·백엔드·프론트를 함께 띄웁니다. DB(5432)·백엔드(8000) 포트는 이 PC의 루프백(`127.0.0.1`)에만 열리고(예시 비밀번호의 DB가 다른 PC에 노출되지 않게), 프론트 포트(5173)만 같은 네트워크의 다른 기기 테스트를 위해 모든 인터페이스에 열립니다(아래 "다른 기기에서 접속").
 
 ```bash
 cp .env.example .env            # 처음 한 번 (비밀값은 .env에만 두고 커밋하지 않음)
@@ -87,6 +88,10 @@ docker compose down                         # 중지(데이터 유지) / down -v
 - 한 PC에서 클론/에이전트를 여러 개 돌릴 때는 `.env`의 `COMPOSE_PROJECT_NAME`과 `*_HOST_PORT`를 서로 다르게 지정합니다(예: `gs42-b`, 8100/5532/5273).
   - `FRONTEND_HOST_PORT`를 바꾸면 compose가 백엔드의 `FRONTEND_ORIGIN`(CSRF 신뢰 origin·CORS)을 `http://localhost:<FRONTEND_HOST_PORT>`로 자동 설정합니다. `.env`의 `FRONTEND_ORIGIN`은 호스트에서 직접 실행할 때만 쓰입니다.
   - `BACKEND_HOST_PORT`를 바꾸면 42 로그인용 `FORTYTWO_REDIRECT_URI`와 intra 앱에 등록한 redirect URI도 같은 포트로 맞춰야 합니다(모의 로그인만 쓰면 무관).
+- **다른 기기에서 접속(개발·테스트용)**: 프론트 포트(5173)는 기본으로 모든 인터페이스에 열려 있어, 같은 네트워크의 PC·휴대폰에서 `http://<이 PC의 IP>:5173`으로 접속합니다(IP 확인: macOS `ipconfig getifaddr en0`). `/api`는 프론트가 프록시하므로 DB(5432)·백엔드(8000) 포트는 계속 이 PC에서만 열립니다. 개발 모드(`DJANGO_DEBUG=true`)에서는 사설망 IP(10.x·172.16–31.x·192.168.x)로 접속한 프론트의 origin을 CSRF에서 자동 신뢰하므로 별도 설정이 필요 없습니다(운영 모드에서는 적용되지 않음). 이 PC에서만 쓰려면 `.env`에 `FRONTEND_BIND=127.0.0.1`을 지정하고 `docker compose up -d`를 실행합니다.
+  - **주의**: 개발 모드는 모의 로그인이 켜져 있어 그 네트워크의 누구나 운영팀 계정으로 들어올 수 있습니다. 신뢰하는 네트워크에서만 쓰고, 공용 와이파이에서는 `FRONTEND_BIND=127.0.0.1`로 닫습니다. 인터넷 공개·HTTPS는 #43 범위입니다.
+  - 42 로그인은 redirect URI가 `localhost`라 다른 기기에서는 동작하지 않습니다. 다른 기기에서는 모의 로그인을 씁니다.
+  - 웹 푸시는 보안 컨텍스트(HTTPS 또는 localhost)에서만 동작해 `http://<IP>`로 접속한 기기에서는 켜지지 않습니다. 앱 안 알림(벨)은 동작합니다.
 - **`.env`를 수정한 뒤에는 `docker compose up -d`로 적용합니다.** `docker compose restart`는 `.env`(`env_file`)를 다시 읽지 않아 컨테이너 안의 값이 그대로 남습니다. `up -d`는 환경변수가 바뀐 서비스만 새로 만들며 DB 볼륨은 유지됩니다.
 - 프론트 컨테이너는 `node_modules`를 컨테이너 전용 볼륨에 두므로 호스트의 `node_modules`와 섞이지 않습니다. 의존성을 바꾼 뒤에는 `docker compose restart frontend`(시작 시 `npm ci`)를 실행합니다.
 - 컨테이너 없이 호스트에서 직접 실행하는 방법은 아래 "백엔드"·"프론트엔드" 절을 참고합니다.
