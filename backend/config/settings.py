@@ -98,6 +98,11 @@ STAFF_INTRA_IDS = _env_list("STAFF_INTRA_IDS")
 # 모의 로그인은 DJANGO_DEBUG=true 에서만 허용한다.
 MOCK_LOGIN_ENABLED = DEBUG
 
+# ── 웹 푸시(VAPID). 개인키가 없으면 푸시 채널과 구독 API 가 꺼지고 앱 안 알림만 동작한다 ──
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:admin@example.com")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
