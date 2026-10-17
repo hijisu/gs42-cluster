@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "rooms",
     "reviews",
     "notifications",
+    "devtools",
 ]
 
 MIDDLEWARE = [
@@ -102,6 +103,10 @@ MOCK_LOGIN_ENABLED = DEBUG
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:admin@example.com")
+
+# Django 는 JSON API 만 제공하고 정적 파일은 web(Caddy)이 서빙한다. 표준 설정값만 명시한다
+# (테스트용 live_server 가 STATIC_URL 을 요구한다).
+STATIC_URL = "/static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
