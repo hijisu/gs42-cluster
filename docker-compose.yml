@@ -28,6 +28,9 @@ services:
       POSTGRES_PORT: "5432"
       # 프론트 dev 서버가 /api 를 프록시할 때 Host 가 backend:8000 으로 바뀌므로 서비스 이름을 허용한다.
       DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1},backend"
+      # 브라우저가 접속하는 프론트 주소. CSRF 신뢰 origin·CORS 에 쓰이므로 FRONTEND_HOST_PORT 에서 계산해
+      # 포트를 바꿔도 어긋나지 않게 한다(.env 의 FRONTEND_ORIGIN 은 compose 에서는 무시된다).
+      FRONTEND_ORIGIN: "http://localhost:${FRONTEND_HOST_PORT:-5173}"
     ports:
       - "${BACKEND_HOST_PORT:-8000}:8000"
     volumes:
