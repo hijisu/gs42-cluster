@@ -46,6 +46,8 @@ describe('공통 컴포넌트', () => {
     const { rerender } = render(<Table columns={columns} rows={[{ n: 'a' }]} rowKey={(r) => r.n} />)
     expect(screen.getByRole('columnheader', { name: '이름' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: 'a' })).toBeInTheDocument()
+    // 좁은 화면(CSS)에서 카드로 바뀔 때 열 이름을 보여 주는 속성
+    expect(screen.getByRole('cell', { name: 'a' })).toHaveAttribute('data-label', '이름')
     rerender(<Table columns={columns} rows={[]} rowKey={(r) => r.n} />)
     expect(screen.getByText('표시할 내용이 없습니다.')).toBeInTheDocument()
   })
