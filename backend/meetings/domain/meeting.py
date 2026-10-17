@@ -45,7 +45,7 @@ class MeetingRequest:
     def propose(
         self, staff_id: int, proposed_at: datetime, note: str = "", location: str = ""
     ) -> None:
-        """다른 시간을 제안한다. pending/proposed → proposed. 장소를 함께 주면 수락 시 그 장소로 확정된다."""
+        """다른 시간을 제안한다. pending/proposed → proposed. 장소를 주면 수락 시 그 장소로 확정."""
         self._require({MeetingStatus.PENDING, MeetingStatus.PROPOSED}, "propose")
         self.staff_id = staff_id
         self.proposed_at = proposed_at
