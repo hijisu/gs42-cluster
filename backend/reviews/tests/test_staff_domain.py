@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from reviews.domain.course import Course, CourseStatus, ReviewTarget
+from reviews.domain.course import Course, ReviewTarget
 from reviews.domain.errors import InvalidCourse, InvalidIntraId
 from reviews.domain.participants import parse_intra_ids
 
@@ -60,8 +60,8 @@ def test_deadline_on_end_date_is_ok():
 
 def test_update_changes_fields_and_rolls_back_on_violation():
     c = course()
-    c.update(status=CourseStatus.COMPLETED, review_deadline=D + timedelta(days=20))
-    assert c.status == CourseStatus.COMPLETED
+    c.update(location="온라인", review_deadline=D + timedelta(days=20))
+    assert c.location == "온라인" and c.review_deadline == D + timedelta(days=20)
     with pytest.raises(InvalidCourse):
         c.update(end_date=D - timedelta(days=3), name="바뀐 이름")
     assert c.end_date == D + timedelta(days=8) and c.name == "과정"  # 되돌려짐
@@ -90,3 +90,15 @@ def test_review_targets_all_and_pending():
 
 def test_pending_ignores_reviewers_who_are_not_participants():
     assert course(participants={"alice"}).review_targets(ReviewTarget.PENDING, {"zed"}) == ["alice"]
+
+
+def test_remove_participants_reports_removed_and_missing():
+    c = course(participants={"alice", "bob"})
+    removed, missing = c.remove_participants(["Alice", "zed"])
+    assert removed == ["alice"] and missing == ["zed"]
+    assert c.participants == {"bob"}
+
+
+def test_update_rejects_status_field():
+    with pytest.raises(InvalidCourse):
+        course().update(status="completed")

@@ -11,6 +11,11 @@ staff_urlpatterns = [
         name="staff-course-participants",
     ),
     path(
+        "courses/<int:course_id>/participants/<str:intra_id>",
+        views.remove_participant,
+        name="staff-course-participant-remove",
+    ),
+    path(
         "courses/<int:course_id>/review-request",
         views.review_request,
         name="staff-course-review-request",

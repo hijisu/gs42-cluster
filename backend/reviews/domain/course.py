@@ -8,7 +8,9 @@ from reviews.domain.errors import InvalidCourse, NotParticipant, ReviewClosed
 
 
 class CourseStatus(StrEnum):
-    UPCOMING = "upcoming"  # 예정
+    """날짜로 계산하는 진행 단계(저장하지 않는다). 상태는 직접 바꾸지 않는다."""
+
+    UPCOMING = "upcoming"  # 시작 전
     ONGOING = "ongoing"  # 진행 중
     COMPLETED = "completed"  # 종료(후기를 받는다)
 
@@ -29,7 +31,6 @@ class Course:
     end_date: date
     location: str = ""
     intro: str = ""
-    status: CourseStatus = CourseStatus.UPCOMING
     review_deadline: date | None = None
     participants: set[str] = field(default_factory=set)  # 정규화된 intra_id
     id: int | None = None
@@ -37,9 +38,16 @@ class Course:
     def is_participant(self, intra_id: str) -> bool:
         return normalize_intra_id(intra_id) in self.participants
 
+    def phase(self, today: date) -> CourseStatus:
+        if today < self.start_date:
+            return CourseStatus.UPCOMING
+        if today < self.end_date:
+            return CourseStatus.ONGOING
+        return CourseStatus.COMPLETED
+
     def is_open_for_review(self, today: date) -> bool:
-        """종료된 과정이고 마감일(있다면)이 지나지 않았을 때 후기를 받는다."""
-        if self.status != CourseStatus.COMPLETED:
+        """종료일이 되었고 마감일(있다면)이 지나지 않았을 때 후기를 받는다."""
+        if self.phase(today) != CourseStatus.COMPLETED:
             return False
         return self.review_deadline is None or today <= self.review_deadline
 
@@ -72,7 +80,6 @@ class Course:
             "end_date",
             "location",
             "intro",
-            "status",
             "review_deadline",
         }
         unknown = set(changes) - allowed
@@ -99,6 +106,18 @@ class Course:
                 self.participants.add(intra_id)
                 added.append(intra_id)
         return added, existing
+
+    def remove_participants(self, intra_ids: list[str]) -> tuple[list[str], list[str]]:
+        """(제거된 ID, 참여자가 아니던 ID). 이미 쓴 후기는 남고 작성률에서만 빠진다."""
+        removed, missing = [], []
+        for raw in intra_ids:
+            intra_id = normalize_intra_id(raw)
+            if intra_id in self.participants:
+                self.participants.discard(intra_id)
+                removed.append(intra_id)
+            else:
+                missing.append(intra_id)
+        return removed, missing
 
     def review_targets(self, target: ReviewTarget, reviewed: set[str]) -> list[str]:
         """후기 요청을 보낼 참여자(정렬). pending이면 이미 쓴 사람은 제외한다."""

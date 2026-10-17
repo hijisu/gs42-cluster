@@ -6,6 +6,7 @@ from reviews.application.staff_usecases import (
     CreateCourseUseCase,
     GetStaffCourseUseCase,
     ListStaffCoursesUseCase,
+    RemoveParticipantUseCase,
     RequestReviewsUseCase,
     UpdateCourseUseCase,
 )
@@ -38,3 +39,7 @@ def add_participants() -> AddParticipantsUseCase:
 
 def request_reviews() -> RequestReviewsUseCase:
     return RequestReviewsUseCase(*_repos(), event_bus, timezone.localdate)
+
+
+def remove_participant() -> RemoveParticipantUseCase:
+    return RemoveParticipantUseCase(*_repos())

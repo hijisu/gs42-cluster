@@ -2,7 +2,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count
 
 from reviews.application.ports import CourseStats
-from reviews.domain.course import Course, CourseStatus, normalize_intra_id
+from reviews.domain.course import Course, normalize_intra_id
 from reviews.domain.errors import AlreadyReviewed
 from reviews.domain.review import Review
 from reviews.infrastructure.models import CourseParticipant, CourseRow, ReviewRow
@@ -16,7 +16,6 @@ def _course(row: CourseRow) -> Course:
         end_date=row.end_date,
         location=row.location,
         intro=row.intro,
-        status=CourseStatus(row.status),
         review_deadline=row.review_deadline,
         participants={normalize_intra_id(p.intra_id) for p in row.participants.all()},
     )
@@ -29,7 +28,6 @@ def _course_fields(course: Course) -> dict:
         "end_date": course.end_date,
         "location": course.location,
         "intro": course.intro,
-        "status": course.status.value,
         "review_deadline": course.review_deadline,
     }
 
@@ -48,6 +46,10 @@ class DjangoCourseRepository:
 
     @staticmethod
     def _sync_participants(course: Course) -> None:
+        # 참여자를 도메인 집합과 맞춘다: 빠진 사람은 지우고 새 사람은 추가한다(후기는 그대로).
+        CourseParticipant.objects.filter(course_id=course.id).exclude(
+            intra_id__in=course.participants
+        ).delete()
         CourseParticipant.objects.bulk_create(
             [
                 CourseParticipant(course_id=course.id, intra_id=i)

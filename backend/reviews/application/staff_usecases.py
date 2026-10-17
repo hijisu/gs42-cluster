@@ -6,8 +6,8 @@ from datetime import date
 from common.domain.events import EventDispatcher
 from reviews.application.ports import CourseRepository, ReviewRepository
 from reviews.application.usecases import Today
-from reviews.domain.course import Course, CourseStatus, ReviewTarget
-from reviews.domain.errors import CourseNotFound, ReviewClosed
+from reviews.domain.course import Course, ReviewTarget, normalize_intra_id
+from reviews.domain.errors import CourseNotFound, ParticipantNotFound, ReviewClosed
 from reviews.domain.events import ReviewRequested
 from reviews.domain.participants import parse_intra_ids
 
@@ -71,7 +71,6 @@ class CreateCourseCommand:
     end_date: date
     location: str = ""
     intro: str = ""
-    status: CourseStatus = CourseStatus.UPCOMING
     review_deadline: date | None = None
     intra_ids: list[str] = field(default_factory=list)
     csv: str = ""
@@ -91,7 +90,6 @@ class CreateCourseUseCase(_Views):
             end_date=cmd.end_date,
             location=cmd.location,
             intro=cmd.intro,
-            status=cmd.status,
             review_deadline=cmd.review_deadline,
             participants=set(_ids(cmd.intra_ids, cmd.csv)),
         )
@@ -126,6 +124,28 @@ class AddParticipantsUseCase(_Views):
         added, existing = course.add_participants(_ids(intra_ids or [], csv))
         self._courses.save(course)
         return AddParticipantsResult(self.view(course), added, existing)
+
+
+@dataclass(frozen=True)
+class RemoveParticipantResult:
+    view: StaffCourseView
+    removed: bool
+    had_review: bool
+
+
+class RemoveParticipantUseCase(_Views):
+    """참여자를 뺀다. 이미 쓴 후기는 지우지 않고 남긴다(작성률에서만 빠짐, 다시 추가하면 복원)."""
+
+    def execute(self, course_id: int, intra_id: str) -> RemoveParticipantResult:
+        course = _load(self._courses, course_id)
+        reviewed = self._reviews.reviewer_intra_ids_by_course().get(course.id, set())
+        removed, _ = course.remove_participants([intra_id])
+        if not removed:
+            raise ParticipantNotFound("이 과정의 참여자가 아닙니다")
+        self._courses.save(course)
+        return RemoveParticipantResult(
+            self.view(course), True, normalize_intra_id(intra_id) in reviewed
+        )
 
 
 class RequestReviewsUseCase(_Views):

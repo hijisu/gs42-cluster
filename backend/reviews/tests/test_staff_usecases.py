@@ -63,10 +63,11 @@ def create(env, **kw):
         name="파이썬 AI 교육",
         start_date=TODAY - timedelta(days=12),
         end_date=TODAY - timedelta(days=3),
-        status=CourseStatus.COMPLETED,
         review_deadline=TODAY + timedelta(days=7),
         csv="alice,bob\ncarol",
     )
+    if kw.pop("status", None) == CourseStatus.ONGOING:  # 상태는 날짜로 계산된다
+        base.update(start_date=TODAY - timedelta(days=2), end_date=TODAY + timedelta(days=3))
     return CreateCourseUseCase(courses, reviews).execute(CreateCourseCommand(**{**base, **kw}))
 
 
@@ -125,16 +126,16 @@ def test_add_participants_unknown_course(env):
         AddParticipantsUseCase(env[0], env[1]).execute(99, csv="alice")
 
 
-def test_update_status_and_rollback_on_invalid(env):
-    course_id = create(env, status=CourseStatus.ONGOING).course.id
+def test_update_dates_open_reviews_and_rollback_on_invalid(env):
+    course_id = create(env, status=CourseStatus.ONGOING).course
+    assert not course_id.is_open_for_review(TODAY)
     update = UpdateCourseUseCase(env[0], env[1])
-    assert (
-        update.execute(course_id, {"status": CourseStatus.COMPLETED}).course.status
-        == CourseStatus.COMPLETED
-    )
+    view = update.execute(course_id.id, {"end_date": TODAY - timedelta(days=1)})
+    assert view.course.is_open_for_review(TODAY)
+    course_id = course_id.id
     with pytest.raises(InvalidCourse):
         update.execute(course_id, {"end_date": TODAY - timedelta(days=99)})
-    assert env[0].rows[course_id].end_date == TODAY - timedelta(days=3)
+    assert env[0].rows[course_id].end_date == TODAY - timedelta(days=1)
 
 
 def request_uc(env):

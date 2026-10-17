@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from accounts.interfaces.decorators import staff_api
 from reviews.application.staff_usecases import CreateCourseCommand
-from reviews.domain.course import CourseStatus, ReviewTarget
+from reviews.domain.course import ReviewTarget
 from reviews.interfaces import staff_deps as deps
 from reviews.interfaces.staff_serializers import (
     CoursePatchSerializer,
@@ -32,7 +32,6 @@ def courses(request):
                 end_date=data["end_date"],
                 location=data["location"],
                 intro=data["intro"],
-                status=CourseStatus(data["status"]),
                 review_deadline=data["review_deadline"],
                 intra_ids=data["intra_ids"],
                 csv=data["csv"],
@@ -48,8 +47,6 @@ def course_detail(request, course_id: int):
     body = CoursePatchSerializer(data=request.data, partial=True)
     body.is_valid(raise_exception=True)
     changes = dict(body.validated_data)
-    if "status" in changes:
-        changes["status"] = CourseStatus(changes["status"])
     with transaction.atomic():
         view = deps.update_course().execute(course_id, changes)
     return Response(staff_course_payload(view, detail=True))
@@ -71,6 +68,16 @@ def add_participants(request, course_id: int):
             "existing": result.existing,
             "course": staff_course_payload(result.view, detail=True),
         }
+    )
+
+
+@staff_api(["DELETE"])
+def remove_participant(request, course_id: int, intra_id: str):
+    """참여자 제거. 이미 쓴 후기는 남고 작성률에서만 빠진다(`had_review`로 알린다)."""
+    with transaction.atomic():
+        result = deps.remove_participant().execute(course_id, intra_id)
+    return Response(
+        {"had_review": result.had_review, "course": staff_course_payload(result.view, detail=True)}
     )
 
 
