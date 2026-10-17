@@ -110,9 +110,7 @@ def test_invalid_intra_id_has_code(staff):
 def test_list_shows_participation_and_review_rate(staff):
     course = create(staff, intra_ids=["student", "alice", "bob", "carol"])
     student = login("student")
-    student.post(
-        "/api/reviews", {"course_id": course["id"], "rating": 5, "title": "좋았어요"}, format="json"
-    )
+    student.post("/api/reviews", {"course_id": course["id"], "rating": 5}, format="json")
     (row,) = staff.get("/api/staff/courses").json()
     assert (row["participant_count"], row["reviewed_count"], row["pending_count"]) == (4, 1, 3)
     assert row["review_rate"] == 0.25 and "participants" not in row
@@ -122,7 +120,7 @@ def test_detail_marks_who_reviewed_without_leaking_anonymous_text(staff):
     course = create(staff)
     login("student").post(
         "/api/reviews",
-        {"course_id": course["id"], "rating": 4, "title": "익명", "anonymous": True},
+        {"course_id": course["id"], "rating": 4, "anonymous": True},
         format="json",
     )
     detail = staff.get(f"/api/staff/courses/{course['id']}").json()
@@ -138,7 +136,7 @@ def test_course_status_is_derived_and_end_date_change_opens_reviews(staff):
     course = create(staff, status="ongoing")
     assert course["status"] == "ongoing"
     student = login("student")
-    payload = {"course_id": course["id"], "rating": 5, "title": "t"}
+    payload = {"course_id": course["id"], "rating": 5}
     assert student.post("/api/reviews", payload, format="json").json()["code"] == "review_closed"
     patched = staff.patch(
         f"/api/staff/courses/{course['id']}",
@@ -201,9 +199,7 @@ def test_participant_registered_before_signup_can_review_after_login(staff):
 
 def test_review_request_all_and_pending_with_events(staff, events):
     course = create(staff, intra_ids=["student", "alice", "bob"])
-    login("student").post(
-        "/api/reviews", {"course_id": course["id"], "rating": 5, "title": "t"}, format="json"
-    )
+    login("student").post("/api/reviews", {"course_id": course["id"], "rating": 5}, format="json")
     url = f"/api/staff/courses/{course['id']}/review-request"
 
     everyone = staff.post(
@@ -241,9 +237,7 @@ def test_review_request_validation_and_closed_course(staff, events):
 
 def test_review_request_with_nobody_pending_is_empty_and_silent(staff, events):
     course = create(staff, intra_ids=["student"])
-    login("student").post(
-        "/api/reviews", {"course_id": course["id"], "rating": 5, "title": "t"}, format="json"
-    )
+    login("student").post("/api/reviews", {"course_id": course["id"], "rating": 5}, format="json")
     result = staff.post(
         f"/api/staff/courses/{course['id']}/review-request", {"target": "pending"}, format="json"
     ).json()
@@ -253,7 +247,7 @@ def test_review_request_with_nobody_pending_is_empty_and_silent(staff, events):
 def test_review_rows_by_non_participants_do_not_inflate_rate(staff):
     course = create(staff, intra_ids=["alice"])
     outsider = User.objects.create_user("zed", name="zed", role=Role.STUDENT.value)
-    ReviewRow.objects.create(course_id=course["id"], author=outsider, rating=3, title="x")
+    ReviewRow.objects.create(course_id=course["id"], author=outsider, rating=3)
     (row,) = staff.get("/api/staff/courses").json()
     assert row["reviewed_count"] == 0 and row["review_rate"] == 0.0
 
@@ -262,7 +256,7 @@ def test_review_rows_by_non_participants_do_not_inflate_rate(staff):
 def test_remove_participant_keeps_review_and_drops_it_from_rate(staff):
     course = create(staff)  # alice, bob, student
     student = login("student")
-    payload = {"course_id": course["id"], "rating": 5, "title": "t"}
+    payload = {"course_id": course["id"], "rating": 5}
     assert student.post("/api/reviews", payload, format="json").status_code == 201
 
     removed = staff.delete(f"/api/staff/courses/{course['id']}/participants/STUDENT")

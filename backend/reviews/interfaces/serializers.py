@@ -7,7 +7,6 @@ from reviews.application.usecases import CourseView, ReviewItem
 class CreateReviewSerializer(serializers.Serializer):
     course_id = serializers.IntegerField()
     rating = serializers.IntegerField(min_value=1, max_value=5)
-    title = serializers.CharField(max_length=200)
     good = serializers.CharField(allow_blank=True, max_length=5000, default="")
     bad = serializers.CharField(allow_blank=True, max_length=5000, default="")
     recommend_to = serializers.CharField(allow_blank=True, max_length=5000, default="")
@@ -42,7 +41,6 @@ def review_payload(item: ReviewItem) -> dict:
         "id": r.id,
         "course_id": r.course_id,
         "rating": r.rating,
-        "title": r.title,
         "good": r.good,
         "bad": r.bad,
         "recommend_to": r.recommend_to,

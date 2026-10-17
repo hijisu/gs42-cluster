@@ -81,7 +81,7 @@ class Reviews:
 
 
 def cmd(viewer=ALICE, **kw):
-    base = dict(course_id=1, rating=5, title="좋아요")
+    base = dict(course_id=1, rating=5, good="좋아요")
     return CreateReviewCommand(viewer=viewer, **{**base, **kw})
 
 

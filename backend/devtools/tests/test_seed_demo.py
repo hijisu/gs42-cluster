@@ -88,7 +88,7 @@ def test_reset_clears_only_the_mock_accounts_data():
         headcount=1,
     )
     ReviewRow.objects.filter(author=student).delete()
-    ReviewRow.objects.create(course=course, author=student, rating=5, title="내 후기")
+    ReviewRow.objects.create(course=course, author=student, rating=5)
 
     seed("--reset")
 
