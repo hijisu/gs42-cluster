@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { urlBase64ToUint8Array } from '../../lib/push'
 import { mockApi } from '../../test-utils'
@@ -80,5 +80,43 @@ describe('푸시 알림 설정', () => {
     render(<PushSettings />)
     await userEvent.click(await screen.findByRole('button', { name: '푸시 알림 켜기' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('바꾸지 못했어요')
+  })
+
+  describe('서비스워커가 등록되지 않은 환경(개발 서버 등)', () => {
+    function stubNoServiceWorker() {
+      // ready가 영원히 끝나지 않는 상태를 흉내 낸다.
+      Object.defineProperty(navigator, 'serviceWorker', { value: { ready: new Promise(() => {}) }, configurable: true })
+      vi.stubGlobal('PushManager', class {})
+      vi.stubGlobal('Notification', { requestPermission: vi.fn(async () => 'granted') })
+    }
+    afterEach(() => vi.useRealTimers())
+
+    it('버튼을 영구 비활성으로 두지 않고 안내 문구를 보여준다', async () => {
+      vi.useFakeTimers()
+      stubNoServiceWorker()
+      render(<PushSettings />)
+      expect(screen.getByRole('button', { name: '푸시 알림 켜기' })).toBeDisabled() // 확인 중
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      expect(screen.getByRole('button', { name: '푸시 알림 켜기' })).toBeEnabled()
+      expect(screen.getByRole('alert')).toHaveTextContent('서비스워커가 아직 준비되지 않았어요')
+    })
+
+    it('눌러도 구독하지 않고 같은 안내를 보여준다', async () => {
+      vi.useFakeTimers()
+      stubNoServiceWorker()
+      const calls = mockApi()
+      render(<PushSettings />)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      await act(async () => {
+        screen.getByRole('button', { name: '푸시 알림 켜기' }).click()
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+      expect(screen.getByRole('alert')).toHaveTextContent('서비스워커가 아직 준비되지 않았어요')
+      expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
+    })
   })
 })

@@ -15,6 +15,8 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
+      // 개발 서버(npm run dev)에서도 서비스워커를 등록해 푸시 구독을 확인할 수 있게 한다(module 서비스워커: Chrome 계열).
+      devOptions: { enabled: true, type: 'module' },
       manifest: {
         name: '42gs-cluster',
         short_name: 'gs42',
