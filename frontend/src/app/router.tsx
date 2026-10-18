@@ -18,16 +18,12 @@ import { staffNav, studentNav } from './routes'
 export const routes = [
   { path: '/login', element: <LoginPage /> },
   {
-    element: <RequireAuth />,
+    element: <RequireAuth role="student" />,
     children: [
   {
     path: '/',
     element: (
-      <Layout
-        variant="student"
-        nav={studentNav}
-        switchTo={{ to: '/staff', label: '교육운영팀 화면 보기' }}
-      />
+      <Layout variant="student" nav={studentNav} />
     ),
     children: [
       { index: true, element: <HomePage /> },
@@ -46,11 +42,7 @@ export const routes = [
   {
     path: '/staff',
     element: (
-      <Layout
-        variant="staff"
-        nav={staffNav}
-        switchTo={{ to: '/', label: '교육생 화면 보기' }}
-      />
+      <Layout variant="staff" nav={staffNav} />
     ),
     children: [
       { index: true, element: <StaffHomePage /> },
