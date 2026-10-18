@@ -14,10 +14,10 @@ Cloudflare Tunnel (TLS 종단) → Traefik(nginx class) → web(Caddy, 프론트
 | --- | --- |
 | Docker (buildx) | `docker buildx version` — arm64 Mac에서도 `linux/amd64`로 교차 빌드합니다 |
 | kubectl 컨텍스트 `z2mini` (= hijaeui-server-1) | `kubectl --context z2mini get nodes` |
-| SSH 접속 `hijaeui-server-1` | `ssh hijaeui-server-1 microk8s status` (이미지를 서버로 전송할 때 사용) |
-| python3 | 비밀값 생성 스크립트용 |
+| SSH 접속 `hijae@hijaeui-server-1` | `ssh hijae@hijaeui-server-1 microk8s status` (이미지 전송용. 사용자가 `microk8s` 그룹이면 sudo 없이 containerd 소켓에 가져옵니다) |
+| python3 + `cryptography` | 비밀값·VAPID 키 생성 스크립트용 |
 
-컨텍스트 이름이 다르면 `K8S_CONTEXT=이름`, SSH 호스트가 다르면 `K8S_NODE=호스트`를 환경변수로 지정합니다.
+컨텍스트 이름이 다르면 `K8S_CONTEXT=이름`, SSH 호스트가 다르면 `K8S_NODE=사용자@호스트`를 환경변수로 지정합니다.
 
 ## 2. 설정할 값
 
@@ -26,7 +26,8 @@ Cloudflare Tunnel (TLS 종단) → Traefik(nginx class) → web(Caddy, 프론트
 | `configmap.yaml` | `DJANGO_ALLOWED_HOSTS`, `FRONTEND_ORIGIN`, `FORTYTWO_REDIRECT_URI` | 도메인(`42gs-cluster.hijae.dev`). 도메인을 바꾸면 `ingress.yaml`의 host와 `backend.yaml`의 probe Host 헤더도 같이 바꿉니다 |
 | `configmap.yaml` | `DJANGO_DEBUG` | 기본 `true` = **모의 로그인 켜짐**. 아래 "모의 로그인" 참고 |
 | `secret.yaml` (자동 생성) | `DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD` | 처음 한 번 무작위로 만들어 `k8s/.env.k8s`에 저장하고 재사용합니다. **DB 비밀번호를 바꾸면 기존 DB에 접속할 수 없으니 `.env.k8s`를 지우지 마세요** |
-| 저장소 루트 `.env` → `secret.yaml` | `FORTYTWO_UID`, `FORTYTWO_SECRET`, `STAFF_INTRA_IDS`, `VAPID_*` | 값이 있을 때만 가져옵니다(실제 42 로그인·웹 푸시용, 없어도 동작) |
+| `secret.yaml` (자동 생성) | `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | 웹 푸시(알림)용. 루트 `.env`에 개인키가 있으면 그 값, 없으면 새로 만들어 `.env.k8s`에 저장·재사용합니다. 키를 바꾸면 기존 푸시 구독이 모두 무효가 됩니다 |
+| 저장소 루트 `.env` → `secret.yaml` | `FORTYTWO_UID`, `FORTYTWO_SECRET`, `STAFF_INTRA_IDS` | 값이 있을 때만 가져옵니다(실제 42 로그인용, 없어도 동작) |
 
 `secret.yaml`, `.env.k8s`는 `.gitignore`에 있어 커밋되지 않습니다. 비밀값을 채팅·이슈·PR에 붙여 넣지 않습니다.
 
@@ -36,12 +37,12 @@ Cloudflare Tunnel (TLS 종단) → Traefik(nginx class) → web(Caddy, 프론트
 k8s/scripts/make-secret.sh        # secret.yaml 생성 (처음 한 번, .env 값이 바뀌면 다시)
 k8s/scripts/build.sh              # amd64 이미지 빌드 → 서버 containerd로 전송 (태그 = git 짧은 SHA)
 k8s/scripts/deploy.sh diff        # (선택) 적용 전 차이 확인, 클러스터는 바뀌지 않음
-k8s/scripts/deploy.sh             # 적용 + 롤아웃 대기
+k8s/scripts/deploy.sh             # 적용 + 롤아웃 대기 + 아래 두 Job 자동 실행
 k8s/scripts/deploy.sh job import-books   # 도서 518종 (반복 실행 안전)
-k8s/scripts/deploy.sh job seed-demo      # 시연 데이터 (DJANGO_DEBUG=true에서만)
+k8s/scripts/deploy.sh job seed-demo      # 시연 데이터(디버깅·시연용; DJANGO_DEBUG=true에서만). 면담 기본 담당자, 회의실 예약 예시, 교육과정·후기 포함
 ```
 
-DB 마이그레이션은 backend가 시작할 때 자동으로 실행됩니다. 코드를 고친 뒤에는 `build.sh` → `deploy.sh`만 다시 실행합니다.
+`deploy.sh`는 끝에 두 Job을 자동 실행합니다(둘 다 반복 실행해도 안전, 시연 데이터는 모의 계정 데이터만 만듭니다). DB 마이그레이션은 backend가 시작할 때 자동으로 실행됩니다. 코드를 고친 뒤에는 `build.sh` → `deploy.sh`만 다시 실행합니다.
 
 ## 4. 사람이 해야 하는 설정
 

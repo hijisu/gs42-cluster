@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 사용법 (전체 순서는 k8s/README.md):
-#   k8s/scripts/deploy.sh [태그]           매니페스트 적용 + 롤아웃 대기 (태그 기본값: build.sh 가 마지막으로 만든 태그)
+#   k8s/scripts/deploy.sh [태그]           매니페스트 적용 + 롤아웃 대기 + 도서·시연 데이터 입력(두 Job, 반복 실행 안전)
+#                                          (태그 기본값: build.sh 가 마지막으로 만든 태그)
 #   k8s/scripts/deploy.sh job import-books  도서 518종 가져오기 Job
 #   k8s/scripts/deploy.sh job seed-demo     시연 데이터 Job (DJANGO_DEBUG=true 에서만 동작)
 #   k8s/scripts/deploy.sh diff [태그]       적용 전 차이 확인(클러스터 변경 없음)
@@ -36,5 +37,7 @@ case "${1:-}" in
     $K -n $NS rollout status deploy/backend --timeout=300s
     $K -n $NS rollout status deploy/web --timeout=120s
     $K -n $NS get pods
+    "$0" job import-books
+    "$0" job seed-demo
     ;;
 esac
