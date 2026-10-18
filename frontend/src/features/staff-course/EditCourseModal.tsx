@@ -1,8 +1,11 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Button, Field, Modal } from '../../components'
 import type { StaffCourse } from './api'
 import { messageFor } from './errors'
 import { useAddParticipants, useRemoveParticipant, useStaffCourse, useUpdateCourse } from './hooks'
+
+/** 참여 학생이 이 수를 넘으면 검색칸을 보여준다 */
+const SEARCH_FROM = 10
 
 const splitIds = (raw: string) => raw.split(/[\s,]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
 
@@ -78,7 +81,10 @@ function Participants({ course }: { course: StaffCourse }) {
   const [input, setInput] = useState('')
   const [confirming, setConfirming] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const participants = course.participants ?? []
+  const [query, setQuery] = useState('')
+  const participants = useMemo(() => [...(course.participants ?? [])].sort((a, b) => (a.intra_id < b.intra_id ? -1 : a.intra_id > b.intra_id ? 1 : 0)), [course.participants])
+  const q = query.trim().toLowerCase()
+  const visible = q ? participants.filter((p) => p.intra_id.toLowerCase().includes(q)) : participants
   const error = messageFor(add.error ?? remove.error, '처리하지 못했어요. 잠시 후 다시 시도해 주세요.')
 
   function addIds() {
@@ -140,8 +146,13 @@ function Participants({ course }: { course: StaffCourse }) {
       {notice && <p role="status" className="info">{notice}</p>}
       {error && <p role="alert" className="login-error">{error}</p>}
       {participants.length === 0 && <p className="muted small">참여 학생이 없어요.</p>}
-      <ul className="stack" style={{ gap: 6, listStyle: 'none', padding: 0, margin: 0 }}>
-        {participants.map((p) => (
+      {participants.length > SEARCH_FROM && (
+        <input className="input" type="search" aria-label="참여 학생 검색" placeholder="intra ID 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
+      )}
+      {q && <p className="muted small" role="status">{participants.length}명 중 {visible.length}명</p>}
+      {q && visible.length === 0 && <p className="muted small">검색 결과가 없어요.</p>}
+      <ul className="stack scroll-list" style={{ gap: 6, listStyle: 'none', padding: 0, margin: 0 }}>
+        {visible.map((p) => (
           <li key={p.intra_id} className="row" data-testid={`participant-${p.intra_id}`}>
             <span>
               <span className="mono">{p.intra_id}</span> <span className="muted small">{p.reviewed ? '후기 작성함' : '후기 미작성'}</span>

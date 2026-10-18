@@ -34,6 +34,13 @@ export function formatMonthDay(date: string): string {
   return `${date.slice(5, 7)}.${date.slice(8, 10)}`
 }
 
+/** 교육 기간: 같은 해면 '2026.10.15–10.24', 해가 다르면 '2026.12.28–2027.01.09' */
+export function formatPeriod(start: string, end: string): string {
+  const from = `${start.slice(0, 4)}.${formatMonthDay(start)}`
+  const to = start.slice(0, 4) === end.slice(0, 4) ? formatMonthDay(end) : `${end.slice(0, 4)}.${formatMonthDay(end)}`
+  return `${from}–${to}`
+}
+
 /** 'YYYY-MM-DD' → '월' */
 export function weekdayKo(date: string): string {
   return WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()]

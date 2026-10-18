@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Card, Pill, Table, type Column } from '../../components'
-import { formatMonthDay } from '../../lib/datetime'
+import { formatMonthDay, formatPeriod } from '../../lib/datetime'
 import type { Course, Review } from './api'
 import { useCourses, useReviews } from './hooks'
 import { ReviewCard } from './ReviewCard'
@@ -9,7 +9,7 @@ import { ReviewDetailModal, ReviewEditModal, ReviewForm } from './ReviewModal'
 import { writeState } from './labels'
 import { sortCourses, sortOptions, type CourseSort } from './sort'
 
-const period = (c: Course) => `${formatMonthDay(c.start_date)}–${formatMonthDay(c.end_date)}`
+const period = (c: Course) => formatPeriod(c.start_date, c.end_date)
 
 /** 교육과정 후기 게시판: ① 교육과정 목록 → ② 과정을 고르면 그 과정의 후기 목록. 선택 과정은 주소(?course=)에 둔다. */
 export function ReviewPage() {
@@ -151,7 +151,7 @@ export function ReviewPage() {
             <Card className="stack" style={{ gap: 4 }}>
               <h2 className="card-title">내가 참여한 과정</h2>
               {mine.length === 0 && <p className="muted">참여한 과정이 없어요.</p>}
-              <div className="list">
+              <div className="list scroll-list">
                 {mine.map((c) => {
                   const w = writeState(c)
                   return (

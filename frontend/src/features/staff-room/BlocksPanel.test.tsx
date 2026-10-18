@@ -118,6 +118,21 @@ describe('예약 차단 기간', () => {
     expect(calls.some((c) => c.method === 'POST')).toBe(false)
   })
 
+  it('회차가 많으면 10개만 보이고 더 보기로 펼친다', async () => {
+    const many = Array.from({ length: 20 }, (_, i) => {
+      const d = kstDateFromToday(7 + i)
+      return { date: d, start_at: kstToIso(d, '10:00'), end_at: kstToIso(d, '12:00') }
+    })
+    await openPage(blocks([block({ occurrences: many })]))
+    const item = await screen.findByTestId('block-5')
+    await userEvent.click(within(item).getByRole('button', { name: '수학 교육 회차 보기' }))
+    expect(within(item).getAllByRole('button', { name: /이 회차 수정/ })).toHaveLength(10)
+    await userEvent.click(within(item).getByRole('button', { name: '10회 더 보기' }))
+    expect(within(item).getAllByRole('button', { name: /이 회차 수정/ })).toHaveLength(20)
+    await userEvent.click(within(item).getByRole('button', { name: '처음 10회만 보기' }))
+    expect(within(item).getAllByRole('button', { name: /이 회차 수정/ })).toHaveLength(10)
+  })
+
   it('한 회차만 삭제하고, 전체 삭제는 확인 후 한다', async () => {
     const calls = await openPage(
       blocks([block()]),
