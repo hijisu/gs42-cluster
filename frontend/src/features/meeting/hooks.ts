@@ -13,10 +13,15 @@ const keys = {
 
 export const useMeetingTypes = () => useQuery({ queryKey: keys.types, queryFn: fetchMeetingTypes, staleTime: Infinity })
 
-export function useSlots() {
+/** 선택한 면담 유형 담당자의 가능 시간. 유형을 고르기 전에는 조회하지 않는다. */
+export function useSlots(typeId: number | null) {
   const from = firstViewWeek(kstDateFromToday(0))
   const to = addDays(from, SLOT_WEEKS * 7 - 1)
-  return useQuery({ queryKey: [...keys.slots, from, to], queryFn: () => fetchSlots(from, to) })
+  return useQuery({
+    queryKey: [...keys.slots, typeId, from, to],
+    queryFn: () => fetchSlots(from, to, typeId ?? undefined),
+    enabled: typeId !== null,
+  })
 }
 
 export const useMyMeetings = () => useQuery({ queryKey: keys.mine, queryFn: fetchMyMeetings })

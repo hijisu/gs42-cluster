@@ -51,7 +51,7 @@ describe('면담 신청 화면', () => {
 
   it('유형 chip, 가능/마감 격자, 이용 안내 문구를 보여준다', async () => {
     await openPage()
-    expect(await screen.findByRole('button', { name: '프리즈' })).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: '프리즈' }))
     expect(await screen.findByRole('button', { name: /15:00 가능/ })).toBeInTheDocument()
     expect(screen.getByLabelText(/16:00 마감/)).toBeInTheDocument()
     expect(screen.getByLabelText("10.15 17:00 불가")).toBeInTheDocument()
@@ -60,6 +60,7 @@ describe('면담 신청 화면', () => {
 
   it('월~금 5열을 한 번에 보여주고 주 단위로 이동한다', async () => {
     await openPage()
+    await userEvent.click(await screen.findByRole('button', { name: '프리즈' }))
     const grid = await screen.findByRole('group', { name: '희망 시간 선택' })
     expect(within(grid).getAllByText(/^(월|화|수|목|금)$/)).toHaveLength(5)
     expect(within(grid).queryByText('토')).toBeNull()
@@ -77,11 +78,31 @@ describe('면담 신청 화면', () => {
 
   it('칸에 올리면 요일·시간 툴팁이 뜨고, 불가·마감은 사유를 덧붙인다', async () => {
     await openPage()
+    await userEvent.click(await screen.findByRole('button', { name: '프리즈' }))
     expect(await screen.findByRole('button', { name: /10\.15 15:00 가능/ })).toHaveAttribute('data-tip', '10.15 (목) 15:00')
     expect(screen.getByLabelText('10.15 16:00 마감')).toHaveAttribute('data-tip', '10.15 (목) 16:00 · 마감')
     expect(screen.getByLabelText('10.15 17:00 불가')).toHaveAttribute('data-tip', '10.15 (목) 17:00 · 불가')
     // 키보드 포커스로도 툴팁을 볼 수 있도록 불가·마감 칸도 포커스를 받는다
     expect(screen.getByLabelText('10.15 16:00 마감')).toHaveAttribute('tabindex', '0')
+  })
+
+  it('유형을 고르기 전에는 안내만 보이고 시간을 조회하지 않는다', async () => {
+    const calls = await openPage()
+    expect(await screen.findByText(/면담 유형을 먼저 선택해 주세요/)).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: '희망 시간 선택' })).toBeNull()
+    expect(calls.some((c) => c.url.includes('/meetings/slots'))).toBe(false)
+  })
+
+  it('유형을 고르면 그 유형으로 시간을 조회하고, 유형을 바꾸면 다시 조회하며 선택한 시간을 푼다', async () => {
+    const calls = await openPage()
+    await userEvent.click(await screen.findByRole('button', { name: '프리즈' }))
+    await userEvent.click(await screen.findByRole('button', { name: /15:00 가능/ }))
+    expect(screen.getByText(/선택한 일정/).parentElement).not.toHaveTextContent('아직 선택하지 않았어요')
+    await userEvent.click(screen.getByRole('button', { name: '기숙사 이용' }))
+    await screen.findByRole('button', { name: /15:00 가능/ })
+    const slotCalls = calls.filter((c) => c.url.includes('/meetings/slots')).map((c) => new URL(c.url, 'http://x').searchParams.get('type_id'))
+    expect(slotCalls).toEqual(['1', '2'])
+    expect(screen.getByText(/선택한 일정/).parentElement).toHaveTextContent('아직 선택하지 않았어요')
   })
 
   it('신청하면 내역에 "배정 중"으로 즉시 반영된다', async () => {
