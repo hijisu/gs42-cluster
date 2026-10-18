@@ -9,10 +9,10 @@ import { SlotGrid } from './SlotGrid'
 
 export function MeetingPage() {
   const types = useMeetingTypes()
-  const slots = useSlots()
   const create = useCreateMeeting()
 
   const [typeId, setTypeId] = useState<number | null>(null)
+  const slots = useSlots(typeId)
   const [slotAt, setSlotAt] = useState<string | null>(null)
   const [content, setContent] = useState('')
   const [notifySlack, setNotifySlack] = useState(true)
@@ -67,7 +67,15 @@ export function MeetingPage() {
             {types.isError && <p role="alert">면담 유형을 불러오지 못했습니다.</p>}
             <div className="chips" role="group" aria-label="면담 유형">
               {types.data?.map((t) => (
-                <Chip key={t.id} selected={typeId === t.id} onClick={() => setTypeId(t.id)}>
+                <Chip
+                  key={t.id}
+                  selected={typeId === t.id}
+                  onClick={() => {
+                    // 유형마다 담당자의 가능 시간이 달라 선택했던 시간은 풀고 격자를 다시 받는다.
+                    setTypeId(t.id)
+                    setSlotAt(null)
+                  }}
+                >
                   {t.name}
                 </Chip>
               ))}
@@ -80,9 +88,10 @@ export function MeetingPage() {
               <h2 className="card-title">2. 희망 시간</h2>
               <span className="muted small">운영팀 확인 후 확정 · 변경될 수 있어요</span>
             </div>
-            {slots.isPending && <p className="muted" role="status">불러오는 중…</p>}
+            {typeId === null && <p className="muted" role="status">면담 유형을 먼저 선택해 주세요. 유형마다 담당자의 가능 시간이 달라요.</p>}
+            {typeId !== null && slots.isPending && <p className="muted" role="status">불러오는 중…</p>}
             {slots.isError && <p role="alert">시간 정보를 불러오지 못했습니다.</p>}
-            {slots.data && <SlotGrid slots={slots.data} selected={effectiveSlot} onSelect={setSlotAt} />}
+            {typeId !== null && slots.data && <SlotGrid slots={slots.data} selected={effectiveSlot} onSelect={setSlotAt} />}
           </Card>
         </div>
 

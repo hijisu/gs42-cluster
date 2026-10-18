@@ -39,7 +39,9 @@ export interface CreateMeetingInput {
 }
 
 export const fetchMeetingTypes = () => api<MeetingType[]>('/meetings/types')
-export const fetchSlots = (from: string, to: string) => api<Slot[]>(`/meetings/slots?from=${from}&to=${to}`)
+/** typeId 를 주면 그 유형 기본 담당자의 가능 시간 기준으로 받는다. */
+export const fetchSlots = (from: string, to: string, typeId?: number) =>
+  api<Slot[]>(`/meetings/slots?from=${from}&to=${to}${typeId === undefined ? '' : `&type_id=${typeId}`}`)
 export const fetchMyMeetings = () => api<Meeting[]>('/meetings/me')
 export const createMeeting = (body: CreateMeetingInput) => api<Meeting>('/meetings', { method: 'POST', body })
 export const cancelMeeting = (id: number) => api<Meeting>(`/meetings/${id}/cancel`, { method: 'POST' })
