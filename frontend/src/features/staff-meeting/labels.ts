@@ -17,7 +17,7 @@ export const emptyLabel: Record<string, string> = {
 export const errorLabel: Record<string, string> = {
   slot_unavailable: '같은 담당자가 그 시간에 이미 확정된 면담이 있어요. 담당자나 시간을 바꿔 주세요.',
   invalid_transition: '이미 처리된 요청이에요. 목록을 새로 불러왔어요.',
-  invalid_slot: '선택할 수 없는 시간이에요(과거이거나 30분 단위가 아님).',
+  invalid_slot: '선택할 수 없는 시간이에요.',
   staff_not_found: '운영팀 계정이 아닌 담당자예요.',
   meeting_not_found: '면담 요청을 찾을 수 없어요.',
   meeting_type_not_found: '면담 유형을 찾을 수 없어요.',
