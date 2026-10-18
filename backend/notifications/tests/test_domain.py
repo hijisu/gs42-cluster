@@ -42,4 +42,8 @@ def test_type_codes_are_stable_strings():
         "reservation_rejected",
         "reservation_reassigned",
         "review_requested",
+        "meeting_requested",
+        "meeting_canceled",
+        "reservation_requested",
+        "reservation_canceled",
     }

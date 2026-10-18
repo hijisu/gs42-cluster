@@ -68,7 +68,10 @@ class StaffCancelMeetingUseCase:
         self._meetings.save(meeting)
         self._events.publish(
             MeetingCanceled(
-                meeting_id=meeting.id, student_id=meeting.student_id, staff_id=meeting.staff_id
+                meeting_id=meeting.id,
+                student_id=meeting.student_id,
+                staff_id=meeting.staff_id,
+                canceled_by_staff=True,
             )
         )
         return self._read.get(meeting.id)

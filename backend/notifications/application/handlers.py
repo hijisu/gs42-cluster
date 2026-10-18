@@ -3,19 +3,32 @@
 import logging
 
 from common.domain.events import DomainEvent, EventDispatcher
-from meetings.domain.events import MeetingConfirmed, MeetingProposed
+from meetings.domain.events import (
+    MeetingCanceled,
+    MeetingConfirmed,
+    MeetingProposed,
+    MeetingRequested,
+)
 from notifications.application.ports import UserDirectory
 from notifications.application.service import NotificationService
 from notifications.domain.formatting import fmt_date, fmt_moment, fmt_range
 from notifications.domain.notification import NotificationType
 from reviews.domain.events import ReviewRequested
-from rooms.domain.events import ReservationApproved, ReservationReassigned, ReservationRejected
+from rooms.domain.events import (
+    ReservationApproved,
+    ReservationCanceled,
+    ReservationReassigned,
+    ReservationRejected,
+    ReservationRequested,
+)
 
 logger = logging.getLogger(__name__)
 
 MEETING_LINK = "/meeting"
 ROOM_LINK = "/room"
 REVIEW_LINK = "/reviews"
+STAFF_MEETING_LINK = "/staff/meeting"
+STAFF_ROOM_LINK = "/staff/room"
 
 
 class NotificationHandlers:
@@ -91,6 +104,73 @@ class NotificationHandlers:
             },
         )
 
+    # ── 운영팀이 받는 알림 ──
+    def _notify_staff(self, recipients, type_, title, body, link, data) -> None:
+        for staff_id in recipients:
+            self._service.notify(staff_id, type_, title, body, link, data)
+
+    def _meeting_recipients(self, staff_id: int | None) -> list[int]:
+        """배정된 담당자가 있으면 그 사람만, 없으면 운영팀 전체."""
+        return [staff_id] if staff_id is not None else self._users.staff_ids()
+
+    def on_meeting_requested(self, e: MeetingRequested) -> None:
+        name = self._users.display_names([e.student_id]).get(e.student_id, "교육생")
+        self._notify_staff(
+            self._meeting_recipients(e.staff_id),
+            NotificationType.MEETING_REQUESTED,
+            "새 면담 신청이 들어왔어요",
+            f"{name} · {fmt_moment(e.slot_at)}",
+            STAFF_MEETING_LINK,
+            {
+                "meeting_id": e.meeting_id,
+                "student_id": e.student_id,
+                "slot_at": e.slot_at.isoformat(),
+            },
+        )
+
+    def on_meeting_canceled(self, e: MeetingCanceled) -> None:
+        if e.canceled_by_staff:
+            return
+        name = self._users.display_names([e.student_id]).get(e.student_id, "교육생")
+        self._notify_staff(
+            self._meeting_recipients(e.staff_id),
+            NotificationType.MEETING_CANCELED,
+            "면담 신청이 취소되었어요",
+            name,
+            STAFF_MEETING_LINK,
+            {"meeting_id": e.meeting_id, "student_id": e.student_id},
+        )
+
+    def on_reservation_requested(self, e: ReservationRequested) -> None:
+        name = self._users.display_names([e.user_id]).get(e.user_id, "교육생")
+        self._notify_staff(
+            self._users.staff_ids(),
+            NotificationType.RESERVATION_REQUESTED,
+            "새 회의실 예약 요청이 들어왔어요",
+            f"{name} · {fmt_range(e.start_at, e.end_at)}",
+            STAFF_ROOM_LINK,
+            {
+                "reservation_id": e.reservation_id,
+                "room_id": e.room_id,
+                "user_id": e.user_id,
+                "start_at": e.start_at.isoformat(),
+                "end_at": e.end_at.isoformat(),
+            },
+        )
+
+    def on_reservation_canceled(self, e: ReservationCanceled) -> None:
+        if e.canceled_by_staff:
+            return
+        name = self._users.display_names([e.user_id]).get(e.user_id, "교육생")
+        self._notify_staff(
+            self._users.staff_ids(),
+            NotificationType.RESERVATION_CANCELED,
+            "회의실 예약이 취소되었어요",
+            name,
+            STAFF_ROOM_LINK,
+            {"reservation_id": e.reservation_id, "room_id": e.room_id, "user_id": e.user_id},
+        )
+
     def on_review_requested(self, e: ReviewRequested) -> None:
         """가입한 참여자에게만 보낸다. 아직 가입하지 않은 intra ID는 건너뛴다."""
         user_ids = self._users.ids_by_intra_ids(list(e.intra_ids))
@@ -133,5 +213,9 @@ def register_handlers(bus: EventDispatcher, handlers: NotificationHandlers) -> N
         (ReservationRejected, handlers.on_reservation_rejected),
         (ReservationReassigned, handlers.on_reservation_reassigned),
         (ReviewRequested, handlers.on_review_requested),
+        (MeetingRequested, handlers.on_meeting_requested),
+        (MeetingCanceled, handlers.on_meeting_canceled),
+        (ReservationRequested, handlers.on_reservation_requested),
+        (ReservationCanceled, handlers.on_reservation_canceled),
     ):
         bus.subscribe(event_type, _isolated(handler))

@@ -174,6 +174,7 @@ class StaffCancelReservationUseCase(_Staff):
                 reservation_id=reservation.id,
                 user_id=reservation.user_id,
                 room_id=reservation.room_id,
+                canceled_by_staff=True,
             )
         )
         return self._one(reservation.id)

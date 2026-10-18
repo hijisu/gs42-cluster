@@ -17,6 +17,11 @@ class NotificationType(StrEnum):
     RESERVATION_REJECTED = "reservation_rejected"
     RESERVATION_REASSIGNED = "reservation_reassigned"
     REVIEW_REQUESTED = "review_requested"
+    # 운영팀이 받는 알림
+    MEETING_REQUESTED = "meeting_requested"
+    MEETING_CANCELED = "meeting_canceled"
+    RESERVATION_REQUESTED = "reservation_requested"
+    RESERVATION_CANCELED = "reservation_canceled"
 
 
 @dataclass
