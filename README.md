@@ -77,7 +77,7 @@ docker compose exec backend python manage.py import_books   # 도서 518종
 
 **주소:** http://localhost:5173 (같은 네트워크의 다른 기기에서는 `http://<이 PC의 IP>:5173`)
 
-**테스트 계정:** 로그인 화면의 **"개발용 모의 로그인"** 영역에서 `교육생` 또는 `운영팀` 버튼을 누르면 비밀번호 없이 들어갑니다. 개발 모드(`DJANGO_DEBUG=true`)에서만 나타납니다. 교육생과 운영팀 화면을 동시에 보려면 브라우저 창을 둘 쓰세요(일반 창 + 시크릿 창).
+**테스트 계정:** 로그인 화면의 **"개발용 모의 로그인"** 영역에서 `교육생` 또는 `운영팀` 버튼을 누르면 비밀번호 없이 들어갑니다. 개발 모드(프론트 개발 서버)에서만 나타납니다. 교육생과 운영팀 화면을 동시에 보려면 브라우저 창을 둘 쓰세요(일반 창 + 시크릿 창).
 
 | 모의 계정 | 역할 | 볼 수 있는 것 |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ docker compose exec backend python manage.py import_books   # 도서 518종
 **동작 확인 명령**
 
 ```bash
-curl http://localhost:5173/api/health                  # {"status": "ok"} 류 응답이면 백엔드 정상
+curl http://localhost:5173/api/health                  # {"status":"ok"} 이면 정상
 docker compose exec backend pytest -q                  # 백엔드 테스트
 docker compose exec frontend npm test                  # 프론트엔드 테스트
 ```
