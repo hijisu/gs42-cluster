@@ -54,6 +54,20 @@ describe('인증 가드', () => {
     expect(await screen.findByRole('link', { name: '교육운영팀 화면 보기' })).toBeInTheDocument()
   })
 
+  it('로그인된 운영팀 계정은 로그인 화면에서 운영 홈으로 간다', async () => {
+    mockMe('staff')
+    const router = renderAt('/login')
+    await screen.findByRole('main')
+    expect(router.state.location.pathname).toBe('/staff')
+  })
+
+  it('로그인된 교육생 계정은 로그인 화면에서 교육생 홈으로 간다', async () => {
+    mockMe('student')
+    const router = renderAt('/login')
+    await screen.findByRole('main')
+    expect(router.state.location.pathname).toBe('/')
+  })
+
   it('로그인 화면은 콜백 오류 코드를 문구로 보여준다', async () => {
     mockMe(null)
     renderAt('/login?error=invalid_state')

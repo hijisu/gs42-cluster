@@ -71,7 +71,8 @@ def callback(request):
         return _frontend_redirect(error="auth_failed")
     account = deps.login_with_profile().execute(profile)
     _start_session(request, account)
-    return _frontend_redirect("/")
+    # 로그인 화면이 역할별 홈(교육생 /, 운영팀 /staff)으로 보낸다.
+    return _frontend_redirect("/login")
 
 
 @api_view(["GET"])

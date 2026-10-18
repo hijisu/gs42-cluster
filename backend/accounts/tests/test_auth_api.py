@@ -102,7 +102,7 @@ def test_callback_creates_user_and_staff_ids_decide_role(settings, monkeypatch):
         monkeypatch,
         FakeFortyTwo(FortyTwoProfile("alice", "Alice", image_url="https://cdn.example/alice.jpg")),
     )
-    assert response.status_code == 302 and response["Location"].endswith("/")
+    assert response.status_code == 302 and response["Location"].endswith("/login")
     me = APIClient()
     me.cookies = client.cookies
     payload = me.get("/api/auth/me").json()
