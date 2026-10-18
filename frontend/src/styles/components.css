@@ -210,7 +210,8 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 }
 
 /* 면담 가능 시간 설정 그리드(staff-meeting) */
-.av-toolbar{display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-3)}
+.av-editor{display:flex;flex-direction:column;gap:var(--sp-3)}
+.av-toolbar{display:flex;align-items:center}
 .av-nav{display:flex;align-items:center;gap:var(--sp-1)}
 .av-title{font-weight:700;min-width:104px;text-align:center}
 .av-grid{display:grid;grid-template-columns:44px repeat(5,minmax(0,1fr));gap:2px;user-select:none;-webkit-user-select:none}
@@ -229,16 +230,16 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 @media (max-width:900px){
   .av-cell{min-height:44px}
   .av-status{height:44px;line-height:22px}
-  .av-hint-short{display:none}
 }
 @media (min-width:901px){
   /* 설정 카드 열을 넓혀(약 38%, 최소 480px) 탭·변경 취소/저장이 한 줄에 들어가게 한다 */
   .staff-meeting-split{grid-template-columns:minmax(0,1fr) minmax(480px,38%)}
   .av-head-row{flex-wrap:nowrap}
-  .av-toolbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-2)}
-  .av-toolbar .av-nav{grid-column:2;justify-self:center}
-  .av-toolbar .av-status{grid-column:3;grid-row:1;justify-self:end;height:auto;max-width:100%;font-size:12px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .av-hint-long{display:none}
+  /* 순서: 탭·버튼 줄 → 안내(버튼 바로 아래, 오른쪽, 전문 표시) → 날짜 이동(가운데) → 격자 */
+  .av-status{order:1;margin-top:calc(-1 * var(--sp-2));height:16px;font-size:12px;line-height:16px;text-align:right}
+  .av-toolbar{order:2;justify-content:center}
+  .av-grid{order:3}
+  .av-note{order:4}
 }
 
 /* 후기 게시판: 목록의 과정명 링크, 목록으로 돌아가기, 정렬 */

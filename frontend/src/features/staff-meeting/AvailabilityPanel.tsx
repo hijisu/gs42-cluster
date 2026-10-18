@@ -108,7 +108,7 @@ function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
   const message = error instanceof ApiError ? (errorLabel[error.code ?? ''] ?? '저장하지 못했어요. 잠시 후 다시 시도해 주세요.') : error ? '저장하지 못했어요.' : null
 
   return (
-    <>
+    <div className="av-editor">
       <div className="row av-head-row">
         {tabs}
         <div style={{ display: 'flex', gap: 6 }}>
@@ -120,18 +120,11 @@ function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
           </Button>
         </div>
       </div>
-      {/* 데스크톱: 날짜 이동은 가운데, 안내는 오른쪽 작은 글씨(별도 높이 없음). 모바일: 이동 아래 한 줄(높이 고정). */}
-      <div className="av-toolbar">
-        {nav}
-        <p className="av-status" role="status" title={message ?? undefined}>
-          {message ?? (dirty ? (
-            <>
-              <span className="av-hint-long">저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.</span>
-              <span className="av-hint-short">저장하지 않은 변경 있음</span>
-            </>
-          ) : '')}
-        </p>
-      </div>
+      {/* 안내는 전문을 그대로 보여준다. 데스크톱: 변경 취소·저장 버튼 바로 아래 오른쪽(높이 고정). 모바일: 날짜 이동 아래(높이 고정). */}
+      <p className="av-status" role="status" title={message ?? undefined}>
+        {message ?? (dirty ? '저장하지 않은 변경이 있어요. 저장하거나 취소해야 다른 주로 이동할 수 있어요.' : '')}
+      </p>
+      <div className="av-toolbar">{nav}</div>
       <div className="av-grid" role="group" aria-label="가능 시간 선택">
         <span />
         {days.map((d) => (
@@ -172,8 +165,8 @@ function Editor({ from, days, today, slots, nav, tabs, onDirty }: EditorProps) {
           </Row>
         ))}
       </div>
-      <p className="muted small">오늘부터 4주 안에서 설정할 수 있어요. 칸을 누르거나 끌어서 열고 닫아요.</p>
-    </>
+      <p className="muted small av-note">오늘부터 4주 안에서 설정할 수 있어요. 칸을 누르거나 끌어서 열고 닫아요.</p>
+    </div>
   )
 }
 
