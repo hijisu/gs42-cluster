@@ -1,0 +1,4 @@
+# 비밀값. make-secret.sh 가 만든 파일은 커밋하지 않는다.
+secret.yaml
+.env.k8s
+.last-tag

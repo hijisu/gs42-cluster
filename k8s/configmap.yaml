@@ -1,0 +1,21 @@
+# 비밀이 아닌 설정. 도메인을 바꿀 때는 이 파일과 ingress.yaml 의 host 를 함께 고친다.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gs42-config
+  namespace: gs42-cluster
+data:
+  DJANGO_ALLOWED_HOSTS: "42gs-cluster.hijae.dev,backend,localhost,127.0.0.1"
+  # 브라우저가 접속하는 origin. CSRF 신뢰 origin 과 CORS 허용에 쓰인다.
+  FRONTEND_ORIGIN: "https://42gs-cluster.hijae.dev"
+  FORTYTWO_REDIRECT_URI: "https://42gs-cluster.hijae.dev/api/auth/callback"
+  # 모의 로그인(true)을 쓰려면 true. OAuth 만 쓰려면 false 로 바꾸고 web 이미지를 deploy/web.Dockerfile 로 빌드한다.
+  DJANGO_DEBUG: "true"
+  # Cloudflare 가 TLS 를 끝내므로 브라우저는 https 로 접속한다 → Secure 쿠키.
+  DJANGO_COOKIE_SECURE: "true"
+  TIME_ZONE: "Asia/Seoul"
+  POSTGRES_DB: "gs42"
+  POSTGRES_USER: "gs42"
+  POSTGRES_HOST: "db"
+  POSTGRES_PORT: "5432"
+  GUNICORN_WORKERS: "2"
