@@ -17,7 +17,11 @@ export function LoginPage() {
   const error = params.get('error')
 
   if (isPending) return null
-  if (me) return <Navigate to={(location.state as { from?: string } | null)?.from ?? '/'} replace />
+  if (me) {
+    // 돌아갈 경로가 없으면 역할별 홈: 운영팀은 운영 홈, 교육생은 교육생 홈.
+    const home = me.role === 'staff' ? '/staff' : '/'
+    return <Navigate to={(location.state as { from?: string } | null)?.from ?? home} replace />
+  }
 
   return (
     <div className="login">
