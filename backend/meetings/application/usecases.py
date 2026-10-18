@@ -42,13 +42,20 @@ class GetSlotsUseCase:
         self._meetings = meetings
         self._clock = clock
 
-    def execute(self, start: datetime, end: datetime) -> list[SlotAvailability]:
+    def execute(
+        self, start: datetime, end: datetime, staff_id: int | None = None
+    ) -> list[SlotAvailability]:
         """평일 운영 시간 전체(+운영 시간 밖에 누가 연 시간)를 시간순으로 돌려준다.
 
         각 칸의 state: open(신청 가능) / full(마감) / unavailable(불가: 연 담당자 없음).
+        staff_id 를 주면 그 담당자가 연 시간·확정 면담만으로 계산한다(유형별 기본 담당자 기준).
+        담당자가 정해지지 않은 확정 면담은 누구의 자리든 1자리를 차지하므로 그대로 반영한다.
         """
         offered = self._availability.offered_between(start, end)
         confirmed = self._meetings.confirmed_between(start, end)
+        if staff_id is not None:
+            offered = [(who, at) for who, at in offered if who == staff_id]
+            confirmed = [(who, at) for who, at in confirmed if who in (staff_id, None)]
         grid = {s.start_at: s for s in compute_slots(offered, confirmed, now=self._clock())}
         for at in default_slots(start, end):
             grid.setdefault(at, SlotAvailability(start_at=at, remaining=0, offered=0))
@@ -80,7 +87,7 @@ class RequestMeetingUseCase:
             raise InvalidSlot("면담 시간은 30분 단위여야 합니다")
 
         slots = GetSlotsUseCase(self._availability, self._meetings, self._clock).execute(
-            cmd.slot_at, cmd.slot_at
+            cmd.slot_at, cmd.slot_at, staff_id=meeting_type.default_staff_id
         )
         if not any(s.start_at == cmd.slot_at and s.available for s in slots):
             raise SlotUnavailable("선택한 시간은 마감되었거나 열려 있지 않습니다")

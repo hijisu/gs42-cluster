@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from meetings.application.usecases import RequestMeetingCommand
+from meetings.domain.errors import MeetingTypeNotFound
 from meetings.interfaces import deps
 from meetings.interfaces.serializers import (
     RequestMeetingSerializer,
@@ -21,19 +22,31 @@ def meeting_types(request):
     return Response([type_payload(t) for t in deps.meeting_types().list_all()])
 
 
+def _type_param(request) -> dict:
+    raw = request.query_params.get("type_id")
+    return {} if raw is None else {"type_id": raw}
+
+
 @api_view(["GET"])
 def slots(request):
     query = SlotsQuerySerializer(
         data={
             "from_date": request.query_params.get("from"),
             "to_date": request.query_params.get("to"),
+            **_type_param(request),
         }
     )
     query.is_valid(raise_exception=True)
+    staff_id = None
+    if "type_id" in query.validated_data:
+        meeting_type = deps.meeting_types().get(query.validated_data["type_id"])
+        if meeting_type is None:
+            raise MeetingTypeNotFound("존재하지 않는 면담 유형입니다")
+        staff_id = meeting_type.default_staff_id
     tz = timezone.get_current_timezone()
     start = datetime.combine(query.validated_data["from_date"], time.min, tzinfo=tz)
     end = datetime.combine(query.validated_data["to_date"], time.min, tzinfo=tz) + timedelta(days=1)
-    result = deps.get_slots().execute(start, end - timedelta(microseconds=1))
+    result = deps.get_slots().execute(start, end - timedelta(microseconds=1), staff_id=staff_id)
     return Response(
         [
             {

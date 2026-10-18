@@ -14,6 +14,8 @@ class SlotsQuerySerializer(serializers.Serializer):
     # from은 파이썬 예약어라 필드명은 from_date, 쿼리 이름은 source로 맞춘다.
     from_date = serializers.DateField()
     to_date = serializers.DateField()
+    # 선택한 면담 유형. 있으면 그 유형 기본 담당자의 가능 시간만 보여준다.
+    type_id = serializers.IntegerField(required=False)
 
     def validate(self, attrs):
         if attrs["to_date"] < attrs["from_date"]:

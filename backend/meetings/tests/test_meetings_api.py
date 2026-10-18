@@ -270,3 +270,66 @@ def test_proposal_without_location_is_still_accepted_with_empty_location(slot_at
     )
     accepted = client.post(f"/api/meetings/{created['id']}/accept")
     assert accepted.status_code == 200 and accepted.json()["location"] == ""
+
+
+def _two_staff_with_types():
+    """담당자 A는 오전, B는 오후만 연다. 프리즈=A, 과제=B."""
+    a = User.objects.create_user("slot_a", name="스태프 A", role=Role.STAFF.value)
+    b = User.objects.create_user("slot_b", name="스태프 B", role=Role.STAFF.value)
+    day = (datetime.now(KST) + timedelta(days=3)).replace(minute=0, second=0, microsecond=0)
+    am, pm = day.replace(hour=10), day.replace(hour=15)
+    AvailabilitySlot.objects.create(staff=a, start_at=am)
+    AvailabilitySlot.objects.create(staff=b, start_at=pm)
+    freeze_type, assignment_type = freeze(), MeetingType.objects.get(code="assignment")
+    MeetingType.objects.filter(pk=freeze_type.pk).update(default_staff=a)
+    MeetingType.objects.filter(pk=assignment_type.pk).update(default_staff=b)
+    return day.date().isoformat(), am, pm, freeze_type, assignment_type
+
+
+def test_slots_follow_the_selected_types_default_staff():
+    day, am, pm, freeze_type, assignment_type = _two_staff_with_types()
+    client = login()
+    base = f"/api/meetings/slots?from={day}&to={day}"
+
+    everyone = client.get(base).json()
+    assert one(everyone, am)["state"] == "open" and one(everyone, pm)["state"] == "open"
+
+    a_view = client.get(f"{base}&type_id={freeze_type.id}").json()
+    assert one(a_view, am)["state"] == "open"
+    assert one(a_view, pm)["state"] == "unavailable"
+
+    b_view = client.get(f"{base}&type_id={assignment_type.id}").json()
+    assert one(b_view, am)["state"] == "unavailable"
+    assert one(b_view, pm)["state"] == "open"
+
+
+def test_slots_for_type_without_default_staff_show_everyone():
+    day, am, pm, _, _ = _two_staff_with_types()
+    other = MeetingType.objects.get(code="other")
+    assert other.default_staff_id is None
+    data = login().get(f"/api/meetings/slots?from={day}&to={day}&type_id={other.id}").json()
+    assert one(data, am)["state"] == "open" and one(data, pm)["state"] == "open"
+
+
+def test_slots_unknown_type_is_404_and_bad_type_is_400():
+    day, *_ = _two_staff_with_types()
+    client = login()
+    assert client.get(f"/api/meetings/slots?from={day}&to={day}&type_id=999999").status_code == 404
+    assert client.get(f"/api/meetings/slots?from={day}&to={day}&type_id=x").status_code == 400
+
+
+def test_request_is_rejected_for_a_time_only_another_staff_offers():
+    day, am, pm, freeze_type, _ = _two_staff_with_types()
+    client = login()
+    ok = client.post(
+        "/api/meetings",
+        {"type_id": freeze_type.id, "slot_at": am.isoformat(), "content": "문의"},
+        format="json",
+    )
+    assert ok.status_code == 201
+    blocked = client.post(
+        "/api/meetings",
+        {"type_id": freeze_type.id, "slot_at": pm.isoformat(), "content": "문의"},
+        format="json",
+    )
+    assert blocked.status_code == 409 and blocked.json()["code"] == "slot_unavailable"
