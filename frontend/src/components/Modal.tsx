@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   open: boolean
@@ -58,7 +59,8 @@ export function Modal({ open, title, onClose, children, actions, placement = 'ce
   }, [open])
 
   if (!open) return null
-  return (
+  // document.body로 렌더링한다: 사이드바(sticky)·카드처럼 쌓임 맥락을 만드는 조상 안에 두면 z-index가 그 안에 갇혀 본문에 가려진다.
+  return createPortal(
     <div className={`scrim${placement === 'left' ? ' left' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={ref} className={`modal${placement === 'left' ? ' drawer' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <h2 id={titleId} className="modal-title">
@@ -67,6 +69,7 @@ export function Modal({ open, title, onClose, children, actions, placement = 'ce
         {children}
         {actions && <div className="modal-actions">{actions}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
