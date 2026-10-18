@@ -7,11 +7,13 @@ PORT      := $(or $(call env_value,FRONTEND_HOST_PORT),5173)
 PROD_PORT := $(or $(call env_value,PROD_HTTP_PORT),80)
 PROD      := docker compose -p $(PROJECT)-prod -f docker-compose.prod.yml
 
-.PHONY: help dev run demoreset
+.PHONY: help dev up stop clean demoreset
 
 help:
 	@echo "make dev        개발 모드로 띄우고 seed_demo, import_books 실행 (http://localhost:$(PORT))"
-	@echo "make run        운영 모드로 띄우고 import_books만 실행 (http://localhost:$(PROD_PORT), .env 의 DJANGO_SECRET_KEY 필요)"
+	@echo "make up         운영 모드로 띄우고 import_books만 실행 (http://localhost:$(PROD_PORT), .env 의 DJANGO_SECRET_KEY 필요)"
+	@echo "make stop       개발·운영 구성을 모두 정지 (데이터는 유지)"
+	@echo "make clean      개발·운영 구성을 모두 정지하고 DB 데이터까지 삭제"
 	@echo "make demoreset  시연 데이터를 처음 상태로 (seed_demo --reset, 개발 모드가 떠 있어야 함)"
 
 dev:
@@ -23,11 +25,20 @@ dev:
 	docker compose exec -T backend python manage.py import_books
 	@echo "개발 서버: http://localhost:$(PORT)"
 
-run:
+up:
 	@test -f .env || { echo ".env 가 없습니다. 먼저: cp .env.example .env (그리고 DJANGO_SECRET_KEY 를 실제 값으로)"; exit 1; }
 	$(PROD) up -d --build --wait
 	$(PROD) exec -T backend python manage.py import_books
 	@echo "운영 구성: http://localhost:$(PROD_PORT)"
+
+stop:
+	docker compose down --remove-orphans
+	$(PROD) down --remove-orphans
+
+clean:
+	@echo "개발·운영 구성의 컨테이너와 DB 데이터를 모두 삭제합니다."
+	docker compose down -v --remove-orphans
+	$(PROD) down -v --remove-orphans
 
 demoreset:
 	@docker compose ps --status running --services 2>/dev/null | grep -qx backend || { echo "개발 모드가 떠 있지 않습니다. 먼저: make dev"; exit 1; }
