@@ -66,4 +66,10 @@
   /* layout */
   --side-w: 248px;
   --touch: 44px;
+  --modal-pad: var(--sp-7);
+}
+@media (max-width: 900px) {
+  :root {
+    --modal-pad: var(--sp-5);
+  }
 }
