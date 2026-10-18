@@ -197,8 +197,10 @@ def scenario_meeting(student: Api, staff: Api, r: Report) -> None:
     r.step("면담 유형 6종이 있다", len(types) == 6, ", ".join(t["name"] for t in types))
     freeze = next(t for t in types if t["code"] == "freeze")
 
-    first, last = weekdays_from(1, 1)[0], weekdays_from(1, 6)[-1]
-    slots = student.get(f"/api/meetings/slots?from={first.isoformat()}&to={last.isoformat()}")
+    # 유형을 고르면 그 유형 기본 담당자의 가능 시간으로 시간이 보인다(운영팀 화면과 같은 기준).
+    first, last = weekdays_from(1, 1)[0], weekdays_from(1, 12)[-1]
+    slots_url = f"/api/meetings/slots?from={first.isoformat()}&to={last.isoformat()}&type_id={freeze['id']}"
+    slots = student.get(slots_url)
     open_slots = [s for s in slots if s["available"]]
     r.step("신청 가능한 시간이 있다(시연 데이터 필요: manage.py seed_demo)", bool(open_slots), f"{len(open_slots)}개")
     slot = open_slots[0]
@@ -218,15 +220,17 @@ def scenario_meeting(student: Api, staff: Api, r: Report) -> None:
 
         members = staff.get("/api/staff/members")
         r.step("담당자로 지정할 운영팀 목록이 있다", bool(members))
-        assigned = staff.call("PATCH", f"/api/staff/meetings/{mid}/assign", {"staff_id": members[0]["id"]})
-        r.step("담당자를 배정할 수 있다", assigned["staff"]["id"] == members[0]["id"])
+        # 신청 때 유형 기본 담당자가 자동 배정되고, 같은 담당자로 다시 지정할 수 있다.
+        owner = next(t for t in staff.get("/api/staff/meeting-types") if t["code"] == "freeze")["default_staff"]["id"]
+        assigned = staff.call("PATCH", f"/api/staff/meetings/{mid}/assign", {"staff_id": owner})
+        r.step("담당자를 배정할 수 있다", assigned["staff"]["id"] == owner)
 
         confirmed = staff.post(f"/api/staff/meetings/{mid}/confirm", {"location": "1층 사무실 앞"})
         r.step("장소를 넣어 확정하면 confirmed다", confirmed["status"] == "confirmed" and confirmed["location"] == "1층 사무실 앞")
 
         mine = {x["id"]: x for x in student.get("/api/meetings/me")}
         r.step("교육생 화면에 확정 일시·담당·장소가 보인다", mine[mid]["status"] == "confirmed" and mine[mid]["staff"] and mine[mid]["location"])
-        slots_after = student.get(f"/api/meetings/slots?from={first.isoformat()}&to={last.isoformat()}")
+        slots_after = student.get(slots_url)
         same = next(s for s in slots_after if s["start_at"] == slot["start_at"])
         r.step("확정된 시간은 마감으로 바뀐다", same["remaining"] == slot["remaining"] - 1)
 
@@ -237,7 +241,7 @@ def scenario_meeting(student: Api, staff: Api, r: Report) -> None:
     finally:
         cancelled = staff.post(f"/api/staff/meetings/{mid}/cancel")
     r.step("(정리) 취소하면 canceled다", cancelled["status"] == "canceled")
-    restored = student.get(f"/api/meetings/slots?from={first.isoformat()}&to={last.isoformat()}")
+    restored = student.get(slots_url)
     back = next(s for s in restored if s["start_at"] == slot["start_at"])
     r.step("(정리) 시간이 다시 열린다", back["remaining"] == slot["remaining"])
 
