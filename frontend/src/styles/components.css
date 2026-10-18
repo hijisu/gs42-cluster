@@ -37,7 +37,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .table td{padding:9px 10px;border-bottom:1px solid var(--c-line-soft)}
 
 .scrim{position:fixed;inset:0;height:100dvh;background:var(--c-scrim);display:flex;align-items:center;justify-content:center;padding:var(--sp-4);z-index:10}
-.modal{background:var(--c-surface);border-radius:var(--r-xl);width:480px;max-width:100%;max-height:100%;min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--sp-7);display:flex;flex-direction:column;gap:var(--sp-4)}
+.modal{background:var(--c-surface);border-radius:var(--r-xl);width:480px;max-width:100%;max-height:100%;min-width:0;overflow-y:auto;overscroll-behavior:contain;--modal-pad:var(--sp-7);padding:var(--modal-pad);display:flex;flex-direction:column;gap:var(--sp-4)}
 /* 모달 안의 긴 목록(참여 학생·차단 회차 등)은 목록만 스크롤한다 */
 .scroll-list{max-height:40vh;overflow-y:auto;overscroll-behavior:contain}
 /* 차단 일정 모달의 날짜·시간 줄: 날짜 칸을 넓히고 입력창 아래 선을 맞춘다 */
@@ -48,7 +48,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
 .modal-actions{display:flex;justify-content:flex-end;gap:var(--sp-2);flex-wrap:wrap}
 .modal-divider{border:0;border-top:1px solid var(--c-line);margin:var(--sp-2) 0}
 /* 긴 모달에서도 닫기·저장 확인이 항상 보이도록 하단에 고정 */
-.modal-footer{position:sticky;bottom:0;background:var(--c-surface);border-top:1px solid var(--c-line-soft);padding-top:var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-2)}
+.modal-footer{position:sticky;bottom:calc(-1 * var(--modal-pad));margin-bottom:calc(-1 * var(--modal-pad));background:var(--c-surface);border-top:1px solid var(--c-line-soft);padding:var(--sp-3) 0 var(--modal-pad);display:flex;flex-direction:column;gap:var(--sp-2)}
 
 /* 시간 격자 (면담·회의실 공용) */
 .slot-wrap{display:flex;flex-direction:column;gap:var(--sp-3)}
@@ -152,7 +152,7 @@ table.table{width:100%;border-collapse:collapse;font-size:14px}
   .tabs{max-width:100%;flex-wrap:nowrap;overflow-x:auto}
   .tabs button{flex:0 0 auto;white-space:nowrap}
   /* 이용수칙 등 모달은 화면 가장자리에서 여백만 남기고 꽉 채운다 */
-  .modal{padding:var(--sp-5);overflow-x:hidden}
+  .modal{--modal-pad:var(--sp-5);overflow-x:hidden}
   /* iOS Safari의 date/time 입력은 네이티브 외형의 고유 폭 때문에 카드 밖으로 넘치므로 폭을 부모에 맞춘다 */
   .input[type='date'],.input[type='time']{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;display:block;text-align:left}
   .input[type='date']::-webkit-date-and-time-value,.input[type='time']::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
