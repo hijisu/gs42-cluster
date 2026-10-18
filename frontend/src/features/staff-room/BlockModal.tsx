@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Button, Chip, Field, Modal } from '../../components'
 import { formatDayLabel, kstDate, kstDateFromToday, kstTime, kstToIso } from '../../lib/datetime'
 import type { Room } from '../room/api'
@@ -171,18 +171,17 @@ function BlockForm({ target, rooms, onClose }: { target: BlockTarget; rooms: Roo
 }
 
 function TimeSelect({ label, value, onChange, error }: { label: string; value: string; onChange: (v: string) => void; error?: string }) {
+  const id = useId()
   return (
     <div className="field">
-      <label>
-        {label}
-        <select className="input" value={value} aria-invalid={error ? true : undefined} onChange={(e) => onChange(e.target.value)}>
-          {HALF_HOURS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-      </label>
+      <label htmlFor={id}>{label}</label>
+      <select id={id} className="input" value={value} aria-invalid={error ? true : undefined} onChange={(e) => onChange(e.target.value)}>
+        {HALF_HOURS.map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
       {error && <span className="error" role="alert">{error}</span>}
     </div>
   )
