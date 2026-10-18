@@ -42,11 +42,16 @@ Python·Node.js·PostgreSQL을 호스트에 설치할 필요가 없습니다. �
 ```bash
 git clone https://github.com/42gyeongsan-hackathon-2026/42.Zip-team10.git
 cd 42.Zip-team10
-cp .env.example .env     # 기본값 그대로 실행됩니다 (4. 환경 변수)
-make dev                 # 빌드 → 기동 → 시연 데이터와 도서 518종 입력. 첫 실행은 이미지 빌드로 몇 분 걸립니다
+cp .env.example .env
 ```
 
-`make dev`가 끝나면 `개발 서버: http://localhost:5173`이 출력됩니다. 같은 명령을 다시 실행해도 안전합니다(데이터를 지우지 않음).
+### 3-1. 개발용
+
+```bash
+make dev
+```
+
+개발용 예시값(시연 데이터, 도서 518종)까지 입력됩니다. 끝나면 `개발 서버: http://localhost:5173`이 출력되고, 같은 명령을 다시 실행해도 데이터를 지우지 않습니다.
 
 **make 없이** 같은 결과를 내려면:
 
@@ -56,24 +61,35 @@ docker compose exec backend python manage.py seed_demo      # 시연 데이터 (
 docker compose exec backend python manage.py import_books   # 도서 518종
 ```
 
+### 3-2. 운영용
+
+`.env`의 `DJANGO_SECRET_KEY`를 실제 값으로 바꾼 뒤 실행합니다.
+
+```bash
+make up
+```
+
+gunicorn, `DEBUG=false`로 실행하며 모의 로그인이 꺼지고 시연 데이터는 들어가지 않습니다(도서 518종만 입력). 접속 주소는 `http://localhost:80`입니다. 자세한 내용은 [docs/BUILD.md](docs/BUILD.md#배포-운영-구성-로컬-검증)를 참고하세요.
+
+### 3-3. 정지 · 삭제
+
 | 하고 싶은 일 | 명령 |
 | --- | --- |
-| 중지(데이터 유지) | `docker compose down` |
-| 데이터까지 완전 삭제 | `docker compose down -v` |
+| 전체 정지(개발·운영, 데이터 유지) | `make stop` |
+| 모든 데이터 삭제(개발·운영, DB 포함) | `make clean` |
 | 시연 데이터를 처음 상태로 | `make demoreset` |
 | 로그 보기 | `docker compose logs -f backend` |
-| 운영 구성(gunicorn, `DEBUG=false`)으로 실행 | `make run` — `.env`의 `DJANGO_SECRET_KEY`를 실제 값으로 바꿔야 하고 모의 로그인이 꺼집니다. 자세한 내용은 [docs/BUILD.md](docs/BUILD.md#배포-운영-구성-로컬-검증) |
 
 ## 4. 환경 변수
 
-`cp .env.example .env`로 만든 `.env`를 사용합니다. **심사·확인 목적이라면 값을 하나도 바꾸지 않아도 됩니다**(모의 로그인으로 모든 기능을 확인할 수 있습니다). `.env`는 비밀값이 들어갈 수 있어 커밋하지 않습니다(gitignore).
+기본값으로 실행합니다. 값을 바꾸려면 아래 환경 변수를 참고하세요. 모의 로그인으로 모든 기능을 확인할 수 있으니 심사·확인 목적이라면 값을 하나도 바꾸지 않아도 됩니다.
 
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
 | `FRONTEND_HOST_PORT` | `5173` | 접속 포트. 충돌하면 다른 값으로 변경 |
 | `FRONTEND_BIND` | `0.0.0.0` | 포트를 여는 주소. 같은 네트워크의 다른 기기에서 접속하려면 그대로, 이 PC에서만 쓰려면 `127.0.0.1` |
 | `DJANGO_DEBUG` | `true` | `true`일 때만 모의 로그인 허용 |
-| `DJANGO_SECRET_KEY` | `change-me` | 개발 모드는 예시 값으로 동작. 운영 구성(`make run`)은 실제 값 필수 |
+| `DJANGO_SECRET_KEY` | `change-me` | 개발 모드는 예시 값으로 동작. 운영 구성(`make up`)은 실제 값 필수 |
 | `POSTGRES_*` | `.env.example` 참조 | DB 이름·사용자·비밀번호. compose가 내부 네트워크로 연결(호스트에는 열리지 않음) |
 | `FORTYTWO_UID` / `FORTYTWO_SECRET` / `STAFF_INTRA_IDS` | 비어 있음 | **선택.** 실제 42 intra 로그인에만 필요. 등록 방법은 [BUILD.md](docs/BUILD.md#42-oauth-앱-등록) |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | 비어 있음 | **선택.** 웹 푸시. 비우면 앱 안 알림만 동작 |
@@ -121,7 +137,7 @@ docker compose exec frontend npm test                  # 프론트엔드 테스�
 | 모의 로그인 버튼이 안 보이거나 실패 | `.env`의 `DJANGO_DEBUG=true` 확인 후 `docker compose up -d` |
 | `Cannot connect to the Docker daemon` / Linux에서 권한 오류 | Docker 데몬 실행 확인, Linux는 사용자를 `docker` 그룹에 추가하거나 `sudo` 사용 |
 | `make dev`가 "백엔드가 준비되지 않았습니다" | `docker compose logs backend`로 오류 확인. 대개 첫 빌드 중 네트워크 문제이므로 `make dev` 재실행 |
-| 처음부터 다시 | `docker compose down -v && make dev` |
+| 처음부터 다시 | `make clean && make dev` |
 
 ## 문서
 

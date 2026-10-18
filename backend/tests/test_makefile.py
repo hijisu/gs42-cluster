@@ -1,4 +1,4 @@
-"""Makefile(make dev / run / demoreset)과 docs/BUILD.md 설명의 정합성."""
+"""Makefile(make dev / up / stop / clean / demoreset)과 docs/BUILD.md 설명의 정합성."""
 
 import re
 from pathlib import Path
@@ -28,8 +28,8 @@ def test_dev_seeds_demo_and_imports_books_without_reset():
     assert "--reset" not in body
 
 
-def test_run_is_production_and_only_imports_books():
-    body = recipe("run")
+def test_up_is_production_and_only_imports_books():
+    body = recipe("up")
     assert "$(PROD)" in body
     definition = re.search(r"^PROD\s*:=.*$", MAKEFILE.read_text(encoding="utf-8"), re.MULTILINE)
     assert definition and "docker-compose.prod.yml" in definition.group(0)
@@ -38,11 +38,22 @@ def test_run_is_production_and_only_imports_books():
     assert "seed_demo" not in body
 
 
+def test_stop_brings_down_dev_and_prod_but_keeps_volumes():
+    body = recipe("stop")
+    assert "docker compose down" in body and "$(PROD) down" in body
+    assert "-v" not in body.replace("--remove-orphans", "")
+
+
+def test_clean_removes_volumes_of_dev_and_prod():
+    body = recipe("clean")
+    assert "docker compose down -v" in body and "$(PROD) down -v" in body
+
+
 def test_demoreset_resets_demo_data():
     assert "seed_demo --reset" in recipe("demoreset")
 
 
 def test_build_md_documents_every_make_target():
     text = BUILD_MD.read_text(encoding="utf-8")
-    for command in ("make dev", "make run", "make demoreset"):
+    for command in ("make dev", "make up", "make stop", "make clean", "make demoreset"):
         assert command in text, f"docs/BUILD.md 에 `{command}` 설명이 없습니다"
