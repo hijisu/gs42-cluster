@@ -92,11 +92,12 @@ def test_meeting_confirmed_shows_up_for_the_student():
     assert "1층 사무실 앞" in item["body"] and item["data"]["meeting_id"] == meeting["id"]
 
 
-def test_staff_who_confirms_gets_no_notification():
+def test_staff_who_confirms_gets_no_confirmation_notification():
     student, staff = login("student"), login("staff")
     meeting = request_meeting(student, User.objects.get(intra_id="staff"))
     staff.post(f"/api/staff/meetings/{meeting['id']}/confirm", {"location": "a"}, format="json")
-    assert student_notifications(staff)["items"] == []
+    # 신청 알림(meeting_requested)은 받지만 확정 알림은 받지 않는다.
+    assert {n["type"] for n in student_notifications(staff)["items"]} <= {"meeting_requested"}
 
 
 def test_meeting_proposed_notifies_the_student():
@@ -145,8 +146,9 @@ def test_reservation_approval_notifies_only_the_owner():
     other.post("/api/auth/mock-login", {"role": "student"}, format="json")
     reservation = request_room(owner)
     staff.post(f"/api/staff/reservations/{reservation['id']}/approve")
-    assert NotificationRow.objects.count() == 1
-    assert NotificationRow.objects.get().user.intra_id == "student"
+    approved = NotificationRow.objects.filter(type="reservation_approved")
+    assert approved.count() == 1
+    assert approved.get().user.intra_id == "student"
 
 
 def test_failed_approval_creates_no_notification():
@@ -278,3 +280,20 @@ def test_no_staff_role_is_required_to_read_notifications():
     assert Role.STUDENT.value == "student"
     assert login("student").get("/api/notifications").status_code == 200
     assert login("staff").get("/api/notifications").status_code == 200
+
+
+def test_student_meeting_request_and_cancel_notify_staff_not_the_student():
+    staff, student = login("staff"), login("student")
+    at = (datetime.now(KST) + timedelta(days=2)).replace(hour=15, minute=0, second=0, microsecond=0)
+    AvailabilitySlot.objects.create(staff=User.objects.get(intra_id="staff"), start_at=at)
+    freeze = MeetingType.objects.get(code="freeze")
+    created = student.post(
+        "/api/meetings",
+        {"type_id": freeze.id, "slot_at": at.isoformat(), "content": "문의"},
+        format="json",
+    ).json()
+    assert student.post(f"/api/meetings/{created['id']}/cancel").status_code == 200
+
+    types = [n["type"] for n in staff.get("/api/notifications").json()["items"]]
+    assert "meeting_requested" in types and "meeting_canceled" in types
+    assert student.get("/api/notifications").json()["unread_count"] == 0

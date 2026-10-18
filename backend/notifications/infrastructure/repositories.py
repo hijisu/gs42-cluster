@@ -73,3 +73,12 @@ class DjangoUserDirectory:
         wanted = {i.lower() for i in intra_ids}
         users = get_user_model().objects.all().values_list("intra_id", "pk")
         return {intra.lower(): pk for intra, pk in users if intra.lower() in wanted}
+
+    def staff_ids(self) -> list[int]:
+        return list(get_user_model().objects.filter(role="staff").values_list("pk", flat=True))
+
+    def display_names(self, user_ids: list[int]) -> dict[int, str]:
+        rows = (
+            get_user_model().objects.filter(pk__in=user_ids).values_list("pk", "name", "intra_id")
+        )
+        return {pk: name or intra for pk, name, intra in rows}

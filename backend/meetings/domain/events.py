@@ -18,6 +18,7 @@ class MeetingCanceled(DomainEvent):
     meeting_id: int
     student_id: int
     staff_id: int | None
+    canceled_by_staff: bool = False
 
 
 @dataclass(frozen=True)

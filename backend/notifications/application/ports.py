@@ -29,3 +29,11 @@ class UserDirectory(Protocol):
     def ids_by_intra_ids(self, intra_ids: list[str]) -> dict[str, int]:
         """가입한 사용자만 {intra_id(소문자): user_id}로 돌려준다."""
         ...
+
+    def staff_ids(self) -> list[int]:
+        """운영팀 역할 사용자의 id."""
+        ...
+
+    def display_names(self, user_ids: list[int]) -> dict[int, str]:
+        """{user_id: 표시 이름}. 이름이 없으면 intra_id."""
+        ...

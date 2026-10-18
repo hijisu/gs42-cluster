@@ -18,6 +18,7 @@ class ReservationCanceled(DomainEvent):
     reservation_id: int
     user_id: int
     room_id: int
+    canceled_by_staff: bool = False
 
 
 @dataclass(frozen=True)

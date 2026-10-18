@@ -5,12 +5,23 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 
 from common.infrastructure.dispatcher import InProcessEventDispatcher
-from meetings.domain.events import MeetingConfirmed, MeetingProposed
+from meetings.domain.events import (
+    MeetingCanceled,
+    MeetingConfirmed,
+    MeetingProposed,
+    MeetingRequested,
+)
 from notifications.application.handlers import NotificationHandlers, register_handlers
 from notifications.application.service import NotificationService
 from notifications.domain.notification import NotificationType
 from reviews.domain.events import ReviewRequested
-from rooms.domain.events import ReservationApproved, ReservationReassigned, ReservationRejected
+from rooms.domain.events import (
+    ReservationApproved,
+    ReservationCanceled,
+    ReservationReassigned,
+    ReservationRejected,
+    ReservationRequested,
+)
 
 START = datetime(2026, 10, 20, 5, 0, tzinfo=UTC)  # 14:00 KST
 END = START + timedelta(hours=2)
@@ -27,11 +38,17 @@ class Channel:
 
 
 class Users:
-    def __init__(self, mapping):
-        self.mapping = mapping
+    def __init__(self, mapping, staff=(), names=None):
+        self.mapping, self.staff, self.names = mapping, list(staff), names or {}
 
     def ids_by_intra_ids(self, intra_ids):
         return {i: self.mapping[i] for i in intra_ids if i in self.mapping}
+
+    def staff_ids(self):
+        return self.staff
+
+    def display_names(self, user_ids):
+        return {i: self.names[i] for i in user_ids if i in self.names}
 
 
 def build(channel=None, users=None):
@@ -199,3 +216,62 @@ def test_meeting_body_omits_separator_without_location(location, expected):
         MeetingConfirmed(meeting_id=1, student_id=1, staff_id=2, slot_at=START, location=location)
     )
     assert channel.sent[0].body == expected
+
+
+# ── 운영팀이 받는 알림 ──
+def staff_build(staff=(10, 11)):
+    channel = Channel()
+    users = Users({}, staff=staff, names={7: "김교육"})
+    bus = InProcessEventDispatcher()
+    register_handlers(bus, NotificationHandlers(NotificationService([channel]), users))
+    return channel, bus
+
+
+def test_unassigned_meeting_request_notifies_all_staff():
+    channel, bus = staff_build()
+    bus.publish(
+        MeetingRequested(meeting_id=1, student_id=7, type_id=1, slot_at=START, staff_id=None)
+    )
+    assert sorted(n.user_id for n in channel.sent) == [10, 11]
+    first = channel.sent[0]
+    assert first.type == NotificationType.MEETING_REQUESTED
+    assert "김교육" in first.body and first.link == "/staff/meeting"
+
+
+def test_assigned_meeting_request_notifies_only_that_staff():
+    channel, bus = staff_build()
+    bus.publish(MeetingRequested(meeting_id=1, student_id=7, type_id=1, slot_at=START, staff_id=11))
+    assert [n.user_id for n in channel.sent] == [11]
+
+
+def test_student_meeting_cancel_notifies_staff_but_staff_cancel_does_not():
+    channel, bus = staff_build()
+    bus.publish(MeetingCanceled(meeting_id=1, student_id=7, staff_id=11))
+    assert [(n.user_id, n.type) for n in channel.sent] == [(11, NotificationType.MEETING_CANCELED)]
+    channel.sent.clear()
+    bus.publish(MeetingCanceled(meeting_id=1, student_id=7, staff_id=11, canceled_by_staff=True))
+    assert channel.sent == []
+
+
+def test_reservation_request_notifies_all_staff_and_cancel_only_by_student():
+    channel, bus = staff_build()
+    bus.publish(
+        ReservationRequested(reservation_id=5, user_id=7, room_id=2, start_at=START, end_at=END)
+    )
+    assert sorted(n.user_id for n in channel.sent) == [10, 11]
+    assert channel.sent[0].type == NotificationType.RESERVATION_REQUESTED
+    assert channel.sent[0].link == "/staff/room"
+    channel.sent.clear()
+    bus.publish(ReservationCanceled(reservation_id=5, user_id=7, room_id=2))
+    assert len(channel.sent) == 2
+    channel.sent.clear()
+    bus.publish(ReservationCanceled(reservation_id=5, user_id=7, room_id=2, canceled_by_staff=True))
+    assert channel.sent == []
+
+
+def test_no_staff_means_no_notifications_and_no_error():
+    channel, bus = staff_build(staff=())
+    bus.publish(
+        ReservationRequested(reservation_id=5, user_id=7, room_id=2, start_at=START, end_at=END)
+    )
+    assert channel.sent == []
