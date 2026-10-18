@@ -1,0 +1,24 @@
+# 수동 실행: scripts/deploy.sh job seed-demo  (반복 실행해도 안전)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: seed-demo-
+  namespace: gs42-cluster
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: backend-job
+        db-client: "true"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: job
+          image: gs42-backend:local
+          imagePullPolicy: IfNotPresent
+          command: ["python", "manage.py", "seed_demo"]
+          envFrom:
+            - configMapRef: {name: gs42-config}
+            - secretRef: {name: gs42-secret}

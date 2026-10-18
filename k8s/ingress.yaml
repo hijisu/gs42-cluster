@@ -1,0 +1,19 @@
+# 클래스 nginx 는 이 클러스터에서 Traefik 컨트롤러다(gs42stat 과 같은 방식). 외부 노출은 Cloudflare Tunnel 이 맡는다.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gs42-cluster
+  namespace: gs42-cluster
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: 42gs-cluster.hijae.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80

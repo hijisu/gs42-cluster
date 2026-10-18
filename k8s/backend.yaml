@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: gs42-cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: backend}
+  template:
+    metadata:
+      labels:
+        app: backend
+        db-client: "true"
+    spec:
+      containers:
+        - name: backend
+          # 태그는 deploy.sh 가 git 짧은 SHA 로 바꾼다.
+          image: gs42-backend:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef: {name: gs42-config}
+            - secretRef: {name: gs42-secret}
+          # 컨테이너 시작 시 migrate 후 gunicorn 실행(backend/Dockerfile prod 타깃). Host 검증 때문에 Host 헤더를 도메인으로 지정한다.
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+              httpHeaders: [{name: Host, value: 42gs-cluster.hijae.dev}]
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+              httpHeaders: [{name: Host, value: 42gs-cluster.hijae.dev}]
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 100m, memory: 192Mi}
+            limits: {memory: 768Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: gs42-cluster
+spec:
+  selector: {app: backend}
+  ports:
+    - port: 8000
+      targetPort: 8000
