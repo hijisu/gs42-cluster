@@ -18,9 +18,11 @@ export function LoginPage() {
 
   if (isPending) return null
   if (me) {
-    // 돌아갈 경로가 없으면 역할별 홈: 운영팀은 운영 홈, 교육생은 교육생 홈.
+    // 돌아갈 경로가 없거나 교육생 홈('/')이면 역할별 홈으로: 운영팀은 운영 홈, 교육생은 교육생 홈.
+    // '/'는 미로그인으로 첫 화면을 열었을 때 저장되는 기본값이라 운영팀에게는 목적지가 아니다.
+    const from = (location.state as { from?: string } | null)?.from
     const home = me.role === 'staff' ? '/staff' : '/'
-    return <Navigate to={(location.state as { from?: string } | null)?.from ?? home} replace />
+    return <Navigate to={!from || from === '/' ? home : from} replace />
   }
 
   return (
