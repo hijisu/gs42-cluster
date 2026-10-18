@@ -98,7 +98,7 @@ function BlockForm({ target, rooms, onClose }: { target: BlockTarget; rooms: Roo
           ))}
         </select>
       </div>
-      <div className="g3" style={{ gap: 12 }}>
+      <div className="block-when">
         {target.mode === 'occurrence' ? (
           <div className="field">
             <span className="label">날짜</span>
