@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event'
 import { screen, within } from '@testing-library/react'
 import { anonymous, asUser, mockApi, renderAt } from '../test-utils'
 import { staffNav, studentNav } from './routes'
@@ -66,6 +67,19 @@ describe('인증 가드', () => {
     const router = renderAt('/login')
     await screen.findByRole('main')
     expect(router.state.location.pathname).toBe('/')
+  })
+
+  it('미로그인으로 /를 열었다가 운영팀으로 로그인하면 운영 홈으로 간다', async () => {
+    let loggedIn = false
+    mockApi(
+      (req) => (req.url.endsWith('/auth/mock-login') ? ((loggedIn = true), { json: { intra_id: 'staff', role: 'staff' } }) : undefined),
+      (req) => (req.url.endsWith('/auth/me') ? (loggedIn ? asUser('staff')(req) : anonymous(req)) : undefined),
+    )
+    const router = renderAt('/')
+    await screen.findByRole('heading', { name: '로그인' })
+    await userEvent.click(screen.getByRole('button', { name: '운영팀' }))
+    await screen.findByRole('main')
+    expect(router.state.location.pathname).toBe('/staff')
   })
 
   it('로그인 화면은 콜백 오류 코드를 문구로 보여준다', async () => {
