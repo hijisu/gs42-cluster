@@ -7,6 +7,7 @@
 #   k8s/scripts/deploy.sh diff [태그]       적용 전 차이 확인(클러스터 변경 없음)
 # 컨텍스트는 K8S_CONTEXT(기본 z2mini = hijaeui-server-1).
 set -euo pipefail
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 cd "$(dirname "$0")/.."
 CTX="${K8S_CONTEXT:-z2mini}"
 NS=gs42-cluster
@@ -37,7 +38,7 @@ case "${1:-}" in
     $K -n $NS rollout status deploy/backend --timeout=300s
     $K -n $NS rollout status deploy/web --timeout=120s
     $K -n $NS get pods
-    "$0" job import-books
-    "$0" job seed-demo
+    "$SELF" job import-books
+    "$SELF" job seed-demo
     ;;
 esac
