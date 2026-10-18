@@ -9,7 +9,6 @@ import { Modal } from './Modal'
 interface LayoutProps {
   variant: 'student' | 'staff'
   nav: NavItem[]
-  switchTo: { to: string; label: string }
 }
 
 const roleLabel = { student: '42경산 · 교육생', staff: '교육운영팀' }
@@ -50,7 +49,7 @@ function MenuLinks({ nav, onNavigate }: { nav: NavItem[]; onNavigate?: () => voi
   )
 }
 
-export function Layout({ variant, nav, switchTo }: LayoutProps) {
+export function Layout({ variant, nav }: LayoutProps) {
   const { data: me } = useMe()
   const logout = useLogout()
   const navigate = useNavigate()
@@ -79,12 +78,6 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
         <span className="me-role">{roleLabel[me.role]}</span>
       </div>
     </div>
-  )
-  // 운영팀 계정에만 화면 전환 토글을 보여준다
-  const switcher = me?.role === 'staff' && (
-    <NavLink className="switch" to={switchTo.to} onClick={() => setMenuOpen(false)}>
-      {switchTo.label}
-    </NavLink>
   )
   const logoutButton = (
     <button
@@ -119,7 +112,6 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
           <Modal open={menuOpen} title="메뉴" placement="left" onClose={() => setMenuOpen(false)}>
             <MenuLinks nav={nav} onNavigate={() => setMenuOpen(false)} />
             {account}
-            {switcher}
             {logoutButton}
           </Modal>
         </>
@@ -129,7 +121,6 @@ export function Layout({ variant, nav, switchTo }: LayoutProps) {
           {variant === 'staff' && <span className="role">STAFF</span>}
           <MenuLinks nav={nav} />
           {me && <NotificationBell />}
-          {switcher}
           {logoutButton}
           {account}
         </aside>

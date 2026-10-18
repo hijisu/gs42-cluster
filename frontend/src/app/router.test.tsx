@@ -18,11 +18,25 @@ describe('routes', () => {
     expect(new Set([...studentNav, ...staffNav].map((n) => n.design)).size).toBe(10)
   })
 
-  it.each(paths)('운영팀 계정은 %s 가 열린다', async (path) => {
+  it.each(staffNav.map((n) => n.path))('운영팀 계정은 %s 가 열린다', async (path) => {
     mockMe('staff')
     renderAt(path)
     expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
+  })
+
+  it.each(studentNav.map((n) => n.path))('운영팀 계정이 교육생 화면 %s 를 열면 운영 홈으로 보낸다', async (path) => {
+    mockMe('staff')
+    const router = renderAt(path)
+    await screen.findByRole('main')
+    expect(router.state.location.pathname).toBe('/staff')
+  })
+
+  it.each(studentNav.map((n) => n.path))('교육생 계정은 %s 가 열린다', async (path) => {
+    mockMe('student')
+    const router = renderAt(path)
+    expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(path)
   })
 
 })
@@ -49,10 +63,12 @@ describe('인증 가드', () => {
     expect(screen.queryByRole('link', { name: '교육운영팀 화면 보기' })).toBeNull()
   })
 
-  it('운영팀 계정에는 "교육운영팀 화면 보기" 토글이 있다', async () => {
+  it('운영팀 계정에도 교육생 화면 전환 토글은 없다', async () => {
     mockMe('staff')
-    renderAt('/')
-    expect(await screen.findByRole('link', { name: '교육운영팀 화면 보기' })).toBeInTheDocument()
+    renderAt('/staff')
+    await screen.findByRole('main')
+    expect(screen.queryByRole('link', { name: '교육생 화면 보기' })).toBeNull()
+    expect(screen.queryByRole('link', { name: '교육운영팀 화면 보기' })).toBeNull()
   })
 
   it('로그인된 운영팀 계정은 로그인 화면에서 운영 홈으로 간다', async () => {

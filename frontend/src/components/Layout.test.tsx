@@ -58,13 +58,13 @@ describe('레이아웃: 모바일(≤900px)', () => {
     expect(opener).toHaveFocus()
   })
 
-  it('운영팀 계정은 드로어에서 화면 전환·로그아웃을, 교육생은 로그아웃만 본다', async () => {
+  it('운영팀 계정 드로어에는 화면 전환 없이 로그아웃만 있다', async () => {
     stubViewport(true)
     mockApi(asUser('staff'))
     renderAt('/staff')
     await userEvent.click(await screen.findByRole('button', { name: '메뉴 열기' }))
     const drawer = await screen.findByRole('dialog', { name: '메뉴' })
-    expect(within(drawer).getByRole('link', { name: '교육생 화면 보기' })).toBeInTheDocument()
+    expect(within(drawer).queryByRole('link', { name: '교육생 화면 보기' })).toBeNull()
     expect(within(drawer).getByRole('button', { name: '로그아웃' })).toBeInTheDocument()
     expect(screen.getByText('STAFF')).toBeInTheDocument()
   })

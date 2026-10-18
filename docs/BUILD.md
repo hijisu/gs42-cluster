@@ -222,7 +222,7 @@ npm run build      # tsc + vite build (PWA manifest·서비스워커 생성)
 2. 이름(예: `42gs-cluster dev`)을 적고, **Redirect URI**에 `.env`의 `FORTYTWO_REDIRECT_URI`와 **똑같은 값**을 등록합니다. compose 기본값은 `http://localhost:5173/api/auth/callback`(프록시 경유)이며 `FRONTEND_HOST_PORT`·`FRONTEND_PUBLIC_HOST`를 바꿨다면 그 값을 씁니다. 호스트에서 backend를 직접 실행할 때는 `http://localhost:8000/api/auth/callback`입니다. Scope는 `public`이면 충분합니다.
 3. 발급된 **UID**와 **SECRET**을 `.env`의 `FORTYTWO_UID`, `FORTYTWO_SECRET`에 넣습니다. **채팅·이슈·PR·커밋에 붙여 넣지 않습니다**(`.env`는 gitignore 대상).
 4. 교육운영팀 계정은 `.env`의 `STAFF_INTRA_IDS`에 intra login을 쉼표로 적습니다(42 응답의 `staff?`는 보조). 바꾼 뒤 **`docker compose up -d`**로 적용합니다(`restart`는 `.env`를 다시 읽지 않아 값이 바뀌지 않습니다).
-5. http://localhost:5173/login 에서 **"42 intra로 로그인"**을 누르고 승인하면 사이드바에 내 `intra_id`가 보입니다. 운영팀으로 등록한 계정이면 '교육운영팀 화면 보기' 토글이 나타납니다.
+5. http://localhost:5173/login 에서 **"42 intra로 로그인"**을 누르고 승인하면 사이드바에 내 `intra_id`가 보입니다. 운영팀 계정이면 로그인 직후 운영 홈(`/staff`)이 나옵니다. 운영팀은 교육생 화면에, 교육생은 운영 화면에 들어갈 수 없습니다.
 
 로그인에 실패하면 `/login?error=<코드>`로 돌아옵니다.
 
