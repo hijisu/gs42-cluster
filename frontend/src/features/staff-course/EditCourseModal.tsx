@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Button, Field, Modal } from '../../components'
 import type { StaffCourse } from './api'
 import { messageFor } from './errors'
@@ -12,16 +12,34 @@ const splitIds = (raw: string) => raw.split(/[\s,]+/).map((s) => s.trim().toLowe
 /** 등록한 교육과정 수정: 기본 정보·후기 마감일 + 참여 학생 추가/제거 */
 export function EditCourseModal({ courseId, onClose }: { courseId: number | null; onClose: () => void }) {
   const course = useStaffCourse(courseId)
+  // 기본 정보는 '정보 저장'을 눌러야 저장되므로, 고친 채 닫으려 하면 한 번 묻는다. Esc·바깥 클릭도 같은 경로를 탄다.
+  const [dirty, setDirty] = useState(false)
+  const [asking, setAsking] = useState(false)
+  const close = () => {
+    setDirty(false)
+    setAsking(false)
+    onClose()
+  }
+  const requestClose = () => (dirty ? setAsking(true) : close())
   return (
-    <Modal open={courseId !== null} title="교육과정 수정" onClose={onClose}>
+    <Modal open={courseId !== null} title="교육과정 수정" onClose={requestClose}>
       {course.isPending && courseId !== null && <p className="muted" role="status">불러오는 중…</p>}
       {course.isError && <p role="alert">교육과정을 불러오지 못했어요.</p>}
-      {course.data && <EditBody key={course.data.id} course={course.data} onClose={onClose} />}
+      {course.data && <EditBody key={course.data.id} course={course.data} asking={asking} onDirty={setDirty} onKeep={() => setAsking(false)} onRequestClose={requestClose} onClose={close} />}
     </Modal>
   )
 }
 
-function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => void }) {
+interface EditBodyProps {
+  course: StaffCourse
+  asking: boolean
+  onDirty: (dirty: boolean) => void
+  onKeep: () => void
+  onRequestClose: () => void
+  onClose: () => void
+}
+
+function EditBody({ course, asking, onDirty, onKeep, onRequestClose, onClose }: EditBodyProps) {
   const update = useUpdateCourse()
   const [name, setName] = useState(course.name)
   const [start, setStart] = useState(course.start_date)
@@ -30,6 +48,9 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
   const [intro, setIntro] = useState(course.intro)
   const [deadline, setDeadline] = useState(course.review_deadline ?? '')
   const [submitted, setSubmitted] = useState(false)
+  const dirty =
+    name.trim() !== course.name || start !== course.start_date || end !== course.end_date || location.trim() !== course.location || intro.trim() !== course.intro || deadline !== (course.review_deadline ?? '')
+  useEffect(() => onDirty(dirty), [dirty, onDirty])
 
   const errors = {
     name: name.trim() === '' ? '과정명을 입력해 주세요.' : undefined,
@@ -41,7 +62,10 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
 
   function save() {
     setSubmitted(true)
-    if (Object.values(errors).some(Boolean)) return
+    if (Object.values(errors).some(Boolean)) {
+      onKeep()
+      return
+    }
     update.mutate(
       { id: course.id, body: { name: name.trim(), start_date: start, end_date: end, location: location.trim(), intro: intro.trim(), review_deadline: deadline || null } },
       { onSuccess: onClose },
@@ -50,25 +74,48 @@ function EditBody({ course, onClose }: { course: StaffCourse; onClose: () => voi
 
   return (
     <div className="stack">
-      <Field label="과정명" value={name} onChange={(e) => setName(e.target.value)} error={submitted ? errors.name : undefined} />
-      <div className="g2" style={{ gap: 12 }}>
-        <Field label="시작일" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={submitted ? errors.start : undefined} />
-        <Field label="종료일" type="date" value={end} onChange={(e) => setEnd(e.target.value)} error={submitted ? errors.end : undefined} />
-      </div>
-      <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
-      <Field label="과정 소개" multiline value={intro} onChange={(e) => setIntro(e.target.value)} />
-      <Field label="후기 작성 마감(선택)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={submitted ? errors.deadline : undefined} />
-      {error && <p role="alert" className="login-error">{error}</p>}
-      <div className="modal-actions">
-        <Button disabled={update.isPending} onClick={save}>
-          {update.isPending ? '저장 중…' : '정보 저장'}
-        </Button>
-      </div>
+      <section className="stack" aria-label="기본 정보">
+        <h3 style={{ fontSize: 16 }}>기본 정보</h3>
+        <Field label="과정명" value={name} onChange={(e) => setName(e.target.value)} error={submitted ? errors.name : undefined} />
+        <div className="g2" style={{ gap: 12 }}>
+          <Field label="시작일" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={submitted ? errors.start : undefined} />
+          <Field label="종료일" type="date" value={end} onChange={(e) => setEnd(e.target.value)} error={submitted ? errors.end : undefined} />
+        </div>
+        <Field label="장소" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <Field label="과정 소개" multiline value={intro} onChange={(e) => setIntro(e.target.value)} />
+        <Field label="후기 작성 마감(선택)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={submitted ? errors.deadline : undefined} />
+        {error && <p role="alert" className="login-error">{error}</p>}
+        <div className="modal-actions">
+          <Button disabled={update.isPending} onClick={save}>
+            {update.isPending ? '저장 중…' : '정보 저장'}
+          </Button>
+        </div>
+      </section>
+      <hr className="modal-divider" />
       <Participants course={course} />
-      <div className="modal-actions">
-        <Button variant="secondary" onClick={onClose}>
-          닫기
-        </Button>
+      <div className="modal-footer">
+        {asking ? (
+          <>
+            <p role="alert" className="small">저장하지 않은 기본 정보가 있어요. 저장하고 닫을까요?</p>
+            <div className="modal-actions">
+              <Button variant="secondary" onClick={onKeep}>
+                계속 수정
+              </Button>
+              <Button variant="danger" onClick={onClose}>
+                버리고 닫기
+              </Button>
+              <Button disabled={update.isPending} onClick={save}>
+                저장 후 닫기
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="modal-actions">
+            <Button variant="secondary" onClick={onRequestClose}>
+              닫기
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -133,6 +180,7 @@ function Participants({ course }: { course: StaffCourse }) {
   return (
     <section className="stack" style={{ gap: 8 }} aria-label="참여 학생">
       <h3 style={{ fontSize: 16 }}>참여 학생 {participants.length}명</h3>
+      <p className="muted small">추가·제거는 바로 저장돼요.</p>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <input id="edit-ids" className="input" style={{ flexGrow: 1 }} aria-label="추가할 intra ID" placeholder="intra ID 입력 후 Enter 또는 ‘추가’" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} />
         <Button variant="secondary" disabled={add.isPending} onClick={addIds}>

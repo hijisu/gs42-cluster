@@ -205,6 +205,48 @@ describe('운영 교육과정·후기 관리 화면', () => {
     expect(within(dialog).getByText('12명 중 1명')).toBeInTheDocument()
   })
 
+  describe('수정 모달 닫기', () => {
+    const detail = () => ({ ...course(), participants: [{ intra_id: 'alice', reviewed: false }] })
+    const openEdit = async (...extra: Handler[]) => {
+      const calls = await openPage(list([course()]), (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: detail() } : undefined), ...extra)
+      await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+      const dialog = await screen.findByRole('dialog')
+      await within(dialog).findByLabelText('과정명')
+      return { calls, dialog }
+    }
+
+    it('고친 것이 없으면 닫기로 바로 닫힌다', async () => {
+      const { dialog } = await openEdit()
+      expect(within(dialog).getByText('추가·제거는 바로 저장돼요.')).toBeInTheDocument()
+      await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    })
+
+    it('기본 정보를 고친 채 닫으면 확인을 묻고, 버리고 닫을 수 있다', async () => {
+      const { calls, dialog } = await openEdit()
+      await userEvent.type(within(dialog).getByLabelText('장소'), ' 별관')
+      await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+      expect(await within(dialog).findByText('저장하지 않은 기본 정보가 있어요. 저장하고 닫을까요?')).toBeInTheDocument()
+      await userEvent.click(within(dialog).getByRole('button', { name: '계속 수정' }))
+      expect(within(dialog).queryByText(/저장하지 않은 기본 정보/)).toBeNull()
+      await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+      await userEvent.click(within(dialog).getByRole('button', { name: '버리고 닫기' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+      expect(calls.some((c) => c.method === 'PATCH')).toBe(false)
+    })
+
+    it('저장 후 닫기는 기본 정보를 저장하고 닫는다', async () => {
+      const { calls, dialog } = await openEdit((req) => (req.method === 'PATCH' ? { json: course({ location: '별관' }) } : undefined))
+      const place = within(dialog).getByLabelText('장소')
+      await userEvent.clear(place)
+      await userEvent.type(place, '별관')
+      await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+      await userEvent.click(within(dialog).getByRole('button', { name: '저장 후 닫기' }))
+      await waitFor(() => expect(calls.find((c) => c.method === 'PATCH')?.body).toMatchObject({ location: '별관' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    })
+  })
+
   it('수정 폼에서 종료일이 시작일보다 이르면 저장하지 않는다', async () => {
     const calls = await openPage(list([course()]), (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: { ...course(), participants: [] } } : undefined))
     await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
