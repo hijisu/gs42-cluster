@@ -80,6 +80,17 @@ describe('공통 컴포넌트', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
+  it('Modal은 사이드바 같은 조상 안에서 열어도 document.body에 렌더링되어 본문에 가려지지 않는다', () => {
+    const { container } = render(
+      <aside className="side">
+        <Modal open title="알림" onClose={() => {}}>본문</Modal>
+      </aside>,
+    )
+    const dialog = screen.getByRole('dialog', { name: '알림' })
+    expect(container.contains(dialog)).toBe(false)
+    expect(dialog.closest('.scrim')?.parentElement).toBe(document.body)
+  })
+
   it('Modal은 부모가 다시 렌더링되어도 입력창 포커스를 빼앗지 않는다', async () => {
     function Demo() {
       const [text, setText] = useState('')
