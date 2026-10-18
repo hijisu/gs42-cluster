@@ -96,8 +96,8 @@ export function CreateCourseModal({ open, onClose, onDone }: { open: boolean; on
           </Button>
           <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" tabIndex={-1} aria-label="CSV 파일 선택" onChange={(e) => onFile(e.target.files?.[0])} />
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-          {ids.map((id) => (
+        <div className="scroll-list" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+          {[...ids].sort().map((id) => (
             <span key={id} className="pill neu">
               {id}
               <button type="button" className="pill-x" aria-label={`${id} 삭제`} onClick={() => setIds(ids.filter((x) => x !== id))}>

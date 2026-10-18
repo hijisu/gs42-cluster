@@ -59,7 +59,7 @@ describe('교육과정 후기 게시판', () => {
     expect(banner).toHaveTextContent('경북 특화형 데이터센터 기초과정')
     const table = await screen.findByRole('table', { name: '교육과정 목록' })
     const row = within(table).getByRole('button', { name: '경북 특화형 데이터센터 기초과정' }).closest('tr') as HTMLElement
-    expect(within(row).getByText('09.17–09.26')).toBeInTheDocument()
+    expect(within(row).getByText('2026.09.17–09.26')).toBeInTheDocument()
     expect(within(row).getByText('유니버스룸')).toBeInTheDocument()
     expect(within(row).getByText('2')).toBeInTheDocument()
     expect(within(row).getByText('작성 가능')).toBeInTheDocument()

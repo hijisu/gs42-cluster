@@ -8,6 +8,9 @@ import { messageFor } from './errors'
 import { useBlocks, useDeleteBlock, useDeleteOccurrence } from './hooks'
 
 const RANGE_DAYS = 365
+/** 회차가 이 수를 넘으면 처음 PREVIEW개만 보이고 '더 보기'로 펼친다 */
+const COLLAPSE_OVER = 15
+const PREVIEW = 10
 
 /** 예약 차단 기간(반복 일정): 교육 활동 등으로 정해진 시간에 회의실 예약을 막는다 */
 export function BlocksPanel({ rooms }: { rooms: Room[] }) {
@@ -17,6 +20,7 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
   const removeOne = useDeleteOccurrence()
   const [target, setTarget] = useState<BlockTarget | null>(null)
   const [open, setOpen] = useState<number | null>(null)
+  const [showAll, setShowAll] = useState<number | null>(null)
   const roomName = (id: number) => rooms.find((r) => r.id === id)?.name ?? '(삭제된 장소)'
   const error = messageFor(remove.error ?? removeOne.error, '삭제하지 못했어요. 잠시 후 다시 시도해 주세요.')
 
@@ -46,7 +50,7 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
               <span className="mono">{blockTime(b)}</span> · {repeatSummary(b)} · 남은 {b.occurrences.length}회
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button size="sm" variant="secondary" aria-label={`${b.reason} 회차 보기`} aria-expanded={open === b.id} onClick={() => setOpen(open === b.id ? null : b.id)}>
+              <Button size="sm" variant="secondary" aria-label={`${b.reason} 회차 보기`} aria-expanded={open === b.id} onClick={() => { setOpen(open === b.id ? null : b.id); setShowAll(null) }}>
                 회차 {open === b.id ? '접기' : '보기'}
               </Button>
               <Button size="sm" variant="secondary" aria-label={`${b.reason} 전체 수정`} onClick={() => setTarget({ mode: 'series', block: b })}>
@@ -69,8 +73,9 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
               )}
             </div>
             {open === b.id && (
-              <ul className="stack" style={{ gap: 4, listStyle: 'none', padding: 0, margin: 0 }}>
-                {b.occurrences.map((o) => (
+              <>
+              <ul className="stack scroll-list" style={{ gap: 4, listStyle: 'none', padding: 0, margin: 0, maxHeight: 320 }}>
+                {(b.occurrences.length > COLLAPSE_OVER && showAll !== b.id ? b.occurrences.slice(0, PREVIEW) : b.occurrences).map((o) => (
                   <li key={o.date} className="row">
                     <span className="small">
                       {formatDayLabel(kstDate(o.start_at))} <span className="mono">{blockTime(o)}</span>
@@ -86,6 +91,12 @@ export function BlocksPanel({ rooms }: { rooms: Room[] }) {
                   </li>
                 ))}
               </ul>
+              {b.occurrences.length > COLLAPSE_OVER && (
+                <Button size="sm" variant="secondary" style={{ alignSelf: 'flex-start' }} onClick={() => setShowAll(showAll === b.id ? null : b.id)}>
+                  {showAll === b.id ? `처음 ${PREVIEW}회만 보기` : `${b.occurrences.length - PREVIEW}회 더 보기`}
+                </Button>
+              )}
+              </>
             )}
           </li>
         ))}

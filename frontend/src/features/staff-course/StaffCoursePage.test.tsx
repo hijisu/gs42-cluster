@@ -41,7 +41,7 @@ describe('운영 교육과정·후기 관리 화면', () => {
     await openPage(list([course(), upcoming, closed]))
     const table = await screen.findByRole('table', { name: '교육과정 목록' })
     const row = within(table).getByText('서울대학교 파이썬 AI 교육').closest('tr') as HTMLElement
-    expect(within(row).getByText('10.05–10.14')).toBeInTheDocument()
+    expect(within(row).getByText('2026.10.05–10.14')).toBeInTheDocument()
     expect(within(row).getByText('4명')).toBeInTheDocument()
     expect(within(row).getByText('25%')).toBeInTheDocument()
     expect(within(row).getByText('후기 수집 중')).toBeInTheDocument()
@@ -182,6 +182,27 @@ describe('운영 교육과정·후기 관리 화면', () => {
     expect(patch.body).toMatchObject({ name: '이름 변경', start_date: '2026-10-05', end_date: '2026-10-14' })
     expect(patch.body).not.toHaveProperty('status')
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('참여 학생을 알파벳 순으로 보여주고, 10명을 넘으면 검색할 수 있다', async () => {
+    const few = { ...course(), participants: [{ intra_id: 'bob', reviewed: false }, { intra_id: 'alice', reviewed: true }] }
+    await openPage(list([course()]), (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: few } : undefined))
+    await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+    const dialog = await screen.findByRole('dialog')
+    await within(dialog).findByTestId('participant-alice')
+    expect(within(dialog).getAllByTestId(/^participant-/).map((e) => e.getAttribute('data-testid'))).toEqual(['participant-alice', 'participant-bob'])
+    expect(within(dialog).queryByLabelText('참여 학생 검색')).toBeNull()
+  })
+
+  it('참여 학생이 많으면 검색으로 걸러 본다', async () => {
+    const ids = ['zed', ...Array.from({ length: 11 }, (_, i) => `user${String(i).padStart(2, '0')}`)]
+    const many = { ...course(), participants: ids.map((intra_id) => ({ intra_id, reviewed: false })) }
+    await openPage(list([course()]), (req) => (req.method === 'GET' && req.url.endsWith('/staff/courses/4') ? { json: many } : undefined))
+    await userEvent.click(await screen.findByRole('button', { name: '서울대학교 파이썬 AI 교육 수정' }))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.type(await within(dialog).findByLabelText('참여 학생 검색'), 'ZE')
+    expect(within(dialog).getAllByTestId(/^participant-/)).toHaveLength(1)
+    expect(within(dialog).getByText('12명 중 1명')).toBeInTheDocument()
   })
 
   it('수정 폼에서 종료일이 시작일보다 이르면 저장하지 않는다', async () => {

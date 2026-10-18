@@ -1,5 +1,5 @@
 import { Button, Card, Pill, Table, type Column } from '../../components'
-import { formatMonthDay, kstDateFromToday } from '../../lib/datetime'
+import { formatPeriod, kstDateFromToday } from '../../lib/datetime'
 import type { StaffCourse } from './api'
 import { canRequest, courseState } from './labels'
 
@@ -8,7 +8,7 @@ export function CoursesTable({ courses, onRequest, onEdit }: { courses: StaffCou
 
   const columns: Column<StaffCourse>[] = [
     { key: 'name', header: '과정명', render: (c) => <span style={{ fontWeight: 600 }}>{c.name}</span> },
-    { key: 'period', header: '기간', render: (c) => <span className="mono">{formatMonthDay(c.start_date)}–{formatMonthDay(c.end_date)}</span> },
+    { key: 'period', header: '기간', render: (c) => <span className="mono">{formatPeriod(c.start_date, c.end_date)}</span> },
     { key: 'count', header: '참여', render: (c) => <span className="mono">{c.participant_count}명</span> },
     {
       key: 'rate',
